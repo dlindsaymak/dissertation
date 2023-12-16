@@ -1,0 +1,1064 @@
+---
+title: CFA Data
+author: Deb Lindsay
+date: '2023-12-14'
+slug: cfa-data
+categories: 
+  - CFA
+tags:
+  - Connection to Nature
+  - Paper 1
+  - DEEP CTN
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2023-12-14T16:48:46-08:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+```{r Packages and Functions required, include=FALSE}
+
+library(tidyverse) #base package that runs most functions
+library(flextable) #tables
+library(moments) #skewness & kurtosis
+library(lavaan) #CFA 
+library(corrplot) #correlations
+library(MVN) #test of normality
+library(semPlot) #plotting paths in CFA
+library(Hmisc) #correlations 
+library(car) # Type 2 Anova
+library(effectsize) #effect sizes
+library(ggplot2) #plots
+```
+
+```{r loading data, include=FALSE}
+CFA1 <- 
+     read_csv("CFApilot1SONA_data_clean.csv")
+
+```
+
+# Pilot 1 - SONA Spring 2023
+
+## Descriptives {.tabset}
+
+```{r Means, include=TRUE, echo=FALSE,}
+
+n <- paste(round((length(CFA1$id)), 2))
+     
+m_age <- paste(round(mean(CFA1$age, na.rm = T),2))
+sd_age <- paste(round(sd(CFA1$age, na.rm = T),2))
+
+m_ses <- paste(round(mean(CFA1$SES_family, na.rm = T),2))
+sd_ses <- paste(round(sd(CFA1$SES_family, na.rm = T),2))
+
+m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
+sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
+```
+
+[**N**]{.underline} = `r paste(n)`
+
+Mean [**Age**]{.underline} = `r paste(m_age)`(`r paste(sd_age)`)
+
+Mean [**SES**]{.underline} = `r paste(m_ses)`(`r paste(sd_ses)`)\
+*Scored on a 10 point ladder with 10 being the best off, and 1 being the worst off*
+
+Mean [**Political Ideology**]{.underline} = `r paste(m_pol)`(`r paste(sd_pol)`)\
+*Scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal*
+
+
+```{r gender table, include=FALSE}
+desc_table <-
+CFA1 %>% 
+     group_by(gender) %>% 
+     summarise(n = length(id),
+               `Age(mean)` = round(mean(age, na.rm = T),2),
+              `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
+
+
+
+```
+::: row
+::: {.col-xs-12 .col-md-6}
+```{r printdesctable, echo=FALSE, message=FALSE, paged.print=FALSE}
+ 
+     flextable(desc_table) %>% 
+  autofit() %>% 
+  set_caption(caption = "Gender")
+
+```
+
+
+`r officer::run_columnbreak()`
+:::
+
+::: {.col-xs-12 .col-md-6}
+```{r race, echo=FALSE}
+CFA1 %>% 
+     group_by(ethnoracial) %>% 
+     summarise(n = length(id)) %>% 
+     flextable() %>% 
+  autofit() %>% 
+  set_caption(caption = "Ethnoracial")
+
+```
+:::
+:::
+
+<!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
+```{r factor data frame, include=FALSE}
+
+#pull out non-binary participants as the n is not big enough to run analyses
+#removed 9 participants
+CFA1 <-    
+ CFA1 %>% 
+     filter(gender == "Woman" | gender == "Man") 
+
+factors <- 
+     CFA1 %>% 
+     dplyr::select(DEEPCTN_s_1:DEEPCTN_em_6)
+
+```
+
+
+
+## CFA Assumptions 
+
+### Skewness & Kurtosis
+
+The closer to 0 for skewness and kurtosis, the closer to a normal distribution.
+Based on the general guidelines below - Distributions exhibiting skewness and/or kurtosis that exceed these guidelines are considered non-normal." (Hair et al., 2017, p. 61, [Statology Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
+
+#### **Skewness**
+
+Ff the number is greater than +1 (right skewed) or lower than --1 (left skewed), this is an indication of a substantially skewed distribution.
+
+::: {style="color:blue"}
+*No items with high skewness*
+:::
+
+```{r Skewness, include=TRUE, echo=FALSE}
+skew <-as.data.frame(round(sort(skewness(factors),
+     decreasing = T),2))
+```
+
+#### **Kurtosis**
+
+If the number is greater than +3, the distribution is too peaked.
+Likewise, a kurtosis of less than --3 indicates a distribution that is too flat.
+
+::: {style="color:blue"}
+*Three items with slightly high Kurtosis:*
+
+1.  DEEPCTN_s_5\
+    "**I have great respect for being alive on this earth and part of the universe"**
+
+2.  DEEPCTN_ex_7\
+    "**Listening to the sounds of nature makes me relax"**
+
+3.  DEEPCTN_em_5\
+    "**I am careful to not step on snails"**
+:::
+
+```{r Kurtosis, include=TRUE, echo=FALSE}
+kurtosis <- as.data.frame(round(sort(kurtosis(factors),
+     decreasing=T),2))
+```
+
+```{r Historgrams, include=FALSE, results='hide', eval=FALSE}
+
+# Deep
+factors %>% 
+     ggplot(aes(DEEPCTN_s_1)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_2)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_3)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_4)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_5)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_7)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_8)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_9)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_s_10)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+# Experience
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_1)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_2)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_3)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_4)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_5)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_6)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_7)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_ex_8)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+# Emotion
+factors %>% 
+     ggplot(aes(DEEPCTN_emo_1)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_emo_2)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_emo_3)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_emo_4)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_em_5)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_em_6)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+# Presence
+factors %>% 
+     ggplot(aes(DEEPCTN_m_1)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_m_2)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_m_3)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_m_4)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_m_5)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+
+factors %>% 
+     ggplot(aes(DEEPCTN_m_6)) +
+     geom_histogram() +
+     scale_x_continuous(breaks = c(1:7))
+```
+
+### Inter-item Correlation
+
+::: {style="color: blue"}
+*None are strongly ( \>.75) correlated so no need to remove any*
+:::
+
+```{r Correlation Matrix, echo=FALSE, out.width="100%"}
+#see if any item is too strongly correlated
+
+corrplot(cor(factors),
+         method="shade",
+         type="upper",
+         order="original",
+         addCoef.col = "black",
+         tl.col="black", 
+         tl.srt=55, 
+         tl.cex=.65,
+         sig.level = 0.05, 
+         insig = "blank",
+         number.cex = .35,
+         cl.pos = "n") 
+
+```
+
+```{r Correlations Large, include=FALSE}
+#pull out too strong ones
+factors %>% 
+    select_if(is.numeric) %>%
+    cor() %>% 
+    round(digits = 2) %>%
+    as.data.frame() %>%
+    rownames_to_column %>%
+    gather(colname, value, -rowname) %>%
+    group_by(rowname) %>%
+  filter(abs(value) >= 0.75) %>%
+  filter(abs(value) != 1)
+```
+
+### Multivariate normality
+
+##### Notes on Multivariate Normality
+
+-   Quantiative test of normality: shapiro is fine for univariate normality test. But I also need to test for multivariate normality. This package is both. Use this.
+-   Can just look at univariate for now, but REPEAT THIS with my final variables to check for multivariate normality
+-   Sources:
+    -   [Lavaan Package notes](https://shiny.rit.albany.edu/stat/cfa1test/data.html)
+    -   [MVN Package Notes](https://cran.r-project.org/web/packages/MVN/MVN.pdf)
+    -   [How to perform multivariate normality tests in R](https://www.statology.org/multivariate-normality-test-r/)
+    -   [How to transform data in R](https://www.statology.org/transform-data-in-r/)
+
+::: {style="color: blue"}
+*Using the Mardia Test of multivariate AND univariate normality. Mardia test shows that my data is [**not normal**]{.underline}. This indicates that I need to use a rotation method that is robust to non-normal data.*
+:::
+
+```{r Mardia Test, echo=FALSE}
+#this tells you multivariate normality of all the items AND univariate normality of each item
+norm_result <- mvn(data= factors, 
+    mvnTest="mardia",  
+    univariateTest="SW",  #shaprio-wilkes
+    # transform="log", #what are results if you transform all variables like this?
+    # univariatePlot = "histogram",
+    # multivariatePlot = "qq"
+    )
+
+```
+
+###### Multivariate Normality
+
+```{r Mardia multivariate, results=TRUE, echo=FALSE}
+print(norm_result$multivariateNormality)
+
+```
+
+###### Univariate Normality
+
+```{r Mardia Univariate, results=TRUE, echo=FALSE}
+print(norm_result$univariateNormality)
+print(norm_result$Descriptives)
+
+```
+
+###### Norm Descriptives for each item
+
+```{r Mardia Norm Descriptives, results=TRUE, echo=FALSE}
+print(norm_result$univariateNormality)
+
+```
+
+### CFA Preparation
+
+::: {style="color: blue"}
+*Only items that were decided upon during EFA pilots to be concluded*
+
+*Remove items with too heavy kurtosis (see above)*
+
+*All analyses going forward will only include the following items:*
+:::
+
+```{r remove high kurtosis, include=FALSE}
+
+final_factors <-
+     factors %>% 
+     dplyr::select(DEEPCTN_s_1,
+            DEEPCTN_s_2,
+            DEEPCTN_s_3,
+            DEEPCTN_s_7,
+            DEEPCTN_s_10,
+            DEEPCTN_s_8, 
+            DEEPCTN_s_4,
+            DEEPCTN_s_6, 
+            DEEPCTN_s_9,
+            DEEPCTN_ex_4,
+            DEEPCTN_ex_5,
+            DEEPCTN_ex_6,
+            DEEPCTN_ex_8,
+            DEEPCTN_ex_1, 
+            DEEPCTN_ex_2,
+            DEEPCTN_ex_3,
+            DEEPCTN_m_1,
+            DEEPCTN_m_2,
+            DEEPCTN_m_3,
+            DEEPCTN_m_4,
+            DEEPCTN_m_5,
+            DEEPCTN_m_6,
+            DEEPCTN_emo_1,
+            DEEPCTN_emo_2,
+            DEEPCTN_emo_3,
+            DEEPCTN_emo_4,
+            DEEPCTN_em_6)
+
+```
+
+```{r variables names, include=FALSE, echo=FALSE}
+
+Items <-
+  c("I view nature as a mother who nurtures and cares for me",
+    "Human beings and nature are connected by the same *energy* or *Life-force*",
+    "My connection to nature is something I would describe as *spiritual*",
+    "I think about the *shared breath* between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale",
+    "When I eat, I feel thankful for the animals, plants, and earth for nourishing me",
+    "I often think about the fact that all life is grounded on this planet that is revolving around the sun",
+    "Every part of nature is sacred",
+    "I like the idea that, when I die, my body will return to the earth, nourishing the soil",
+    "Indoor plants are part of the family",
+    "My favorite place is in nature",
+    "Walking through a forest makes me forget about my daily worries",
+    "I prefer outdoor to indoor sports",
+    "I hike or run in nearby nature",
+    "I like to get outdoors whenever I get the chance",
+    "I feel uneasy if I am away from nature for too long",
+    "I engage and participate with nature to find meaning and richness in life",
+    "I take time to watch the clouds pass by",
+    "I deliberately take time to watch stars at night",
+    "When possible I take time to watch the sunrise or the sunset without distractions",
+    "I consciously watch or listen to birds",
+    "I take time to consciously smell flowers",
+    "I pay attention to the current phase of the moon",
+    "Seeing a cleared forest is upsetting to me",
+    "If one of my plants died, I would blame myself",
+    "Thinking of someone carving their initials into a tree makes me cringe",
+    "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it",
+    "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)")
+
+final_items <- data_frame(variable.names(final_factors), Items) %>% 
+     print(n = Inf) %>% 
+     rename(Code  = `variable.names(final_factors)`)
+
+```
+
+```{r Final Items, echo=FALSE, warning=FALSE}
+
+flextable(final_items) %>% 
+     set_table_properties(layout = "autofit")
+
+
+```
+
+##  {.unlisted .unnumbered}
+
+------------------------------------------------------------------------
+## CFA {.tabset .tabset-fade}
+
+### Four Factor Hierarchical Model
+
+Testing a structure which includes an overall Connection to Nature factor and four dimensions:
+
+-   Deep: Deeply seeing the self as part of nature
+
+-   Experiential: Spending more time in nature and enjoying spending time in nature
+
+-   Emotional: Emotional desire to connect with nature and protect it
+
+-   Presence: Engaging mindfully and consciously with nature
+
+::: {style="color: blue"}
+*Items load onto their dimensions well, with the exception of 1 item ("Thinking of someone carving their initials into a tree makes me cringe") which loaded onto the Emotion dimension at 0.33.*
+
+*All dimensions loaded onto the single CTN dimension, but these loaded quite highly (especially Deep and Emotion) which suggests these might be driving the overall CTN score.*
+:::
+
+```{r CFA - 4 factor hierarchical, echo=FALSE, include=FALSE}
+model_hier_4 <-  'deep =~ 
+  DEEPCTN_s_1 + 
+  DEEPCTN_s_2 +
+  DEEPCTN_s_3 +
+  DEEPCTN_s_7 +
+  DEEPCTN_s_10 +
+  DEEPCTN_s_8 +
+  DEEPCTN_s_4 +
+  DEEPCTN_s_6 +
+  DEEPCTN_s_9
+
+experience =~ 
+   DEEPCTN_ex_4 +
+   DEEPCTN_ex_5 +
+   DEEPCTN_ex_6 +
+   DEEPCTN_ex_8 +
+   DEEPCTN_ex_1 +
+   DEEPCTN_ex_2 +
+   DEEPCTN_ex_3
+
+emotion =~ 
+  DEEPCTN_emo_1 +
+  DEEPCTN_emo_2 +
+  DEEPCTN_emo_3 +
+  DEEPCTN_emo_4 +
+  DEEPCTN_em_6
+
+presence =~
+  DEEPCTN_m_1 +
+  DEEPCTN_m_2 +
+  DEEPCTN_m_3 +
+  DEEPCTN_m_4 +
+  DEEPCTN_m_5 +
+  DEEPCTN_m_6
+
+
+deepctn =~ deep + experience + emotion + presence'
+
+fit_model_hier_4 <- cfa(model_hier_4, data=final_factors,
+                        std.lv=F, #set to T to get Std.Err!!!
+                        estimator = "MLR") #robust against non normal data #https://lavaan.ugent.be/tutorial/est.html
+
+
+
+Plot <-
+     semPaths(fit_model_hier_4, 
+         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "'Shared breath' between myself and plants", 
+                       "When I eat, I feel thankful for animals and plants",
+                       "All life is grounded on this planet", 
+                       "Every part of nature is sacred",
+                       "When I die, my body will return to the earth", 
+                       "Indoor plants are family",
+                       "My favorite is in nature", #experience 
+                       "Walking through a forest makes me forget worries", 
+                       "I prefer outdoor sports", 
+                       "I hike or run in nearby nature", 
+                       "I like to get outdoors when I can", 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "Seeing a cleared forest is upsetting", #emotional
+                       "If my plants died I would blame myself", 
+                       "Someone carving a tree makes me cringe", 
+                       "I catch and release insects in my home", 
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I take time to watch the sunrise & sunset", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Deep", 
+                       "Experience", 
+                       "Emotion", 
+                       "Presence",
+                       "Overall CTN")
+        )
+
+Fit_table_heir <- matrix(fitMeasures(fit_model_hier_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+
+colnames(Fit_table_heir) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_heir) <- c("Fit Indices")
+Fit_table_heir <- round(Fit_table_heir,3)
+
+
+```
+
+```{r 4 factor hierarchical plot, include=TRUE, echo=FALSE, out.width="100%"}
+plot(Plot)
+
+as_tibble(Fit_table_heir) %>% 
+  add_column(c(""), .before = "df") %>%
+      rename(`Fit Indices` = `c("")`) %>% 
+     flextable() %>% 
+     autofit() %>% 
+     footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+     
+
+#summary(fit_model_hier_4, 
+#        standardized = T,
+#        fit.measures = T,
+#        rsquare=T)
+```
+
+### Four Factor Model
+
+Testing a structure which only includes the four dimensions:
+
+-   Deep: Deeply seeing the self as part of nature
+
+-   Experiential: Spending more time in nature and enjoying spending time in nature
+
+-   Emotional: Emotional desire to connect with nature and protect it
+
+-   Presence: Engaging mindfully and consciously with nature
+
+::: {style="color: blue"}
+*Items load onto their dimensions similarly well to the hierarchical model. Again, 1 item loads weakly: ("Thinking of someone carving their initials into a tree makes me cringe") which loaded onto the Emotion dimension at 0.33.*
+
+*Dimensions are intercorrelated reasonable well - not too high as to have multi-collinearity (none above .80)*
+:::
+
+```{r 4 Factor flat, include=FALSE, echo=FALSE}
+model_flat_4 <-  'deep =~ 
+  DEEPCTN_s_1 + 
+  DEEPCTN_s_2 +
+  DEEPCTN_s_3 +
+  DEEPCTN_s_7 +
+  DEEPCTN_s_10 +
+  DEEPCTN_s_8 +
+  DEEPCTN_s_4 +
+  DEEPCTN_s_6 +
+  DEEPCTN_s_9
+
+experience =~ 
+   DEEPCTN_ex_4 +
+   DEEPCTN_ex_5 +
+   DEEPCTN_ex_6 +
+   DEEPCTN_ex_8 +
+   DEEPCTN_ex_1 +
+   DEEPCTN_ex_2 +
+   DEEPCTN_ex_3
+
+emotion =~ 
+  DEEPCTN_emo_1 +
+  DEEPCTN_emo_2 +
+  DEEPCTN_emo_3 +
+  DEEPCTN_emo_4 +
+  DEEPCTN_em_6
+
+presence =~
+  DEEPCTN_m_1 +
+  DEEPCTN_m_2 +
+  DEEPCTN_m_3 +
+  DEEPCTN_m_4 +
+  DEEPCTN_m_5 +
+  DEEPCTN_m_6'
+fit_model_flat_4 <- cfa(model_flat_4, data=final_factors,
+                        std.lv=F, #set to T to get Std.Err!!!
+                        estimator = "MLR") #robust against non normal data #https://urldefense.com/v3/__https://lavaan.ugent.be/tutorial/est.html__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16Hy0Ekyig$ 
+
+
+
+
+Plot_4_flat <-
+     semPaths(fit_model_flat_4, 
+         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex=.75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "'Shared breath' between myself and plants", 
+                       "When I eat, I feel thankful for animals and plants",
+                       "All life is grounded on this planet", 
+                       "Every part of nature is sacred",
+                       "When I die, my body will return to the earth", 
+                       "Indoor plants are family",
+                       "My favorite is in nature", #experience 
+                       "Walking through a forest makes me forget worries", 
+                       "I prefer outdoor sports", 
+                       "I hike or run in nearby nature", 
+                       "I like to get outdoors when I can", 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "Seeing a cleared forest is upsetting", #emotional
+                       "If my plants died I would blame myself", 
+                       "Someone carving a tree makes me cringe", 
+                       "I catch and release insects in my home", 
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #presence
+                       "I deliberately watch the Stars at night", 
+                       "I take time to watch the sunrise & sunset", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Deep", 
+                       "Experience", 
+                       "Emotion", 
+                       "Presence")
+        )
+
+
+Fit_table_4factor <- matrix(fitMeasures(fit_model_flat_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+
+colnames(Fit_table_4factor) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_4factor) <- c("Fit Indices")
+Fit_table_4factor <- round(Fit_table_4factor,3)
+
+
+
+```
+
+```{r flat 4 factor model plot, echo=FALSE, out.width="100%"}
+plot(Plot_4_flat)
+
+
+as_tibble(Fit_table_4factor) %>% 
+  add_column(c(""), .before = "df") %>%
+      rename(`Fit Indices` = `c("")`) %>% 
+     flextable() %>% 
+     autofit() %>% 
+     footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+
+
+
+#summary(fit_model_flat_4, 
+#        standardized = T,
+#        fit.measures = T,
+#        rsquare=T) 
+
+```
+
+### Single Factor Model
+
+Testing a structure which includes only a single overall Connection to Nature factor
+
+::: {style="color: blue"}
+*Loadings are slightly weaker onto a single overall CTN factor. Again, 1 item loads weakly: ("Thinking of someone carving their initials into a tree makes me cringe") which loaded onto the Emotion dimension at 0.31.*
+:::
+
+```{r CFA - 1 factor, include=FALSE, echo=FALSE}
+
+model_flat <-  'overall =~ 
+  DEEPCTN_s_1 + 
+  DEEPCTN_s_2 +
+  DEEPCTN_s_3 +
+  DEEPCTN_s_7 +
+  DEEPCTN_s_10 +
+  DEEPCTN_s_8 +
+  DEEPCTN_s_4 +
+  DEEPCTN_s_6 +
+  DEEPCTN_s_9 +
+
+   DEEPCTN_ex_4 +
+   DEEPCTN_ex_5 +
+   DEEPCTN_ex_6 +
+   DEEPCTN_ex_8 +
+   DEEPCTN_ex_1 +
+   DEEPCTN_ex_2 +
+   DEEPCTN_ex_3 +
+
+  DEEPCTN_emo_1 +
+  DEEPCTN_emo_2 +
+  DEEPCTN_emo_3 +
+  DEEPCTN_emo_4 +
+  DEEPCTN_em_6 +
+
+  DEEPCTN_m_1 +
+  DEEPCTN_m_2 +
+  DEEPCTN_m_3 +
+  DEEPCTN_m_4 +
+  DEEPCTN_m_5 +
+  DEEPCTN_m_6'
+
+fit_model_flat <- cfa(model_flat, data=final_factors,
+                        std.lv=F, #set to T to get Std.Err!!!
+                        estimator = "MLR") #robust against non normal data #https://urldefense.com/v3/__https://lavaan.ugent.be/tutorial/est.html__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16Hy0Ekyig$ 
+
+
+
+Plot_1 <-
+     semPaths(fit_model_flat, 
+         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex=.75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "'Shared breath' between myself and plants", 
+                       "When I eat, I feel thankful for animals and plants",
+                       "All life is grounded on this planet", 
+                       "Every part of nature is sacred",
+                       "When I die, my body will return to the earth", 
+                       "Indoor plants are family",
+                       "My favorite is in nature", #experience 
+                       "Walking through a forest makes me forget worries", 
+                       "I prefer outdoor sports", 
+                       "I hike or run in nearby nature", 
+                       "I like to get outdoors when I can", 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "Seeing a cleared forest is upsetting", #emotional
+                       "If my plants died I would blame myself", 
+                       "Someone carving a tree makes me cringe", 
+                       "I catch and release insects in my home", 
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I take time to watch the sunrise & sunset", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                      "CTN Overall"))
+
+
+Fit_table_flat <- matrix(fitMeasures(fit_model_flat, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+
+colnames(Fit_table_flat) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_flat) <- c("Fit Indices")
+Fit_table_flat <- round(Fit_table_flat,3)
+
+```
+
+```{r single factor plot, echo=FALSE, out.width="100%"}
+
+
+plot(Plot_1)
+
+
+as_tibble(Fit_table_flat) %>% 
+  add_column(c(""), .before = "df") %>%
+      rename(`Fit Indices` = `c("")`) %>% 
+     flextable() %>% 
+     autofit() %>% 
+     footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+
+#summary(fit_model_flat, 
+#        standardized = T,
+#        fit.measures = T,
+#        rsquare=T) 
+
+```
+
+### Comparing Fit of each Model
+
+Comparing the fit of the three models
+
+[*Sources for fit indices*](https://en.wikipedia.org/wiki/Confirmatory_factor_analysis)
+
+::: {style="color: blue"}
+*Both four-factor models (flat and hierarchical) perform better than the single-factor model.*
+
+*There is no difference between the hierarchical and the flat models.*
+:::
+
+```{r fit measures, echo=FALSE}
+#cutoffs:
+# fit_model_flat
+# fit_model_hier_4
+# fit_mode_flat_4
+
+
+ #(RMSEA + CI), (SRMR), (TFI), (CFI) , (AIC)
+# df4, chi-sq3, RMSEA47, RMSEACIL48, RMSEACIU49, SRMR67, TLI18, CFI17, AIC37
+# df, chisq, rmsea, rmsea.ci.lower, rmsea.ci.upper, srmr, tli cfi, aic
+# include the AIC and the confidence interval 
+
+
+Fit_table <- matrix(c(
+                  fitmeasures(fit_model_flat, "df"),
+                  fitmeasures(fit_model_flat, "chisq"),
+                  fitmeasures(fit_model_flat, "rmsea"),
+                  fitmeasures(fit_model_flat, "rmsea.ci.lower"),
+                  fitmeasures(fit_model_flat, "rmsea.ci.upper"),
+                  fitmeasures(fit_model_flat, "srmr"),
+                  fitmeasures(fit_model_flat, "tli"),
+                  fitmeasures(fit_model_flat, "cfi"),
+                  fitmeasures(fit_model_flat, "aic"),
+                  
+                  fitmeasures(fit_model_flat_4, "df"),
+                  fitmeasures(fit_model_flat_4, "chisq"),
+                  fitmeasures(fit_model_flat_4, "rmsea"),
+                  fitmeasures(fit_model_flat_4, "rmsea.ci.lower"),
+                  fitmeasures(fit_model_flat_4, "rmsea.ci.upper"),
+                  fitmeasures(fit_model_flat_4, "srmr"),
+                  fitmeasures(fit_model_flat_4, "tli"),
+                  fitmeasures(fit_model_flat_4, "cfi"),
+                  fitmeasures(fit_model_flat_4, "aic"),
+                  
+                  fitmeasures(fit_model_hier_4, "df"),
+                  fitmeasures(fit_model_hier_4, "chisq"),
+                  fitmeasures(fit_model_hier_4, "rmsea"),
+                  fitmeasures(fit_model_hier_4, "rmsea.ci.lower"),
+                  fitmeasures(fit_model_hier_4, "rmsea.ci.upper"),
+                  fitmeasures(fit_model_hier_4, "srmr"),
+                  fitmeasures(fit_model_hier_4, "tli"),
+                  fitmeasures(fit_model_hier_4, "cfi"),
+                  fitmeasures(fit_model_hier_4, "aic")
+                  ), 
+                    ncol=9,byrow=TRUE)
+
+#df4, chi-sq3, RMSEA32, RMSEACIUp, RMSEACILow, SRMR28, TFI10, CFI9, AIC 
+colnames(Fit_table) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table) <- c("1-Factor",
+                         "4-Factor", "4-Factor Hierarchial")
+Fit_table <- round(Fit_table,3)
+```
+
+```{r Fit table, echo=FALSE}
+as_tibble(Fit_table) %>% 
+  add_column(c("1 Factor", "4 Factor", "4 Factor Hierarchical"), .before = "df") %>%
+     rename(Model = `c("1 Factor", "4 Factor", "4 Factor Hierarchical")`) %>% 
+     flextable() %>% 
+  bold(i = 2:3,
+       part = "body")
+
+```
+
+```{r Model Comparisons, include=FALSE}
+
+
+#models with all the same items 
+test_all<-anova(fit_model_flat,
+      fit_model_flat_4,
+      fit_model_hier_4)
+test_all
+
+#sig here means nested model (hierarhcial) is sig worse than non-nested model
+
+#but note there's not a great way statistically to compare CFA models... 
+
+#test only single factor and four factor
+
+test_2<-anova(fit_model_flat,
+      fit_model_hier_4)
+
+
+
+```
+
+```{r model comparison anova, echo=FALSE}
+test_2
+```

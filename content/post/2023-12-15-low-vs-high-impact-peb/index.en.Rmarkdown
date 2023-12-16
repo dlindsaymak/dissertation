@@ -1,0 +1,649 @@
+---
+title: Low vs. High Impact PEB
+author: Deb Lindsay
+date: '2023-12-15'
+slug: low-vs-high-impact-peb
+categories:
+  - Exploratory
+tags:
+  - Connection to Nature
+  - Pro-Environmental Behavior
+  - DEEP CTN
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2023-12-15T09:43:36-08:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+---
+```{r setup, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(Hmisc) #correlations
+library(corrplot) #correlation plots
+library(flextable)
+library(psych) #factor analyses
+library(reactable) #better tables
+library(lavaan) #sem
+
+
+data <- read_csv("CFApilot1SONA_data_clean.csv", guess_max = 150)
+```
+
+
+
+Data set - add the details of the datset here-
+
+Using Recurring PEB Scale (Brick et al., 2019)
+
+# EFA of PEB
+## Item Correlations
+```{r PEB setup, message=FALSE, warning=FALSE, include=FALSE}
+PEB <-
+  data %>% 
+  select(RPEBS_1:RPEBS_20)
+
+#rename the variables so I know what they are
+PEB_name <-
+  c("Reuse Bags", 
+    "Avoid Car",
+    "Below 60mph",
+    "Plane personal",
+    "Compost",
+    "Eat Meat",
+    "Eat Dairy",
+    "Eat Organic",
+    "Eat Local",
+    "Eat Home Grown",
+    "Turn off Elec",
+    "Effic Lightbulb",
+    "Save Water",
+    "Aerosol",
+    "Recycle public",
+    "Recycle private",
+    "Talk Enviro",
+    "Resusable Bottle",
+    "Politics",
+    "Learn")
+
+colnames(PEB) <- PEB_name
+
+PEB_reverse <- c("Plane personal",
+                 "Eat Meat",
+                 "Eat Dairy",
+                 "Aerosol")
+
+PEB[ ,PEB_reverse] = 6 - PEB[ ,PEB_reverse]
+```
+
+
+```{r correlation, echo=FALSE}
+
+PEB_cor <-
+PEB %>% 
+  as.matrix() %>% 
+  rcorr()
+
+corrplot(PEB_cor$r, method = "shade", type = "upper", tl.cex = .35, tl.col = "black", number.cex = .35,  number.digits = 2, 
+         p.mat = cor.mtest(PEB)$p, sig.level = 0.01, insig = "blank")
+```
+
+## Cronbach's Alpha
+
+```{r PEB Cronbach Alpha, echo=FALSE}
+ltm::cronbach.alpha(PEB) 
+
+```
+
+## Factors
+
+```{r EFA, echo=FALSE}
+
+eigen_PEB <-
+  eigen(cor(PEB))
+
+psych::scree(PEB, pc=FALSE)
+
+psych::fa.parallel(PEB, fa = "fa")
+
+```
+
+```{r functions for efas, include=FALSE}
+flex <- function(data, title=NULL) {
+  # this grabs the data and converts it to a flextbale
+  flextable(data) %>%
+  # this makes the table fill the page width
+  set_table_properties(layout = "autofit", width = 1) %>%
+  # font size
+  fontsize(size=10, part="all") %>%
+    #this adds a ttitlecreates an automatic table number
+      set_caption(title, 
+                  autonum = officer::run_autonum(seq_id = "tab", 
+                                                 pre_label = "Table ", 
+                                                 post_label = "\n", 
+                                                 bkm = "anytable")) %>%
+  # font type
+  font(fontname="Times New Roman", part="all")
+}
+
+fa_table <- function(x, cut) {
+  #get sorted loadings
+  loadings <- fa.sort(x)$loadings %>% round(3)
+  #supress loadings
+  loadings[loadings < cut] <- ""
+  #get additional info
+  add_info <- cbind(x$communalities, 
+                    x$uniquenesses,
+                    x$complexity) %>%
+    # make it a data frame
+    as.data.frame() %>%
+    # column names
+    rename("Communality" = V1,
+           "Uniqueness" = V2,
+           "Complexity" = V3) %>%
+    #get the item names from the vector
+    rownames_to_column("item")
+  #build table
+  loadings %>%
+    unclass() %>%
+    as.data.frame() %>%
+    rownames_to_column("item") %>%
+    left_join(add_info) %>%
+    mutate(across(where(is.numeric), round, 3))
+}
+```
+
+Scree plot suggest ~2-4 factors
+Parallel factor suggests 7 factors
+
+## 2-Factor
+```{r 2 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
+#principal axis (for non-normal data)
+PEB_2 <- 
+  fa(PEB,2,rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+fa_table(PEB_2, .4) %>% 
+  flex("Two Factor Structure")
+
+PEB_2[["Vaccounted"]] %>%
+  as.data.frame() %>%
+  #select(1:5) %>% Use this if you have many factors and only want to show a certain number
+  rownames_to_column("Property") %>%
+    mutate(across(where(is.numeric), round, 3)) %>%
+    flex("Eigenvalues and Variance Explained for Rotated Factor Solution")
+
+#print(PEB_2)
+
+
+#print(PEB_2$loadings, cut = .3) 
+
+#fa.diagram(PEB_2, cex = 1.5, e.size = 0.05, rsize = 0.5, cut = .39, simple = T,marg = c(.5,.5,1,.5), adj = 1)
+```
+
+
+## 3-Factor
+```{r 3 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
+#principal axis (for non-normal data)
+PEB_3 <- 
+  fa(PEB,3, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+fa_table(PEB_3, .4) %>% 
+  flex("Three Factor Structure")
+
+PEB_3[["Vaccounted"]] %>%
+  as.data.frame() %>%
+  #select(1:5) %>% Use this if you have many factors and only want to show a certain number
+  rownames_to_column("Property") %>%
+    mutate(across(where(is.numeric), round, 3)) %>%
+    flex("Eigenvalues and Variance Explained for Rotated Factor Solution")
+
+#print(PEB_3)
+
+
+#print(PEB_2$loadings, cut = .4) 
+
+#fa.diagram(PEB_3, cex = 1.5, e.size = 0.05, rsize = 0.5)
+```
+
+## 4-Factor
+```{r 4 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
+#principal axis (for non-normal data)
+PEB_4 <- 
+  fa(PEB,4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+fa_table(PEB_4, .4) %>% 
+  flex("Four Factor Structure")
+
+PEB_4[["Vaccounted"]] %>%
+  as.data.frame() %>%
+  #select(1:5) %>% Use this if you have many factors and only want to show a certain number
+  rownames_to_column("Property") %>%
+    mutate(across(where(is.numeric), round, 3)) %>%
+    flex("Eigenvalues and Variance Explained for Rotated Factor Solution")
+
+#print(PEB_4)
+
+
+#print(PEB_2$loadings, cut = .4) 
+
+#fa.diagram(PEB_4, cex = 1.5, e.size = 0.05, rsize = 0.5)
+```
+
+## 5-Factor
+```{r 5 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
+#principal axis (for non-normal data)
+PEB_5 <- 
+  fa(PEB,5, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+fa_table(PEB_5, .4) %>% 
+  flex("Five Factor Structure")
+
+PEB_5[["Vaccounted"]] %>%
+  as.data.frame() %>%
+  #select(1:5) %>% Use this if you have many factors and only want to show a certain number
+  rownames_to_column("Property") %>%
+    mutate(across(where(is.numeric), round, 3)) %>%
+    flex("Eigenvalues and Variance Explained for Rotated Factor Solution")
+
+#print(PEB_5)
+
+
+#print(PEB_2$loadings, cut = .4) 
+
+#fa.diagram(PEB_5, cex = 1.5, e.size = 0.05, rsize = 0.5)
+```
+
+## Fit Indices
+
+```{r fit indices, echo=FALSE}
+
+RMSR <- c("<.08", round(PEB_2$rms,2), round(PEB_3$rms,2), round(PEB_4$rms, 2),
+          round(PEB_5$rms, 2))
+TLI <- c(">.95", round(PEB_2$TLI,2), round(PEB_3$TLI,2), round(PEB_4$TLI, 2),
+         round(PEB_5$TLI, 2))
+RMSEA <- c("<=.05 or <.08", round(PEB_2$RMSEA[1], 2),
+           round(PEB_3$RMSEA[1],2), round(PEB_4$RMSEA[1], 2),
+           round(PEB_5$RMSEA[1], 2))
+BIC <- c("lower is better", round(PEB_2$BIC, 2), round(PEB_3$BIC, 2),
+         round(PEB_4$BIC, 2), round(PEB_5$BIC, 2))
+Fit <- c("cut off", "2 Factor", "3 Factor", "4 Factor", "5 Factor")
+
+fit <- data.frame(Fit, RMSR, TLI, RMSEA, BIC)
+
+flextable(fit)
+
+```
+
+
+Four and Five factors have the best fit. Five does not add much to the model
+
+Setting up categories based on the EFA
+
+```{r factor set up, echo=FALSE, message=FALSE, warning=FALSE}
+PEB_items <-
+  c("Use reusable bags when you visit the grocery store",
+    "Walk, bicycle, carpool, or take public transportation instead of driving a vehicle by yourself",
+    "Drive slower than 60mph on the highway",
+    "Go on personal (non-business) air travel",
+    "Compost your household food garbage?",
+    "Eat meat (i.e., the flesh of any animal - includingn fish, chicken etc)",
+    "Eat dairy products such as milk, cheese, eggs, or yogurt",
+    "Eat organic food",
+    "Eat local food (produced within 100 miles)",
+    "Eat from a home vegetable garden (during growing season)",
+    "Turn your personal electronics off or in low-power mode when not in use?",
+    "Buy high efficiency compact fluroescent (CFL) or LED bulbs",
+    "Conserve water, when showering, cleaning clothes, dishes, watering plants, or other uses",
+    "Use aerosol products",
+    "In PUBLIC, how often do you sort trash into the recycling? (when the opportunity is available to you)",
+    "In PRIVATE, how often do you sort trash into the recycling? (when the opportunity is available to you)",
+    "Discuss environmental topics, either in person or with online posts",
+    "Carry a reuseable water bottle",
+    "Engage in political action or activism related to protecting the environment",
+    "Educate yourself about the environment")
+
+
+four_fac <-
+  c(NA, NA, "private", NA, "private", "diet", "diet", NA, NA, "private", NA, NA, NA, NA, "recycle", "recycle", "public", NA, "public", "public")
+
+five_fac <-
+  c(NA, NA, NA, "plane", "private", "diet", "diet", NA, NA, "private", NA, NA, NA, NA, "recycle", "recycle", "public", NA, "public", "public")
+
+
+table_data <- 
+  data.frame(PEB_name, PEB_items, four_fac, five_fac)
+
+
+
+reactable(table_data,
+          height = 350,
+          pagination = FALSE,
+          columns = list(
+            PEB_name = colDef(name = "Var", 
+                              minWidth = 50),
+            PEB_items = colDef(name = "Item"),
+            four_fac = colDef(name = "Four Factor", 
+                              minWidth = 50),
+            five_fac = colDef(name = "Five Factor",
+                              minWidth = 50)),
+          defaultSorted = list("four_fac" = "desc", 
+                               "five_fac" = "desc"),
+          showSortIcon = FALSE,
+          theme = reactableTheme(
+            style = list(fontFamily = "Helvetica, Arial, sans-serif")
+          ),
+          rowStyle = function(index)  {     
+      if ("four_fac" == "public") {
+      list(background = "orange")
+    }},
+    {     
+      if ("four_fac" == "recycle") {
+      list(background = "lightgreen")
+    }},
+    {
+      if ("four_fac" == "public") {
+      list(background = "lightblue")
+    }},
+    {
+      if ("four_fac" == "diet") {
+      list(background = "pink")
+    }
+  }
+)
+```
+# DEEP CTN & PEB
+
+```{r set up for regression, message=FALSE, warning=FALSE, include=FALSE}
+#colnames(data[, 78:97]) <- PEB_name
+
+data <-
+  data %>% 
+  rename("Reuse Bags" = RPEBS_1,
+         "Avoid Car" = RPEBS_2,
+         "Below 60mph" = RPEBS_3,
+         "Plane personal"= RPEBS_4,
+         "Compost" = RPEBS_5,
+         "Eat Meat"= RPEBS_6,
+         "Eat Dairy"= RPEBS_7,
+         "Eat Organic" = RPEBS_8,
+         "Eat Local" = RPEBS_9,
+         "Eat Home Grown" = RPEBS_10,
+         "Turn off Elec" = RPEBS_11,
+         "Effic Lightbulb" = RPEBS_12,
+         "Save Water" = RPEBS_13,
+         "Aerosol" = RPEBS_14,
+         "Recycle public" = RPEBS_15,
+         "Recycle private" = RPEBS_16,
+         "Talk Enviro" = RPEBS_17,
+         "Resusable Bottle" = RPEBS_18,
+         "Politics" = RPEBS_19,
+         "Learn" = RPEBS_20)
+  
+
+colnames(PEB) <- PEB_name
+
+
+PEB_reverse <- c("Plane personal",
+                 "Eat Meat",
+                 "Eat Dairy",
+                 "Aerosol")
+
+data[ ,PEB_reverse] = 6 - data[ ,PEB_reverse]
+
+data <-
+  data %>% 
+  mutate(recycle = (`Recycle public` + `Recycle private`)/2,
+         public = (Learn + Politics + `Talk Enviro`)/3,
+         private4 = (`Eat Home Grown` + Compost + `Below 60mph`)/3,
+         private5 = (`Eat Home Grown` + Compost)/2,
+         diet = (`Eat Dairy` + `Eat Meat`)/2,
+         recycle_z = scale(recycle, center = T, scale = T),
+         public_z = scale(public, center = T, scale = T),
+         private4_z = scale(private4, center = T, scale = T),
+         private5_z = scale(private5, center = T, scale = T),
+         diet_z = scale(diet, center = T, scale = T),
+         plane_z = scale(`Plane personal`, center = T, scale = T))
+
+data <-
+     data %>% 
+     mutate(deep_ctn = (DEEPCTN_s_1 + 
+                             DEEPCTN_s_2 +
+                             DEEPCTN_s_3 +
+                             DEEPCTN_s_7 +
+                             DEEPCTN_s_10 +
+                             DEEPCTN_s_8 +
+                             DEEPCTN_s_4 +
+                             DEEPCTN_s_6 +
+                             DEEPCTN_s_9)/9,
+            deep_ctn_z = as.numeric(scale(deep_ctn, 
+                                          center = T, scale = T)),
+            exp_CTN = (DEEPCTN_ex_4 +
+                            DEEPCTN_ex_5 +
+                            DEEPCTN_ex_6 +
+                            DEEPCTN_ex_8 +
+                            DEEPCTN_ex_1 +
+                            DEEPCTN_ex_2 +
+                            DEEPCTN_ex_3)/7,
+            exp_ctn_z = as.numeric(scale(exp_CTN, 
+                                         center = T, scale = T)),
+            
+            emo_CTN = (DEEPCTN_emo_1 +
+                            DEEPCTN_emo_2 +
+                            DEEPCTN_emo_4 +
+                            DEEPCTN_em_6)/4,
+            emo_ctn_z = as.numeric(scale(emo_CTN,
+                                         center = T, scale = T)),
+            
+            presc_CTN = (DEEPCTN_m_1 +
+                              DEEPCTN_m_2 +
+                              DEEPCTN_m_3 +
+                              DEEPCTN_m_4 +
+                              DEEPCTN_m_5 +
+                              DEEPCTN_m_6)/6,
+            presc_ctn_z = as.numeric(scale(presc_CTN, 
+                                           center = T, scale = T)),
+            
+            CTN_overall = (DEEPCTN_s_1 + 
+                             DEEPCTN_s_2 +
+                             DEEPCTN_s_3 +
+                             DEEPCTN_s_7 +
+                             DEEPCTN_s_10 +
+                             DEEPCTN_s_8 +
+                             DEEPCTN_s_4 +
+                             DEEPCTN_s_6 +
+                             DEEPCTN_s_9 +
+                              DEEPCTN_ex_4 +
+                              DEEPCTN_ex_5 +
+                              DEEPCTN_ex_6 +
+                              DEEPCTN_ex_8 +
+                              DEEPCTN_ex_1 +
+                              DEEPCTN_ex_2 +
+                              DEEPCTN_ex_3 +
+                              DEEPCTN_emo_1 +
+                              DEEPCTN_emo_2 +
+                              DEEPCTN_emo_4 +
+                              DEEPCTN_em_6 +
+                                DEEPCTN_m_1 +
+                              DEEPCTN_m_2 +
+                              DEEPCTN_m_3 +
+                              DEEPCTN_m_4 +
+                              DEEPCTN_m_5 +
+                              DEEPCTN_m_6)/26,
+            CTN_overall_z = as.numeric(scale(CTN_overall, 
+                                             center = T, scale = T)))         
+
+
+```
+
+```{r mean table, message=FALSE, warning=FALSE, include=FALSE}
+
+mean(data$recycle)
+sd(data$recycle)
+
+mean(data$private4)
+sd(data$private4)
+
+mean(data$public)
+sd(data$public)
+
+mean(data$diet)
+sd(data$diet)
+
+```
+
+## Correlations
+```{r correlations with PEB, echo=FALSE, message=FALSE, warning=FALSE}
+cormatrix <- 
+     data %>% 
+          dplyr::select(CTN_overall_z,
+                 deep_ctn_z,
+                 exp_ctn_z,
+                 emo_ctn_z,
+                 presc_ctn_z,
+                 recycle_z,
+                 public_z,
+                 private4_z,
+                 diet_z,
+                 private5,
+                 plane_z) %>% 
+          as.matrix() 
+            
+correlations <-
+     rcorr(cormatrix, type = "spearman")
+
+corp <- 
+     cor.mtest(cormatrix)
+
+#Corplot
+# I edited the Corplot function to move the significance stars up
+# https://stackoverflow.com/questions/49695113/changing-the-position-of-the-signifigance-pch-symbols-in-corrplot
+# 
+# trace(corrplot, edit = T)
+# 
+# Then replace on line 443
+#   place_points = function(sig.locs, point) {
+#    text(pos.pNew[, 1][sig.locs], pos.pNew[, 2][sig.locs], 
+#        labels = point, col = pch.col, cex = pch.cex, 
+#        lwd = 2)
+# 
+#  with:
+# adjust text(X,Y ...) according to your needs, here +0.25 is added to the Y-position    
+# 
+#    place_points = function(sig.locs, point) {
+#      text(pos.pNew[, 1][sig.locs], (pos.pNew[, 2][sig.locs])+0.25, 
+#           labels = point, col = pch.col, cex = pch.cex, 
+#          lwd = 2)
+
+nm = rownames(correlations$r)
+m = t(combn(nm, 2))
+d = cbind(data.frame(m), R = correlations$r[m], P = correlations$P[m])
+d$label = round(d$R, 2)
+d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
+d$X1 = factor(d$X1, nm)
+d$X2 = factor(d$X2, rev(nm))
+
+graphics.off()
+validation_plot <- 
+  ggplot(d, aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c() +
+    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r cor plot, echo=FALSE}
+
+validation_plot
+
+```
+
+## SEM
+```{r SEM, message=FALSE, warning=FALSE, include=FALSE}
+
+peb_model <-'#regressions
+  private4_z ~ deep_ctn_z 
+  private4_z ~ exp_ctn_z
+  private4_z ~ emo_ctn_z
+  private4_z ~ presc_ctn_z
+  
+  public_z ~ deep_ctn_z
+  public_z ~ exp_ctn_z
+  public_z ~ emo_ctn_z
+  public_z ~ presc_ctn_z
+  
+  #covariances
+  public_z ~~ private4_z
+  deep_ctn_z ~~ exp_ctn_z
+  deep_ctn_z ~~ emo_ctn_z
+  deep_ctn_z ~~ presc_ctn_z
+  exp_ctn_z ~~ emo_ctn_z
+  exp_ctn_z ~~ presc_ctn_z
+  emo_ctn_z ~~ presc_ctn_z
+'
+
+fit <- sem(peb_model, data = data)
+summary(fit, standardized = TRUE)
+
+
+#extracting the parameters from the sem model and selecting the interactions relevant for the semPaths (here, I need 12 estimates and p-values)
+sem_table<-parameterEstimates(fit,standardized=TRUE)  %>% 
+  head(15)
+
+#turning the chosen parameters into text
+b<-gettextf('%.3f \n p=%.3f', sem_table$std.all, digits=sem_table$pvalue)
+
+semPlot::semPaths(fit, 
+                  what = "std",
+                  whatLabels = "std",
+                  layout = "tree",
+                  edgeLabels = b,
+
+                  shapeMan = "rectangle", 
+                  style = "lisrel",
+                  cardinal = TRUE,
+                  nodeLabels = c("Private PEB",
+                                 "Public PEB",
+                                 "Depth",
+                                 "Experience",
+                                 "Emotion",
+                                 "Presence"),
+                  curvePivot = T, 
+                  curve = 2,
+                  reorder = F,
+        sizeMan = 15, 
+        sizeMan2 = 5,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 3,
+        mar = c(15,5,15,5),
+        residuals=F, #errors? how do I interpret this?
+        
+        edge.label.cex=1, #size of numbers
+       edge.color = "black"
+        )
+
+
+```
+
+```{r SEM output, echo=FALSE, message=FALSE, warning=FALSE}
+sem_table %>% 
+  as.data.frame() %>% 
+  select(lhs, op, rhs, est, se, z, pvalue, ci.lower, ci.upper) %>% 
+  filter(pvalue <.05) %>% 
+  flextable() %>% 
+  colformat_double(digits = 2)
+  
+```
+
+![](images/sem.png)
