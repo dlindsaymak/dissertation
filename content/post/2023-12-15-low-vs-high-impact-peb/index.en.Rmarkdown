@@ -1,5 +1,5 @@
 ---
-title: Low vs. High Impact PEB
+title: "Low vs. High Impact PEB (Pilot 1 SONA Spr23)"
 author: Deb Lindsay
 date: '2023-12-15'
 slug: low-vs-high-impact-peb
@@ -23,6 +23,7 @@ output:
   blogdown::html_page:
     toc: true
 ---
+
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse)
 library(Hmisc) #correlations
@@ -36,14 +37,14 @@ library(lavaan) #sem
 data <- read_csv("CFApilot1SONA_data_clean.csv", guess_max = 150)
 ```
 
-
-
-Data set - add the details of the datset here-
+Exploratory analysing looking at different types of PEB (private vs. public) using a dataset from SONA Spring 2023. See [DEEP CTN CFA](/post/cfa_sp23/) for descriptives from this sample.
 
 Using Recurring PEB Scale (Brick et al., 2019)
 
 # EFA of PEB
+
 ## Item Correlations
+
 ```{r PEB setup, message=FALSE, warning=FALSE, include=FALSE}
 PEB <-
   data %>% 
@@ -81,7 +82,6 @@ PEB_reverse <- c("Plane personal",
 
 PEB[ ,PEB_reverse] = 6 - PEB[ ,PEB_reverse]
 ```
-
 
 ```{r correlation, echo=FALSE}
 
@@ -159,10 +159,10 @@ fa_table <- function(x, cut) {
 }
 ```
 
-Scree plot suggest ~2-4 factors
-Parallel factor suggests 7 factors
+Scree plot suggest ~2-4 factors Parallel factor suggests 7 factors
 
 ## 2-Factor
+
 ```{r 2 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
 #principal axis (for non-normal data)
 PEB_2 <- 
@@ -187,8 +187,8 @@ PEB_2[["Vaccounted"]] %>%
 #fa.diagram(PEB_2, cex = 1.5, e.size = 0.05, rsize = 0.5, cut = .39, simple = T,marg = c(.5,.5,1,.5), adj = 1)
 ```
 
-
 ## 3-Factor
+
 ```{r 3 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
 #principal axis (for non-normal data)
 PEB_3 <- 
@@ -214,6 +214,7 @@ PEB_3[["Vaccounted"]] %>%
 ```
 
 ## 4-Factor
+
 ```{r 4 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
 #principal axis (for non-normal data)
 PEB_4 <- 
@@ -239,6 +240,7 @@ PEB_4[["Vaccounted"]] %>%
 ```
 
 ## 5-Factor
+
 ```{r 5 factors EFA, echo=FALSE, message=FALSE, warning=FALSE}
 #principal axis (for non-normal data)
 PEB_5 <- 
@@ -283,7 +285,6 @@ fit <- data.frame(Fit, RMSR, TLI, RMSEA, BIC)
 flextable(fit)
 
 ```
-
 
 Four and Five factors have the best fit. Five does not add much to the model
 
@@ -361,6 +362,7 @@ reactable(table_data,
   }
 )
 ```
+
 # DEEP CTN & PEB
 
 ```{r set up for regression, message=FALSE, warning=FALSE, include=FALSE}
@@ -502,6 +504,7 @@ sd(data$diet)
 ```
 
 ## Correlations
+
 ```{r correlations with PEB, echo=FALSE, message=FALSE, warning=FALSE}
 cormatrix <- 
      data %>% 
@@ -562,6 +565,7 @@ validation_plot <-
     coord_equal() +
      theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
 ```{r cor plot, echo=FALSE}
 
 validation_plot
@@ -569,6 +573,7 @@ validation_plot
 ```
 
 ## SEM
+
 ```{r SEM, message=FALSE, warning=FALSE, include=FALSE}
 
 peb_model <-'#regressions

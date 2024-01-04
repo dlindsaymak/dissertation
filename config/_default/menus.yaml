@@ -17,7 +17,7 @@ main:
     url: '#validity'
     weight: 40
   - name: Exploratory
-    url: '/'
+    url: '#exploratory'
     weight: 50
 
 

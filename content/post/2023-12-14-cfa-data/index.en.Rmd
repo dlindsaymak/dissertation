@@ -1,8 +1,8 @@
 ---
-title: CFA Data
+title: 'DEEP CTN CFA (Pilot 1 SONA Spr23)'
 author: Deb Lindsay
-date: '2023-12-14'
-slug: cfa-data
+date: "`r Sys.Date()`"
+slug: CFA_sp23
 categories: 
   - CFA
 tags:
@@ -12,7 +12,7 @@ tags:
 subtitle: ''
 summary: ''
 authors: []
-lastmod: '2023-12-14T16:48:46-08:00'
+lastmod: "`r Sys.Date()`"
 featured: no
 image:
   caption: ''
@@ -49,9 +49,9 @@ CFA1 <-
 
 ```
 
-# Pilot 1 - SONA Spring 2023
+Pilot data collected during the Spring quarter (2023) on SONA students. This was piloting the CFA that will be run on Prolific participants Jan 2024.
 
-## Descriptives {.tabset}
+# Sample Descriptives {.tabset}
 
 ```{r Means, include=TRUE, echo=FALSE,}
 
@@ -67,16 +67,42 @@ m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
 sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
 ```
 
-[**N**]{.underline} = `r paste(n)`
+Total sample size was N = `r paste(n)` . The mean age of sample was `r paste(m_age)`(`r paste(sd_age)`).
 
-Mean [**Age**]{.underline} = `r paste(m_age)`(`r paste(sd_age)`)
+```{r agegraph, echo=FALSE, message=FALSE, warning=FALSE}
 
-Mean [**SES**]{.underline} = `r paste(m_ses)`(`r paste(sd_ses)`)\
-*Scored on a 10 point ladder with 10 being the best off, and 1 being the worst off*
+CFA1 %>% 
+  ggplot() +
+  geom_histogram(aes(age)) +
+  theme_minimal()
 
-Mean [**Political Ideology**]{.underline} = `r paste(m_pol)`(`r paste(sd_pol)`)\
-*Scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal*
+```
 
+Family SES was scored on a 10-point ladder,with 10 being the best off, and 1 being the worst off. The mean SES was `r paste(m_ses)`(`r paste(sd_ses)`).
+
+```{r sesgraph, echo=FALSE, message=FALSE, warning=FALSE}
+
+CFA1 %>% 
+  ggplot() +
+  geom_histogram(aes(SES_family)) +
+  scale_x_continuous(breaks = c(1:10)) +
+  theme_minimal()
+
+```
+
+Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was `r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample skewed more liberal. This is to be expected with our student sample.\
+
+```{r polgraph, echo=FALSE, message=FALSE, warning=FALSE}
+
+CFA1 %>% 
+  ggplot() +
+  geom_histogram(aes(politics_overall)) +
+  scale_x_continuous(breaks = c(1:7)) +
+  theme_minimal()
+
+```
+
+Gender and ethnoracial demographics are reported in the tables below.
 
 ```{r gender table, include=FALSE}
 desc_table <-
@@ -89,16 +115,17 @@ CFA1 %>%
 
 
 ```
+
 ::: row
 ::: {.col-xs-12 .col-md-6}
 ```{r printdesctable, echo=FALSE, message=FALSE, paged.print=FALSE}
  
      flextable(desc_table) %>% 
-  autofit() %>% 
-  set_caption(caption = "Gender")
+  autofit() 
+     #%>% 
+ # set_caption(caption = "Gender")
 
 ```
-
 
 `r officer::run_columnbreak()`
 :::
@@ -109,14 +136,15 @@ CFA1 %>%
      group_by(ethnoracial) %>% 
      summarise(n = length(id)) %>% 
      flextable() %>% 
-  autofit() %>% 
-  set_caption(caption = "Ethnoracial")
+  autofit() #%>% 
+ # set_caption(caption = "Ethnoracial")
 
 ```
 :::
 :::
 
 <!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
+
 ```{r factor data frame, include=FALSE}
 
 #pull out non-binary participants as the n is not big enough to run analyses
@@ -131,16 +159,15 @@ factors <-
 
 ```
 
+------------------------------------------------------------------------
 
+# CFA Assumptions
 
-## CFA Assumptions 
+## Skewness & Kurtosis
 
-### Skewness & Kurtosis
+The closer to 0 for skewness and kurtosis, the closer to a normal distribution. Based on the general guidelines below - Distributions exhibiting skewness and/or kurtosis that exceed these guidelines are considered non-normal." (Hair et al., 2017, p. 61, [Statology Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
 
-The closer to 0 for skewness and kurtosis, the closer to a normal distribution.
-Based on the general guidelines below - Distributions exhibiting skewness and/or kurtosis that exceed these guidelines are considered non-normal." (Hair et al., 2017, p. 61, [Statology Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
-
-#### **Skewness**
+### **Skewness**
 
 Ff the number is greater than +1 (right skewed) or lower than --1 (left skewed), this is an indication of a substantially skewed distribution.
 
@@ -153,10 +180,9 @@ skew <-as.data.frame(round(sort(skewness(factors),
      decreasing = T),2))
 ```
 
-#### **Kurtosis**
+### **Kurtosis**
 
-If the number is greater than +3, the distribution is too peaked.
-Likewise, a kurtosis of less than --3 indicates a distribution that is too flat.
+If the number is greater than +3, the distribution is too peaked. Likewise, a kurtosis of less than --3 indicates a distribution that is too flat.
 
 ::: {style="color:blue"}
 *Three items with slightly high Kurtosis:*
@@ -328,7 +354,7 @@ factors %>%
      scale_x_continuous(breaks = c(1:7))
 ```
 
-### Inter-item Correlation
+## Inter-item Correlation
 
 ::: {style="color: blue"}
 *None are strongly ( \>.75) correlated so no need to remove any*
@@ -366,9 +392,9 @@ factors %>%
   filter(abs(value) != 1)
 ```
 
-### Multivariate normality
+## Multivariate normality
 
-##### Notes on Multivariate Normality
+#### Notes on Multivariate Normality
 
 -   Quantiative test of normality: shapiro is fine for univariate normality test. But I also need to test for multivariate normality. This package is both. Use this.
 -   Can just look at univariate for now, but REPEAT THIS with my final variables to check for multivariate normality
@@ -394,14 +420,14 @@ norm_result <- mvn(data= factors,
 
 ```
 
-###### Multivariate Normality
+##### Multivariate Normality
 
 ```{r Mardia multivariate, results=TRUE, echo=FALSE}
 print(norm_result$multivariateNormality)
 
 ```
 
-###### Univariate Normality
+##### Univariate Normality
 
 ```{r Mardia Univariate, results=TRUE, echo=FALSE}
 print(norm_result$univariateNormality)
@@ -409,14 +435,14 @@ print(norm_result$Descriptives)
 
 ```
 
-###### Norm Descriptives for each item
+##### Norm Descriptives for each item
 
 ```{r Mardia Norm Descriptives, results=TRUE, echo=FALSE}
 print(norm_result$univariateNormality)
 
 ```
 
-### CFA Preparation
+## CFA Preparation
 
 ::: {style="color: blue"}
 *Only items that were decided upon during EFA pilots to be concluded*
@@ -500,7 +526,8 @@ final_items <- data_frame(variable.names(final_factors), Items) %>%
 ```{r Final Items, echo=FALSE, warning=FALSE}
 
 flextable(final_items) %>% 
-     set_table_properties(layout = "autofit")
+     set_table_properties(layout = "autofit") %>% 
+  autofit()
 
 
 ```
@@ -508,9 +535,10 @@ flextable(final_items) %>%
 ##  {.unlisted .unnumbered}
 
 ------------------------------------------------------------------------
-## CFA {.tabset .tabset-fade}
 
-### Four Factor Hierarchical Model
+# CFA {.tabset .tabset-fade}
+
+## Four Factor Hierarchical Model
 
 Testing a structure which includes an overall Connection to Nature factor and four dimensions:
 
@@ -666,7 +694,7 @@ as_tibble(Fit_table_heir) %>%
 #        rsquare=T)
 ```
 
-### Four Factor Model
+## Four Factor Model
 
 Testing a structure which only includes the four dimensions:
 
@@ -823,7 +851,7 @@ as_tibble(Fit_table_4factor) %>%
 
 ```
 
-### Single Factor Model
+## Single Factor Model
 
 Testing a structure which includes only a single overall Connection to Nature factor
 
@@ -962,7 +990,7 @@ as_tibble(Fit_table_flat) %>%
 
 ```
 
-### Comparing Fit of each Model
+## Comparing Fit of each Model
 
 Comparing the fit of the three models
 
@@ -1033,7 +1061,8 @@ as_tibble(Fit_table) %>%
      rename(Model = `c("1 Factor", "4 Factor", "4 Factor Hierarchical")`) %>% 
      flextable() %>% 
   bold(i = 2:3,
-       part = "body")
+       part = "body") %>% 
+  autofit()
 
 ```
 
@@ -1062,3 +1091,4 @@ test_2<-anova(fit_model_flat,
 ```{r model comparison anova, echo=FALSE}
 test_2
 ```
+
