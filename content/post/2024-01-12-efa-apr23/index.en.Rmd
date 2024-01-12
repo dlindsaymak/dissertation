@@ -1,0 +1,121 @@
+---
+title: 'DEEP CTN EFA (Pilot 2 Prolific Apr23)'
+author: Deb Lindsay
+date: "`r Sys.Date()`"
+slug: efa_apr23
+categories:
+  - EFA
+tags:
+  - DEEP CTN
+  - 'Paper 1'
+  - Connection to Nature
+subtitle: ''
+summary: ''
+authors: []
+lastmod: "`r Sys.Date()`"
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+```{r packages, include=FALSE, echo=FALSE, message=FALSE}
+#Make sure you have run the cleaning script first then call it here
+
+library(tidyverse) #base package that runs most functions
+library(Hmisc) #correlations
+library(corrplot) #correlations
+library(DataExplorer) #Data exploration
+library(SmartEDA) #Data exploration
+library(ggpubr) #Data exploration
+# library(dlookr) #Data exploration (not available in this version)
+library(flextable) #tables
+library(corpcor) #Factor analysis
+library(GPArotation) #Factor analysis
+library(psych) #Factor analysis
+library(lavaan)#Factor analysis
+
+```
+
+```{r data, message=FALSE, warning=FALSE, include=FALSE}
+
+p2_prolific <-
+  read_csv("pilot3_data_clean.csv")
+
+items <-
+  read_csv("item names.csv")
+```
+
+# Pilot 2 (Prolific 13 April 2023)
+This is the second pilot study testing the factor structure of the new CTN scale
+
+## Sample Descriptives {.tabset}
+
+```{r Demographics, echo=FALSE}
+
+prolific_p2_demos <-
+p2_prolific %>% 
+  ExpCustomStat(Cvar = "gender", Nvar = "age", stat = c("mean", "count"), gpby = TRUE)
+
+n_prolific <- length(p2_prolific$id)
+m_age_prolific <-round(mean(p2_prolific$age),2)
+sd_age_prolific <-round(sd(p2_prolific$age),2)
+min_age <- min(p2_prolific$age)
+max_age <- max(p2_prolific$age)
+
+
+```
+
+Total sample size was N = `r paste(n_prolific)` . The mean age of sample was `r paste(m_age_prolific)`(`r paste(sd_age_prolific)`). Age range: `r paste(min_age)` - `r paste(max_age)`
+
+```{r agegraph, echo=FALSE, message=FALSE, warning=FALSE}
+
+p2_prolific %>% 
+  ggplot() +
+  geom_histogram(aes(age)) +
+  theme_minimal()
+
+```
+
+Gender and ethnoracial demographics are reported in the tables below.
+
+::: row
+::: {.col-xs-12 .col-md-6}
+
+```{r gender table, include=FALSE}
+desc_table <-
+p2_prolific %>% 
+     group_by(gender) %>% 
+     summarise(n = length(id),
+               `Age(mean)` = round(mean(age, na.rm = T),2),
+              `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
+
+
+
+```
+
+`r officer::run_columnbreak()`
+:::
+
+::: {.col-xs-12 .col-md-6}
+```{r race, echo=FALSE}
+p2_prolific %>% 
+     group_by(`Ethnicity simplified`) %>% 
+     summarise(n = length(id)) %>% 
+     flextable() %>% 
+  autofit() #%>% 
+ # set_caption(caption = "Ethnoracial")
+
+```
+:::
+:::
+
+<!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->

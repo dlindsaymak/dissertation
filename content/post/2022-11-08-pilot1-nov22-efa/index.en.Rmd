@@ -1,0 +1,118 @@
+---
+title: 'DEEP CTN EFA (Pilot 1 Prolific Nov22)'
+author: Deb Lindsay
+date: "`r Sys.Date()`"
+slug: efa_nov22
+categories:
+  - EFA
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: "`r Sys.Date()`"
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+```{r Packages and Functions required, include=FALSE}
+
+library(tidyverse) #base package that runs most functions
+library(Hmisc) #correlations
+library(corrplot) #correlations
+library(DataExplorer) #Data exploration
+library(SmartEDA) #Data exploration
+library(ggpubr) #Data exploration
+# library(dlookr) #Data exploration (not available in this version)
+library(flextable) #tables
+library(corpcor) #Factor analysis
+library(GPArotation) #Factor analysis
+library(psych) #Factor analysis
+library(lavaan)#Factor analysis
+```
+
+```{r loading data, include=FALSE}
+pilot_prolific <-
+  read_csv("pilot1_data_clean.csv")
+
+items <-
+  read_csv("item names.csv")
+
+```
+# Pilot 1 (Prolific 8 November 2022)
+This is the first pilot study testing the factor structure of the new CTN scale
+
+## Sample Descriptives {.tabset}
+```{r Demographics, echo=FALSE}
+pilot_prolific<-
+  pilot_prolific %>% 
+  mutate(age = as.numeric(age))
+
+pilot_prolific$gender <- 
+  factor(pilot_prolific$gender, levels = c("man", "woman", "trans man", "trans woman", "non-binary", "other", "no_answer"))
+
+prolific_demos <-
+pilot_prolific %>% 
+  ExpCustomStat(Cvar = "gender", Nvar = "age", stat = c("mean", "count"), gpby = TRUE)
+
+n_prolific <- length(pilot_prolific$id)
+m_age_prolific <-round(mean(pilot_prolific$age),2)
+sd_age_prolific <-round(sd(pilot_prolific$age),2)
+min_age <- min(pilot_prolific$age)
+max_age <- max(pilot_prolific$age)
+
+```
+
+Total sample size was N = `r paste(n_prolific)` . The mean age of sample was `r paste(m_age_prolific)`(`r paste(sd_age_prolific)`). Age range: `r paste(min_age)` - `r paste(max_age)`
+
+```{r agegraph, echo=FALSE, message=FALSE, warning=FALSE}
+
+pilot_prolific %>% 
+  ggplot() +
+  geom_histogram(aes(age)) +
+  theme_minimal()
+
+```
+
+Gender and ethnoracial demographics are reported in the tables below.
+
+::: row
+::: {.col-xs-12 .col-md-6}
+```{r gender table, include=FALSE}
+desc_table <-
+pilot_prolific %>% 
+     group_by(gender) %>% 
+     summarise(n = length(id),
+               `Age(mean)` = round(mean(age, na.rm = T),2),
+              `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
+
+
+
+```
+`r officer::run_columnbreak()`
+:::
+
+::: {.col-xs-12 .col-md-6}
+```{r race, echo=FALSE}
+pilot_prolific %>% 
+     group_by(`Ethnicity simplified`) %>% 
+     summarise(n = length(id)) %>% 
+     flextable() %>% 
+  autofit() #%>% 
+ # set_caption(caption = "Ethnoracial")
+
+```
+:::
+:::
+
+<!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
+
