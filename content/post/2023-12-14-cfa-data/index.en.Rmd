@@ -92,7 +92,7 @@ CFA1 %>%
 
 ```
 
-Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was `r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample skewed more liberal. This is to be expected with our student sample.\
+Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was `r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample skewed more liberal. This is to be expected with our student sample.
 
 ```{r polgraph, echo=FALSE, message=FALSE, warning=FALSE}
 
