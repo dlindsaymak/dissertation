@@ -1,0 +1,30 @@
+---
+title: 'DEEP CTN EFA Overview '
+author: Deb Lindsay
+date: "`r Sys.Date()`"
+slug: EFA_overview
+categories:
+  - EFA
+tags:
+  - Connection to Nature
+  - DEEP CTN
+  - "Paper 1"
+subtitle: ''
+summary: ''
+authors: []
+lastmod: "`r Sys.Date()`"
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+Set up the overview that I have in the word document here
