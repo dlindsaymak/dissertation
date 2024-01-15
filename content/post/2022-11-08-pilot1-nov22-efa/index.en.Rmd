@@ -161,7 +161,16 @@ pilot_prolific %>%
 # Variables
 
 ```{r list of variables, echo=FALSE}
-items %>% 
+final_items <-
+  items %>% 
+  filter(Item_code != "AIMES_18" &
+           Item_code != "AIMES_19" &
+           Item_code != "AIMES_9" &
+           Item_code != "AIMES_10" &
+           Item_code != "AIMES_11")
+
+
+final_items %>% 
   flextable() %>% 
   autofit()
   
@@ -207,69 +216,153 @@ corrplot(big_corr_prolific$r, method = "shade", type = "upper", tl.cex = .35, tl
 
 ```
 
-## Ceiling and Floor Items
+## Determinant V1
 
-```{r box1, echo=FALSE}
-boxplot(factor_order_prolific[,c(1:7)],
-        las = 2)
+Check on the whether the model will be overdetermined Should aim for a
+determinant \> .00001 (Field et al., 2012)
+
+```{r EFA pre-tests, echo=FALSE}
+
+#find the determinant of our matrix - to see if our matrix is too intercorrelated
+#it may be overdetermined
+determined <- 
+format.pval(det(big_corr_prolific$r), eps = .00001, scientific = F)
+
+
+
 ```
 
-Dispo_34 might have a ceiling effect going on (Listening to the sounds
-of nature makes me relax)
+Our model may be overdetermined. Determinant `r paste(determined)`
 
-```{r box2, echo=FALSE}
-boxplot(factor_order_prolific[,c(8:14)],
-        las = 2)
+With more variables included there is the danger for multi-collinearity.
+First step is to remove items that have a correlation =\>0.8
+
+
+```{r multi-collinear variables, echo=FALSE}
+#Use the correlation matrix that I created earlier - big_corr$r
+
+#correlations over 0.8
+ round(big_corr_prolific$r, 2) %>% 
+  as.data.frame() %>%
+   rownames_to_column %>%
+    gather(colname, value, -rowname) %>%
+    filter(abs(value) >= 0.8 & abs(value) < 1) %>% 
+  flextable() %>% 
+  add_header_lines(values = "Correlations > .80") %>% 
+  autofit()
+ 
+
+
+
+
+
 ```
 
-Celiing effects with \* Dispo_38 (I have mourned (or could imagine
-mourning) the loss of a pet) \* Dispo_39 (It makes me upset to see an
-animal that was hit by a car) \* Dispo_36 (Pets are part of the family)
+```{r high multi-collinear variables, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
-```{r box3, echo=FALSE}
-boxplot(factor_order_prolific[,c(15:21)],
-        las = 2)
+high_cor_prolific <-
+ factor_order_prolific %>% 
+   select(AIMES_15,DISPO_28,AIMES_7, AIMES_6, AIMES_2) 
+
+high_cor_prolific_cor <-
+high_cor_prolific %>% 
+  as.matrix() %>% 
+  rcorr()
+
+
+
+
+aimes2_15_dispo_28 <-
+high_cor_prolific %>% 
+  ggplot()+
+  geom_smooth(aes(x = AIMES_15, y = AIMES_2), method = "lm", colour = "dark green") +
+   geom_smooth(aes(x = DISPO_28, y = AIMES_2), method = "lm", colour = "dark red") +
+  scale_x_continuous(breaks = c(1:7), labs(title = "Other Item (see legend)")) +
+  scale_y_continuous(breaks = c(1:7), labs(title = "I feel right at home when I am in nature")) 
+
+aimes_6_7 <-
+  high_cor_prolific %>% 
+  ggplot() +
+  geom_smooth(aes(x = AIMES_6, y = AIMES_7), method = "lm")+
+  scale_x_continuous(breaks = c(1:7), labs(title = "I think of myself as someone who is very concerned about taking care of nature")) +
+  scale_y_continuous(breaks = c(1:7), labs(title = "Protecting nature is an important part of who I am"))
+
 ```
 
-```{r box4, echo=FALSE}
-boxplot(factor_order_prolific[,c(22:28)],
-        las = 2)
+
+```{r corplot 1, echo=FALSE, warning=FALSE, message=FALSE}
+aimes_6_7
+
 ```
 
-```{r box5, echo=FALSE}
-boxplot(factor_order_prolific[,c(29:35)],
-        las = 2)
+```{r corplot 2, echo=FALSE, message=FALSE, warning=FALSE}
+aimes2_15_dispo_28
+
 ```
 
-```{r box6, echo=FALSE}
-boxplot(factor_order_prolific[,c(36:42)],
-        las = 2)
+Legend
+
+- green = Being in nature allows me to do the things I like doing most 
+- red = My favorite place is in nature
+
+Removed items with high intercollinearity 
+
+```{r Removing items colinearity, echo=FALSE}
+
+filtered_factor_prolific <-
+  factor_order_prolific %>% 
+  select(-AIMES_15,
+         -AIMES_7,
+         -AIMES_2)
+
+#new correlation matrix
+new_cor_matrix_prolific <-
+  filtered_factor_prolific %>% 
+  as.matrix() %>% 
+  rcorr()
+
+
+#is it still overdetermined (accepted level of 0.00001)
+new_det <-
+  format.pval(det(new_cor_matrix_prolific$r), eps = .00001, scientific = F)#it may be overdetermined
+
+
+
 ```
 
-```{r box7, echo=FALSE}
-boxplot(factor_order_prolific[,c(43:48)],
-        las = 2)
+Still may be overdetermined... Determinant = `r paste(new_det)`
+
+Look at other items that might be a problem...
+
+## Shared Variance
+
+Ensuring there is shared variance between items (Bartlett's test of
+sphericity)
+
+```{r bartletts test, echo=FALSE, warning=FALSE, tidy=TRUE}
+
+bartlet <- cortest.bartlett(filtered_factor_prolific) 
+
+bartlet_p <- format.pval(bartlet$p.value, eps = 0.001)
+
 ```
 
-New_9 has a floor effect (I regularly engage in a ritual practice that
-involves nature (e.g., full moon or solstice rituals))
-
-```{r box8, echo=FALSE}
-boxplot(factor_order_prolific[,c(49:53)],
-        las = 2)
-```
+Overall, our data is suitable for factor analysis (p value \<.001 are
+adequate) $\chi^2$=
+`r paste(round(bartlet$chisq,2))`(`r paste(bartlet$df)`) *p* =
+`r paste(bartlet_p)`
 
 ## Proportion of Variance
 
 (KMO test) Measures the amount of variance in items
 
 ```{r KMO test, echo=FALSE, tidy=TRUE}
-kmo <- KMO(r=cor(factor_order_prolific))
+kmo <- KMO(r=cor(filtered_factor_prolific))
 
-new_cols <- c("AIMES_4", "AIMES_1", "AIMES_2", "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
+new_cols <- c("AIMES_4", "AIMES_1", "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
                "DISPO_32", "DISPO_37", "DISPO_38", "DISPO_39", "DISPO_16", "DISPO_36",
-               "AIMES_8", "AIMES_6", "AIMES_5", "AIMES_7",
-                      "AIMES_15", "AIMES_14", "DISPO_28", "DISPO_8", "DISPO_13", "DISPO_18", "DISPO_26","DISPO_33", "DISPO_19", "NEW_4", "DISPO_1", "DISPO_5", "DISPO_6", "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
+               "AIMES_8", "AIMES_6", "AIMES_5", 
+                      "AIMES_14", "DISPO_28", "DISPO_8", "DISPO_13", "DISPO_18", "DISPO_26","DISPO_33", "DISPO_19", "NEW_4", "DISPO_1", "DISPO_5", "DISPO_6", "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
                "DISPO_2", "DISPO_10", "DISPO_11", "DISPO_12", "DISPO_15", "NEW_6", "NEW_7", "NEW_8", "NEW_11", "NEW_12",
                "AIMES_17", "NEW_1", "NEW_9", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12",  "AIMES_20", "NEW_3")
 
@@ -305,100 +398,61 @@ kmo_items %>%
     pet)
 -   DISPO_36 (Pets are part of the family)
 
-## Shared Variance
 
-Ensuring there is shared variance between items (Bartlett's test of
-sphericity)
 
-```{r bartletts test, echo=FALSE, warning=FALSE, tidy=TRUE}
 
-bartlet <- cortest.bartlett(factor_order_prolific) 
+## Ceiling and Floor Items
 
-bartlet_p <- format.pval(bartlet$p.value, eps = 0.001)
-
+```{r box1, echo=FALSE}
+boxplot(factor_order_prolific[,c(1:7)],
+        las = 2)
 ```
 
-Overall, our data is suitable for factor analysis (p value \<.001 are
-adequate) $\chi^2$=
-`r paste(round(bartlet$chisq,2))`(`r paste(bartlet$df)`) *p* =
-`r paste(bartlet_p)`
+Dispo_34 might have a ceiling effect going on (Listening to the sounds
+of nature makes me relax)
 
-## Determinant V1
-
-Check on the whether the model will be overdetermined Should aim for a
-determinant \> .0001
-
-```{r EFA pre-tests, echo=FALSE}
-
-#find the determinant of our matrix - to see if our matrix is too intercorrelated
-#it may be overdetermined
-determined <- 
-format.pval(det(big_corr_prolific$r), eps = .0001, scientific = F)
-
-
-
+```{r box2, echo=FALSE}
+boxplot(factor_order_prolific[,c(8:14)],
+        las = 2)
 ```
 
-Our model may be overdetermined. Determinant `r paste(determined)`
+Celiing effects with 
+- Dispo_38 (I have mourned (or could imagine mourning) the loss of a pet) 
+- Dispo_39 (It makes me upset to see an animal that was hit by a car) 
+- Dispo_36 (Pets are part of the family)
 
-With more variables included there is the danger for multi-collinearity.
-First step is to remove items that have a correlation =\>0.8
-
-```{r multi-collinear variables, echo=FALSE}
-#Use the correlation matrix that I created earlier - big_corr$r
-
-#correlations over 0.8
- round(big_corr_prolific$r, 2) %>% 
-  as.data.frame() %>%
-   rownames_to_column %>%
-    gather(colname, value, -rowname) %>%
-    filter(abs(value) >= 0.8 & abs(value) < 1) %>% 
-  flextable() %>% 
-  add_header_lines(values = "Correlations > .80") %>% 
-  autofit()
- 
- 
-
+```{r box3, echo=FALSE}
+boxplot(factor_order_prolific[,c(15:21)],
+        las = 2)
 ```
 
-```{r high multi-collinear variables, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-high_cor_prolific <-
- factor_order_prolific %>% 
-   select(AIMES_15,DISPO_28,AIMES_7, AIMES_6, AIMES_2) 
-
-aimes2_15_dispo_28 <-
-high_cor_prolific %>% 
-  ggplot()+
-  geom_smooth(aes(x = AIMES_15, y = AIMES_2), method = "lm", colour = "dark green") +
-   geom_smooth(aes(x = DISPO_28, y = AIMES_2), method = "lm", colour = "dark red") +
-  scale_x_continuous(breaks = c(1:7), labs(title = "Other Item (see legend)")) +
-  scale_y_continuous(breaks = c(1:7), labs(title = "I feel right at home when I am in nature")) 
-
-aimes_6_7 <-
-  high_cor_prolific %>% 
-  ggplot() +
-  geom_smooth(aes(x = AIMES_6, y = AIMES_7), method = "lm")+
-  scale_x_continuous(breaks = c(1:7), labs(title = "I think of myself as someone who is very concerned about taking care of nature")) +
-  scale_y_continuous(breaks = c(1:7), labs(title = "Protecting nature is an important part of who I am"))
-
+```{r box4, echo=FALSE}
+boxplot(factor_order_prolific[,c(22:28)],
+        las = 2)
 ```
 
-```{r corplot 1, echo=FALSE, warning=FALSE, message=FALSE}
-aimes_6_7
-
+```{r box5, echo=FALSE}
+boxplot(factor_order_prolific[,c(29:35)],
+        las = 2)
 ```
 
-```{r corplot 2, echo=FALSE, message=FALSE, warning=FALSE}
-aimes2_15_dispo_28
-
+```{r box6, echo=FALSE}
+boxplot(factor_order_prolific[,c(36:42)],
+        las = 2)
 ```
 
-Legend
+```{r box7, echo=FALSE}
+boxplot(factor_order_prolific[,c(43:48)],
+        las = 2)
+```
 
-- green = Being in nature allows me to do the things I like doing most 
-- red = My favorite place is in nature
+New_9 has a floor effect (I regularly engage in a ritual practice that
+involves nature (e.g., full moon or solstice rituals))
 
+```{r box8, echo=FALSE}
+boxplot(factor_order_prolific[,c(49:53)],
+        las = 2)
+```
 
 
 ## Skewedness
@@ -409,6 +463,7 @@ that have a high skewedness Presented in order of suspected dimensions
 ```{r distribution, echo=FALSE, paged.print=TRUE}
 #plot of distribution
 plot_histogram(factor_order_prolific)
+
 
 
 
@@ -435,15 +490,9 @@ graphs)
 -   NEW_9
     -   I regularly engage in a ritual practice that involves nature
         (e.g., full moon or solstice rituals)
--   AIMES_18
-    -   Everything in nature is connected (e.g., animals, plants,
-        humans, water, air, land, fire, etc.)
 
-## Determinant V2
 
-Removed items with high skew, low variability within items, and
-intercollinearity The model is still overdetermined, so we may need to
-do some more work to it
+Removing items of concern...
 
 ```{r Removing items with high skew, echo=FALSE}
 
@@ -453,11 +502,8 @@ filtered_factor_prolific <-
          -DISPO_38,
          -DISPO_39,
          -DISPO_6,
-         -DISPO_36,
-         -AIMES_15,
-         -AIMES_7,
-         -AIMES_2)
-
+         -DISPO_36)
+    
 #new correlation matrix
 new_cor_matrix_prolific <-
   filtered_factor_prolific %>% 
@@ -466,20 +512,23 @@ new_cor_matrix_prolific <-
 
 
 #is it still overdetermined (accepted level of 0.00001)
-new_det <-
-  format.pval(det(new_cor_matrix_prolific$r), eps = .0001, scientific = F)#it may be overdetermined
+new_det2 <-
+  format.pval(det(new_cor_matrix_prolific$r), eps = .00001, scientific = F)#it may be overdetermined
 
 
 
 ```
 
-Still may be overdetermined... Determinant = `r paste(new_det)`
+Still may be overdetermined... Determinant = `r paste(new_det2)`
+But we will look at the EFA anyway
+
+
 
 # Exploratory Factor Analysis
 
 How many factors can we extract
 
-```{r EFA, echo=FALSE}
+```{r EFA, include=FALSE}
 
 eigens_prolific <-
   eigen(cor(filtered_factor_prolific))
@@ -489,52 +538,91 @@ eigens_prolific <-
 
 scree(factor_order_prolific, pc=FALSE)
 
+parallel <- 
 fa.parallel(factor_order_prolific, fa = "fa")
 
 
 
 ```
 
-Scree plot suggest \~3-4 factors Parallel factor suggests 7 factors
-
-# 7 factors
-
-```{r 7 factors EFA, echo=FALSE}
-#principal axis (for non-normal data)
-fit_7_prolific <- 
-  fa(filtered_factor_prolific, 7, rotate="promax", fm= "pa") %>% 
-  fa.sort
-
-phi <- fit_7_prolific$Phi
-
-print(fit_7_prolific)
-print(fit_7_prolific$loadings, cut = .4) 
-
-fa.diagram(fit_7_prolific, Phi = phi, cex = 1.5, e.size = 0.05, rsize = 0.5)
-
+```{r n factors, echo=FALSE}
+scree(factor_order_prolific, pc=FALSE)
+plot(parallel,)
 
 ```
 
-Looking at this factor structure, decided to simplify to a 6 factor to
-see what that looks like.
+
+Scree plot suggest \~3-4 factors Parallel factor suggests `r paste(parallel$nfact)` factors
 
 # 6 Factors
 
-```{r 6 factors efa, echo=FALSE}
+```{r 6 factors efa, include=FALSE}
+#function to build a pretty table
+fa_table <- function(x, cut) {
+  loadings <- fa.sort(x)$loadings %>% round(3)
+  loadings[loadings < cut] <- ""
+  loadings %>%
+    unclass() %>%
+    as.data.frame() %>%
+    rownames_to_column("item") %>%
+    mutate(across(where(is.numeric), round, 3))
+}
+
 
 fit_6_prolific <- 
   fa(filtered_factor_prolific, 6, rotate="promax", fm= "pa") %>% 
   fa.sort
 
+#correlation matrix between factors
 phi <- fit_6_prolific$Phi
 
-print(fit_6_prolific)
-print(fit_6_prolific$loadings, cut = .4) 
+#calculating the omega (better reliabiilty than cronbach alpha)
+omega_6 <- 
+  omega(fit_6_prolific$Phi, 6)
 
-fa.diagram(fit_6_prolific, Phi = phi, cex = 1.5, e.size = 0.05, rsize = 0.5)
+
+omega_row <- list(item = "Omega",
+                  PA1 = round(omega_6$omega.group$total[2], 3), # for factor 1
+                  PA2 = round(omega_6$omega.group$total[3], 3), # for factor 2
+                  PA3 = round(omega_6$omega.group$total[4], 3), # for factor 3
+                  PA4 = round(omega_6$omega.group$total[5], 3), # for factor 4
+                  PA5 = round(omega_6$omega.group$total[6], 3), # for factor 5
+                  PA6 = omega_6$omega.group$total[7] # for factor 6
+                                )
+
+fa_6_table <- 
+  fa_table(fit_6_prolific, cut = .0) %>% 
+  flextable() %>% 
+  add_body(top = F, values = omega_row)
 
 
 ```
+
+
+```{r 6 factor loading table, echo=FALSE}
+fa_6_table %>% 
+  autofit() %>% 
+  color(color = "grey", 
+        i = ~ PA1 <.4, 2) %>% 
+  color(color = "grey", 
+        i = ~ PA2 <.4, 3) %>% 
+  color(color = "grey", 
+        i = ~ PA3 <.4, 4) %>% 
+  color(color = "grey", 
+        i = ~ PA6 <.4, 5) %>% 
+  color(color = "grey", 
+        i = ~ PA4 <.4, 6) %>% 
+  color(color = "grey", 
+        i = ~ PA5 <.4, 7)
+
+
+#PA2 < .4 | PA3 < .4 | PA4 < .4 | PA5 < .4 | PA6 < .4)
+
+
+
+```
+
+
 
 # 5 factors
 
