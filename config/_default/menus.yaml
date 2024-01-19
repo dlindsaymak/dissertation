@@ -8,16 +8,26 @@ main:
     url: '/'
     weight: 10
   - name: EFA
-    url: '#efa'
+    url: '/category/efa'
     weight: 20
+    main:
+      - name: "Pilot 1 Prolific Nov22"
+        url: 'post/efa_nov22'
+        weight: 10
+      - name: "Pilot 2 Prolific Apr23"
+        url: 'post/efa_apr23'
+        weight: 20
+      - name: "Pilot 3 SONA Win/Spr23"
+        url: 'post/efa_sona23'
+        weight: 30
   - name: CFA
-    url: '#cfa'
+    url: '/category/cfa'
     weight: 30
   - name: Validity
-    url: '#validity'
+    url: '/category/validity'
     weight: 40
   - name: Exploratory
-    url: '#exploratory'
+    url: 'category/exploratory'
     weight: 50
 
 

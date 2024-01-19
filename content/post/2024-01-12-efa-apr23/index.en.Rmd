@@ -22,6 +22,9 @@ projects: []
 output:
   blogdown::html_page:
     toc: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE)
@@ -55,11 +58,14 @@ items <-
 ```
 
 # Pilot 2 (Prolific 13 April 2023)
-This is the second pilot study testing the factor structure of the new CTN scale
+This is the second pilot study testing the factor structure of the new CTN scale. Pilot data was collected using Prolific on April 13, 2023.
 
 ## Sample Descriptives {.tabset}
 
 ```{r Demographics, echo=FALSE}
+
+p2_prolific$gender <- 
+  factor(p2_prolific$gender, levels = c("man", "woman", "trans man", "trans woman", "non-binary", "other", "no_answer"))
 
 prolific_p2_demos <-
 p2_prolific %>% 
@@ -71,10 +77,18 @@ sd_age_prolific <-round(sd(p2_prolific$age),2)
 min_age <- min(p2_prolific$age)
 max_age <- max(p2_prolific$age)
 
+m_pol <- paste(round(mean(p2_prolific$politics_1, na.rm = T),2))
+sd_pol <- paste(round(sd(p2_prolific$politics_1, na.rm = T),2))
+
 
 ```
 
 Total sample size was N = `r paste(n_prolific)` . The mean age of sample was `r paste(m_age_prolific)`(`r paste(sd_age_prolific)`). Age range: `r paste(min_age)` - `r paste(max_age)`
+
+Political Ideology was scored on a 7-point Likert scale with 1 = Most
+Conservative and 7 = Most Liberal. The mean political ideology was
+`r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample is skewing
+slightly more left-leaning.
 
 ```{r agegraph, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -85,10 +99,17 @@ p2_prolific %>%
 
 ```
 
-Gender and ethnoracial demographics are reported in the tables below.
+```{r polgraph, echo=FALSE, message=FALSE, warning=FALSE}
 
-::: row
-::: {.col-xs-12 .col-md-6}
+p2_prolific %>% 
+  ggplot() +
+  geom_density(aes(politics_1)) +
+  scale_x_continuous(breaks = c(1:7)) +
+  theme_minimal()
+
+```
+
+Gender and ethnoracial demographics are reported in the tables below.
 
 ```{r gender table, include=FALSE}
 desc_table <-
@@ -102,6 +123,19 @@ p2_prolific %>%
 
 ```
 
+::: row
+::: {.col-xs-12 .col-md-6}
+```{r printdesctable, echo=FALSE, message=FALSE, paged.print=FALSE}
+ 
+     flextable(desc_table) %>% 
+  autofit() 
+     #%>% 
+ # set_caption(caption = "Gender")
+
+```
+
+
+
 `r officer::run_columnbreak()`
 :::
 
@@ -110,6 +144,9 @@ p2_prolific %>%
 p2_prolific %>% 
      group_by(`Ethnicity simplified`) %>% 
      summarise(n = length(id)) %>% 
+  mutate(`Ethnicity simplified` = 
+           if_else(`Ethnicity simplified` == "DATA_EXPIRED", "Unavailable", paste(`Ethnicity simplified`))) %>% 
+  mutate(`Ethnicity simplified` = factor(`Ethnicity simplified`, levels = c("White", "Black", "Asian", "Mixed", "Other", "Unavailable"))) %>% 
      flextable() %>% 
   autofit() #%>% 
  # set_caption(caption = "Ethnoracial")
@@ -119,3 +156,644 @@ p2_prolific %>%
 :::
 
 <!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
+
+# Variables
+
+```{r list of variables, echo=FALSE}
+final_items <-
+  items %>% 
+  filter(Item_code != "AIMES_18" &
+           Item_code != "AIMES_19" &
+           Item_code != "AIMES_9" &
+           Item_code != "AIMES_10" &
+           Item_code != "AIMES_11" &
+           Item_code != "NEW_4" &
+           Item_code != "NEW_3" &
+           Item_code != "DISPO_5" &
+           Item_code != "DISPO_32" &
+           Item_code != "DISPO_26" &
+           Item_code != "AIMES_15" &
+           Item_code != "AIMES_14" &
+           Item_code != "AIMES_7" &
+           Item_code != "AIMES_2" &
+           Item_code != "NEW_9" &
+           Item_code != "DISPO_6" &
+           Item_code != "DISPO_38" &
+           Item_code != "DISPO_39" &
+           Item_code != "DISPO_36")
+
+
+final_items %>% 
+  flextable() %>% 
+  autofit()
+  
+```
+
+# Assumption Checks
+
+## Correlations between variables
+
+Presented in order of suspected dimensions
+
+```{r Description of Variables, echo=FALSE}
+#arrange in order of predicted dimensions
+col_order <- c("AIMES_4", "AIMES_1",  "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
+                "DISPO_37", "DISPO_16", 
+               "AIMES_8", "AIMES_6", "AIMES_5", 
+               "AIMES_9", "AIMES_10", "AIMES_11",
+                "DISPO_28", "DISPO_8", "DISPO_13",  "DISPO_33", "DISPO_19", "DISPO_1",  "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
+               "DISPO_2", "DISPO_10", "DISPO_11", "DISPO_12", "DISPO_15", "NEW_6", "NEW_7", "NEW_8", "NEW_11", "NEW_12",
+               "AIMES_17", "NEW_1", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12", "AIMES_18", "AIMES_19", "AIMES_20")
+
+factor_order_prolific <-
+  p2_prolific[, ..col_order]
+
+factor_order_prolific <-
+  factor_order_prolific %>% 
+  select(-AIMES_18,
+         -AIMES_19,
+         -AIMES_9,
+         -AIMES_10,
+         -AIMES_11)
+
+
+#correlation
+big_corr_prolific <-
+factor_order_prolific %>% 
+  as.matrix() %>% 
+  rcorr()
+
+corrplot(big_corr_prolific$r, method = "shade", type = "upper", tl.cex = .35, tl.col = "black", number.cex = .35,  number.digits = 2, 
+         p.mat = cor.mtest(factor_order_prolific)$p, sig.level = 0.01, insig = "blank")
+
+
+```
+
+## Determinant V1
+
+Check on the whether the model will be overdetermined Should aim for a
+determinant \> .00001 (Field et al., 2012)
+
+```{r EFA pre-tests, echo=FALSE}
+
+#find the determinant of our matrix - to see if our matrix is too intercorrelated
+#it may be overdetermined
+determined <- 
+format.pval(det(big_corr_prolific$r), eps = .00001, scientific = F)
+
+
+
+```
+
+Our model may be overdetermined. Determinant `r paste(determined)`
+
+With more variables included there is the danger for multi-collinearity.
+First step is to remove items that have a correlation =\>0.8
+
+No items had a high colinearity
+
+```{r multi-collinear variables, include=FALSE}
+#Use the correlation matrix that I created earlier - big_corr$r
+
+#correlations over 0.8
+ round(big_corr_prolific$r, 2) %>% 
+  as.data.frame() %>%
+   rownames_to_column %>%
+    gather(colname, value, -rowname) %>%
+        filter(abs(value) < 1) %>% 
+  arrange(desc(value)) %>%  
+  flextable() %>% 
+  add_header_lines(values = "Correlations > .8") %>% 
+  autofit()
+ 
+```
+
+Look at other items that might be a problem...
+
+## Shared Variance
+
+Ensuring there is shared variance between items (Bartlett's test of
+sphericity)
+
+```{r bartletts test, echo=FALSE, warning=FALSE, tidy=TRUE}
+
+bartlet <- cortest.bartlett(factor_order_prolific) 
+
+bartlet_p <- format.pval(bartlet$p.value, eps = 0.001)
+
+```
+
+Overall, our data is suitable for factor analysis (p value \<.001 are
+adequate) $\chi^2$=
+`r paste(round(bartlet$chisq,2))`(`r paste(bartlet$df)`) *p* =
+`r paste(bartlet_p)`
+
+## Proportion of Variance
+
+(KMO test) Measures the amount of variance in items
+
+```{r KMO test, echo=FALSE, tidy=TRUE}
+kmo <- KMO(r=cor(factor_order_prolific))
+kmo_msa <- round(kmo$MSA,3)
+
+new_cols <- c("AIMES_4","AIMES_1", "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34",
+              "DISPO_37", "DISPO_16", "AIMES_8", "AIMES_6", "AIMES_5", "DISPO_28",
+              "DISPO_8", "DISPO_13", "DISPO_33", "DISPO_19", "DISPO_1", "DISPO_20", 
+              "NEW_5", "DISPO_7", "DISPO_23", "DISPO_2", "DISPO_10", "DISPO_11",
+              "DISPO_12", "DISPO_15", "NEW_6", "NEW_7","NEW_8", "NEW_11", "NEW_12",
+              "AIMES_17", "NEW_1", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12", "AIMES_20")
+
+kmo_items <-
+as.matrix(kmo$MSAi) %>% 
+  round(2) %>% 
+  as.data.frame() %>% 
+  add_column(new_cols, .before = "V1") 
+
+colnames(kmo_items) <- c("Item", "KMO")
+
+```
+
+Overall, our data is suitable for factor analysis (overall MSA \> 0.8
+are adequate). Data MSA = `r paste(kmo_msa)`
+
+No single item is also less than .80
+
+```{r kmo concern, echo=FALSE}
+kmo_items %>% 
+    arrange(desc(KMO)) %>% 
+  flextable() %>% 
+  autofit()
+```
+
+## Ceiling and Floor Items
+
+```{r box1, echo=FALSE}
+boxplot(factor_order_prolific[,c(1:8)],
+        las = 2)
+```
+
+```{r box2, echo=FALSE}
+boxplot(factor_order_prolific[,c(9:17)],
+        las = 2)
+```
+
+```{r box3, echo=FALSE}
+boxplot(factor_order_prolific[,c(18:26)],
+        las = 2)
+```
+
+
+```{r box4, echo=FALSE}
+boxplot(factor_order_prolific[,c(27:34)],
+        las = 2)
+```
+
+```{r box5, echo=FALSE}
+boxplot(factor_order_prolific[,c(34:38)],
+        las = 2)
+```
+
+## Skewedness
+
+We can also look at the distribution of variables to remove any items
+that have a high skewedness Presented in order of suspected dimensions
+
+```{r distribution, echo=FALSE, paged.print=TRUE}
+#plot of distribution
+plot_histogram(factor_order_prolific)
+
+```
+
+After looking at these, no items appear to be need to be removed. Even though the model may be overdetermined, we will run the EFA
+
+# Exploratory Factor Analysis
+
+How many factors can we extract
+
+```{r EFA, include=FALSE}
+
+eigens_prolific <-
+  eigen(cor(factor_order_prolific))
+
+# eigens$values
+# uncomment to view the individual eigenvalues
+
+scree(factor_order_prolific, pc=FALSE)
+
+parallel <- 
+fa.parallel(factor_order_prolific, fa = "fa")
+
+
+
+```
+
+```{r n factors, echo=FALSE}
+scree(factor_order_prolific, pc=FALSE)
+plot(parallel,)
+
+```
+Scree plot suggest \~3-4 factors Parallel factor suggests `r paste(parallel$nfact)` factors
+Based on past samples, we will start at 6 factors
+
+# 6 Factors
+
+```{r 6 factors efa, include=FALSE}
+
+fit_6_prolific <- 
+  fa(factor_order_prolific, 6, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+loadings_6 <- fit_6_prolific$loadings
+lambda_6 <- unclass(loadings_6)
+p6 <- nrow(lambda_6)
+factors6 <- ncol(lambda_6)
+
+vx6 <- colSums(loadings_6^2)
+varex6 <- rbind(`SS loadings` = vx6)
+
+if (is.null(attr(loadings_6, "covariance"))) {
+  varex6 <- rbind(varex6, `Proportion Var` = vx6/p6)
+  if (factors6 > 1) 
+    varex6 <- rbind(varex6, `Cumulative Var` = cumsum(vx6/p6))
+}
+
+factor6_var_table <-
+tibble::rownames_to_column(as.data.frame(varex6), "x") %>%  #variance table
+flextable()
+
+cutoff <- 0.01 # (the default for the `print.loadings()` function)
+fx6 <- setNames(lambda_6, attributes(lambda_6)$dimnames[1])
+fx6[abs(lambda_6) < cutoff] <- NA_real_
+fx6 <- as.data.frame(fx6)
+
+factor6_load_table <- fx6 #loadings table
+
+comm_6 <- fit_6_prolific$communality
+cx6 <- setNames(comm_6, attributes(comm_6)$names)
+cx6 <- as.data.frame(cx6)  
+  
+#binding loadings with communalities
+factor6_table <- cbind(fx6, cx6) %>% 
+  rownames_to_column("item") %>% 
+  flextable()
+
+                            
+```
+
+```{r 6 factor loading table, echo=FALSE}
+factor6_table %>% 
+  autofit() %>% 
+  color(color = "grey", 
+        i = ~ PA3 <.4, 2) %>% 
+  color(color = "grey", 
+        i = ~ PA1 <.4, 3) %>% 
+  color(color = "grey", 
+        i = ~ PA2 <.4, 4) %>% 
+  color(color = "grey", 
+        i = ~ PA4 <.4, 5) %>% 
+  color(color = "grey", 
+        i = ~ PA5 <.4, 6) %>% 
+  color(color = "grey", 
+        i = ~ PA6 <.4, 7) %>% 
+  colformat_double(digits = 3)
+
+factor6_var_table %>% 
+  autofit() %>% 
+  colformat_double(digits = 3)
+```
+
+# 5 factors
+
+```{r 5 factors EFA, echo=FALSE}
+#principal axis (for non-normal data)
+fit_5_prolific <- 
+  fa(factor_order_prolific, 5, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+loadings_5 <- fit_5_prolific$loadings
+lambda_5 <- unclass(loadings_5)
+p5 <- nrow(lambda_5)
+factors5 <- ncol(lambda_5)
+
+vx5 <- colSums(loadings_5^2)
+varex5 <- rbind(`SS loadings` = vx5)
+
+if (is.null(attr(loadings_5, "covariance"))) {
+  varex5 <- rbind(varex5, `Proportion Var` = vx5/p5)
+  if (factors5 > 1) 
+    varex5 <- rbind(varex5, `Cumulative Var` = cumsum(vx5/p5))
+}
+
+factor5_var_table <-
+tibble::rownames_to_column(as.data.frame(varex5), "x") %>%  #variance table
+flextable()
+
+cutoff <- 0.01 # (the default for the `print.loadings()` function)
+fx5 <- setNames(lambda_5, attributes(lambda_5)$dimnames[1])
+fx5[abs(lambda_5) < cutoff] <- NA_real_
+fx5 <- as.data.frame(fx5)
+
+factor5_load_table <- fx5 #loadings table
+
+comm_5 <- fit_5_prolific$communality
+cx5 <- setNames(comm_5, attributes(comm_5)$names)
+cx5 <- as.data.frame(cx5)  
+  
+#binding loadings with communalities
+factor5_table <- cbind(fx5, cx5) %>% 
+  rownames_to_column("item") %>% 
+  flextable()
+
+
+```
+
+
+```{r 5 factor loading table, echo=FALSE}
+factor5_table %>% 
+  autofit() %>% 
+  color(color = "grey", 
+        i = ~ PA3 <.4, 2) %>% 
+  color(color = "grey", 
+        i = ~ PA1 <.4, 3) %>% 
+  color(color = "grey", 
+        i = ~ PA2 <.4, 4) %>% 
+  color(color = "grey", 
+        i = ~ PA4 <.4, 5) %>% 
+  color(color = "grey", 
+        i = ~ PA5 <.4, 6) %>% 
+  colformat_double(digits = 3)
+
+
+
+factor5_var_table %>% 
+  autofit() %>% 
+  colformat_double(digits = 3)
+
+
+```
+
+# 4 factors
+
+```{r 4 factors EFA , echo=FALSE}
+
+#principal axis (for non-normal data)
+fit_4_prolific <- 
+  fa(factor_order_prolific, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+loadings_4 <- fit_4_prolific$loadings
+lambda_4 <- unclass(loadings_4)
+p4 <- nrow(lambda_4)
+factors4 <- ncol(lambda_4)
+
+vx4 <- colSums(loadings_4^2)
+varex4 <- rbind(`SS loadings` = vx4)
+
+if (is.null(attr(loadings_4, "covariance"))) {
+  varex4 <- rbind(varex4, `Proportion Var` = vx4/p4)
+  if (factors4 > 1) 
+    varex4 <- rbind(varex4, `Cumulative Var` = cumsum(vx4/p4))
+}
+
+factor4_var_table <-
+tibble::rownames_to_column(as.data.frame(varex4), "x") %>%  #variance table
+flextable()
+
+cutoff <- 0.01 # (the default for the `print.loadings()` function)
+fx4 <- setNames(lambda_4, attributes(lambda_4)$dimnames[1])
+fx4[abs(lambda_4) < cutoff] <- NA_real_
+fx4 <- as.data.frame(fx4)
+
+factor4_load_table <- fx4 #loadings table
+
+comm_4 <- fit_4_prolific$communality
+cx4 <- setNames(comm_4, attributes(comm_4)$names)
+cx4 <- as.data.frame(cx4)  
+  
+#binding loadings with communalities
+factor4_table <- cbind(fx4, cx4) %>% 
+  rownames_to_column("item") %>% 
+  flextable()
+
+
+```
+
+
+```{r 4 factor loading table, echo=FALSE}
+factor4_table %>% 
+  autofit() %>% 
+  color(color = "grey", 
+        i = ~ PA1 <.4, 2) %>% 
+  color(color = "grey", 
+        i = ~ PA3 <.4, 3) %>% 
+  color(color = "grey", 
+        i = ~ PA2 <.4, 4) %>% 
+  color(color = "grey", 
+        i = ~ PA4 <.4, 5) %>% 
+   colformat_double(digits = 3)
+
+
+
+factor4_var_table %>% 
+  autofit() %>% 
+  colformat_double(digits = 3)
+
+
+```
+
+Remove items that cross load and fall under the cut-off of .40
+
+```{r 4 factors simple EFA , echo=FALSE}
+filtered_factor_4_prolific2 <-
+  factor_order_prolific %>% 
+  select(-AIMES_8,
+         -NEW_8,
+        -AIMES_5,
+        -NEW_5,
+        -DISPO_13,
+        -DISPO_8,
+        -NEW_6,
+        -DISPO_20)
+
+#principal axis (for non-normal data)
+fit_4_prolific2 <- 
+  fa(filtered_factor_4_prolific2, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+loadings_4S <- fit_4_prolific2$loadings
+lambda_4S <- unclass(loadings_4S)
+p4S <- nrow(lambda_4S)
+factors4S <- ncol(lambda_4S)
+
+vx4S <- colSums(loadings_4S^2)
+varex4S <- rbind(`SS loadings` = vx4S)
+
+if (is.null(attr(loadings_4S, "covariance"))) {
+  varex4S <- rbind(varex4S, `Proportion Var` = vx4S/p4S)
+  if (factors4S > 1) 
+    varex4S <- rbind(varex4S, `Cumulative Var` = cumsum(vx4S/p4S))
+}
+
+factor4_var_tableS <-
+tibble::rownames_to_column(as.data.frame(varex4S), "x") %>%  #variance table
+flextable()
+
+cutoff <- 0.01 # (the default for the `print.loadings()` function)
+fx4S <- setNames(lambda_4S, attributes(lambda_4S)$dimnames[1])
+fx4S[abs(lambda_4S) < cutoff] <- NA_real_
+fx4S <- as.data.frame(fx4S)
+
+factor4_load_tableS <- fx4S #loadings table
+
+comm_4S <- fit_4_prolific2$communality
+cx4S <- setNames(comm_4S, attributes(comm_4S)$names)
+cx4S <- as.data.frame(cx4S)  
+  
+#binding loadings with communalities
+factor4_tableS <- cbind(fx4S, cx4S) %>% 
+  rownames_to_column("item") %>% 
+  flextable()
+
+
+```
+
+```{r 4 factor SIMP loading table, echo=FALSE}
+factor4_tableS %>% 
+  autofit() %>% 
+  color(color = "grey", 
+        i = ~ PA3 <.4, 2) %>% 
+  color(color = "grey", 
+        i = ~ PA1 <.4, 3) %>% 
+  color(color = "grey", 
+        i = ~ PA2 <.4, 4) %>% 
+  color(color = "grey", 
+        i = ~ PA4 <.4, 5) %>% 
+   colformat_double(digits = 3)
+
+
+
+factor4_var_tableS %>% 
+  autofit() %>% 
+  colformat_double(digits = 3)
+
+
+```
+
+# Fit Indices
+
+Comparing the fit of the three models
+
+[*Sources for fit indices*](https://en.wikipedia.org/wiki/Confirmatory_factor_analysis)
+
+```{r fit indices, include=FALSE}
+# create a table with five columns (RMSR, TLI, RMSEA, BIC + heading)
+# 5 rows (1 for each factor + heading)
+
+#cutoffs:
+# fit_6_prolific
+# fit_5_prolific
+# fit_4_prolific
+# fit_4_prolific2
+
+# (CHI sq + df), (RMSEA + CI), (TLI), (RMSR), (BIC) 
+chi6 <- fit_6_prolific$chi
+df6 <- fit_6_prolific$dof
+rmsea6 <- fit_6_prolific$RMSEA[1]
+rmsea_ciL6 <- fit_6_prolific$RMSEA[2]
+rmsea_ciU6 <- fit_6_prolific$RMSEA[3]
+rmsr6 <- fit_6_prolific$rms
+tli6 <- fit_6_prolific$TLI
+bic6 <- fit_6_prolific$BIC
+
+chi5 <- fit_5_prolific$chi
+df5 <- fit_5_prolific$dof
+rmsea5 <- fit_5_prolific$RMSEA[1]
+rmsea_ciL5 <- fit_5_prolific$RMSEA[2]
+rmsea_ciU5 <- fit_5_prolific$RMSEA[3]
+rmsr5 <- fit_5_prolific$rms
+tli5 <- fit_5_prolific$TLI
+bic5 <- fit_5_prolific$BIC
+
+chi4 <- fit_4_prolific$chi
+df4 <- fit_4_prolific$dof
+rmsea4 <- fit_4_prolific$RMSEA[1]
+rmsea_ciL4 <- fit_4_prolific$RMSEA[2]
+rmsea_ciU4 <- fit_4_prolific$RMSEA[3]
+rmsr4 <- fit_4_prolific$rms
+tli4 <- fit_4_prolific$TLI
+bic4 <- fit_4_prolific$BIC
+
+chi4S <- fit_4_prolific2$chi
+df4S <- fit_4_prolific2$dof
+rmsea4S <- fit_4_prolific2$RMSEA[1]
+rmsea_ciL4S <- fit_4_prolific2$RMSEA[2]
+rmsea_ciU4S <- fit_4_prolific2$RMSEA[3]
+rmsr4S <- fit_4_prolific2$rms
+tli4S <- fit_4_prolific2$TLI
+bic4S <- fit_4_prolific2$BIC
+
+#(CHI sq + df),(RMSEA + CI), (TLI), (RMSR), (BIC) 
+Fit_table <- matrix(c( df6, chi6, rmsea6, rmsea_ciL6, rmsea_ciU6, rmsr6, tli6, bic6,
+                       df5,chi5, rmsea5, rmsea_ciL5, rmsea_ciU5, rmsr5, tli5, bic5,
+                       df4,chi4, rmsea4, rmsea_ciL4, rmsea_ciU4, rmsr4, tli4, bic4,
+                       df4S, chi4S, rmsea4S, rmsea_ciL4S, rmsea_ciU4S, rmsr4S, tli4S, bic4S), 
+                    ncol=8,byrow=TRUE)
+
+#(CHI sq + df),(RMSEA + CI), (TLI), (RMSR), (BIC)
+colnames(Fit_table) <- c( "df","Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "RMSR","TLI",  "BIC")
+rownames(Fit_table) <- c("6-Factor",
+                         "5-Factor", 
+                         "4-Factor",
+                         "4-Factor Simplified")
+Fit_table <- round(Fit_table,3)
+
+```
+
+
+```{r Fit table, echo=FALSE}
+as_tibble(Fit_table) %>% 
+  add_column(c("6-Factor",
+                         "5-Factor", 
+                         "4-Factor",
+                         "4-Factor Simplified"), .before = "df") %>%
+     rename(Model = `c("6-Factor", "5-Factor", "4-Factor", "4-Factor Simplified")`) %>% 
+     flextable()
+```
+
+# Final Assumptions
+
+```{r Assumptions 2, include=FALSE}
+simp4_KMO <- 
+  round(KMO(r=cor(filtered_factor_4_prolific2))$MSA, 3)
+
+
+simp4_bart <-
+  cortest.bartlett(filtered_factor_4_prolific2)
+
+simp4_bart_p <- format.pval(simp4_bart$p.value, eps = 0.001)
+
+
+simp4_big_corr_prolific <-
+filtered_factor_4_prolific2 %>% 
+  as.matrix() %>% 
+  rcorr()
+
+simp4_det <-
+  format.pval(det(simp4_big_corr_prolific$r), eps = .00001, scientific = F)
+
+
+```
+
+Check on the whether the model will be overdetermined Should aim for a
+determinant \> .00001 (Field et al., 2012)
+
+Our model may be overdetermined. Determinant `r paste(simp4_det)`, even though we have removed items with high covariance.
+
+Ensuring there is shared variance between items (Bartlett's test of
+sphericity). Overall, our data is suitable for factor analysis (p value \<.001 are
+adequate) $\chi^2$=
+`r paste(round(simp4_bart$chisq,2))`(`r paste(simp4_bart$df)`) *p* =
+`r paste(simp4_bart_p)`
+
+Overall, our data is suitable for factor analysis (overall MSA \> 0.8
+are adequate). Data MSA = `r paste(simp4_KMO)`
