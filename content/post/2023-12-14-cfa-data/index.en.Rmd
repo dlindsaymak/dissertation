@@ -51,7 +51,7 @@ CFA1 <-
 
 Pilot data collected during the Spring quarter (2023) on SONA students. This was piloting the CFA that will be run on Prolific participants Jan 2024.
 
-# Sample Descriptives {.tabset}
+# Participants {.tabset}
 
 ```{r Means, include=TRUE, echo=FALSE,}
 
@@ -69,9 +69,9 @@ m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
 sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
 ```
 
-Total sample size was N = `r paste(n)` . The mean age of sample was `r paste(m_age)`(`r paste(sd_age)`). Age range: `r paste(min_age)` - `r paste(max_age)`
+394 undergraduate students participated for course credit in May 2023. Thirty-one participants did not complete the study and twenty-two people failed to pass attention checks so their data was not analysed. The final analysis consisted of `r paste(n)` participants with ages ranging from `r paste(min_age)` - `r paste(max_age)` (M = `r paste(m_age)`, `r paste(sd_age)`). The same was primarily made up of females (68.3%) and people of Asian ethnicity (42.1%). See the table below for full descriptives.
 
-```{r agegraph, echo=FALSE, message=FALSE, warning=FALSE}
+```{r agegraph, message=FALSE, warning=FALSE, include=FALSE}
 
 CFA1 %>% 
   ggplot() +
@@ -80,9 +80,7 @@ CFA1 %>%
 
 ```
 
-Family SES was scored on a 10-point ladder,with 10 being the best off, and 1 being the worst off. The mean SES was `r paste(m_ses)`(`r paste(sd_ses)`).
-
-```{r sesgraph, echo=FALSE, message=FALSE, warning=FALSE}
+```{r sesgraph, message=FALSE, warning=FALSE, include=FALSE}
 
 CFA1 %>% 
   ggplot() +
@@ -92,9 +90,7 @@ CFA1 %>%
 
 ```
 
-Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was `r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample skewed more liberal. This is to be expected with our student sample.
-
-```{r polgraph, echo=FALSE, message=FALSE, warning=FALSE}
+```{r polgraph, message=FALSE, warning=FALSE, include=FALSE}
 
 CFA1 %>% 
   ggplot() +
@@ -104,8 +100,6 @@ CFA1 %>%
 
 ```
 
-Gender and ethnoracial demographics are reported in the tables below.
-
 ```{r gender table, include=FALSE}
 desc_table <-
 CFA1 %>% 
@@ -113,8 +107,6 @@ CFA1 %>%
      summarise(n = length(id),
                `Age(mean)` = round(mean(age, na.rm = T),2),
               `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
-
-
 
 ```
 
@@ -147,6 +139,8 @@ CFA1 %>%
 
 <!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
 
+Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was `r paste(m_pol)`(`r paste(sd_pol)`), showing that this sample skewed more liberal. This is to be expected with our student sample. Family SES was scored on a 10-point ladder,with 10 being the best off, and 1 being the worst off. The mean SES was `r paste(m_ses)`(`r paste(sd_ses)`).
+
 ```{r factor data frame, include=FALSE}
 
 #pull out non-binary participants as the n is not big enough to run analyses
@@ -163,204 +157,108 @@ factors <-
 
 ------------------------------------------------------------------------
 
-# CFA Assumptions
+# Method {.tabset}
 
-## Skewness & Kurtosis
+Participants enrolled in undergraduate psychology courses signed up via SONA to participate in a short online study for course credit. They were directed to a Qualtrics survey where they were first prompted with the question “How would you define nature?”. After which they were presented with 30 CTN items. These were the CTN items selected after analysing the results from the EFA studies above. See [ADD LINK HERE] for a full list of CTN items.
 
-The closer to 0 for skewness and kurtosis, the closer to a normal distribution. Based on the general guidelines below - Distributions exhibiting skewness and/or kurtosis that exceed these guidelines are considered non-normal." (Hair et al., 2017, p. 61, [Statology Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
+## Measures
 
-### **Skewness**
+**Convergent Validity**
 
-Ff the number is greater than +1 (right skewed) or lower than --1 (left skewed), this is an indication of a substantially skewed distribution.
+Two pre-existing CTN scales were used to identify convergent validity. The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021). The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree). The EID-R is a 14-item scale designed to measure how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me).
 
-::: {style="color:blue"}
-*No items with high skewness*
-:::
+**Predictive Validity**
+
+[Pro-environmental behavior]{.underline}
+
+Participants completed the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors. This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always).
+
+[Primal Beliefs]{.underline}
+
+Three subscales of the primals beliefs inventory (Clifton et al., 2019) were used to identify worldviews held by participants. The About Me subscale consists of five questions asking how egocentric ones beliefs are (e.g., Whatever is happening around me often feels related to me or something I’ve done). The Hierarchical subscale consists of five questions exploring beliefs about the hierarchical nature of the world (e.g., Things are rarely equal. Most plants and animals, even people, are better or worse than one another.). The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]). All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree).
+
+**Covariates**
+
+[Locus of Control]{.underline}
+
+Participants completed a brief version of the Locus of Control Scale (Sapp & Harrod, 1993) which includes 9 items revealing how much people perceived they have internal control over events (e.g., To a great extent, my life is controlled by accidental happenings). Measured on a Likert scale from 1(strongly disagree) to 7(strongly agree).
+
+[Demographics]{.underline}
+
+Participants also answered several demographics questions (age, gender, political ideology, and social economic status).
+
+# Analysis & Results
+
+## CFA Assumptions
+
+Several assumptions need to be met before running a confirmatory factor analysis. First we checked the skewedness and kurtosis of each item to be included in the CFA. The closer to zero for both skewedness and kurtosis, the closer to a normal distribution. Any items whose distributions exhibited skewness and/or kurtosis that exceed general guidelines were considered non-normal removed from the analysis (Hair et al., 2017, p. 61). [Statology Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
+
+### Skewness
+
+For skewedness, using the skewness function from the Moments package in R ([Komsta & Novemstky, 2015](https://cran.r-project.org/web/packages/moments/moments.pdf)), skewness was calculated for each item. Any item where the number is greater than +1 (right skewed) or lower than -1 (left skewed), this is an indication of a substantially skewed distribution. No items were heavily skewed in this dataset.
 
 ```{r Skewness, include=TRUE, echo=FALSE}
 skew <-as.data.frame(round(sort(skewness(factors),
      decreasing = T),2))
+
+skewed_items <- 
+skew %>% 
+  rename("skew" = "round(sort(skewness(factors), decreasing = T), 2)") %>% 
+  filter(skew > 1 | skew < -1)
+
+if(nrow(skewed_items) == 0)
+{
+  print("No items were heavily skewed")
+}
+
+if(length(skewed_items) != 0)
+{
+  print(skewed_items)
+}  
 ```
 
-### **Kurtosis**
+### Kurtosis
 
-If the number is greater than +3, the distribution is too peaked. Likewise, a kurtosis of less than --3 indicates a distribution that is too flat.
-
-::: {style="color:blue"}
-*Three items with slightly high Kurtosis:*
-
-1.  DEEPCTN_s_5\
-    "**I have great respect for being alive on this earth and part of the universe"**
-
-2.  DEEPCTN_ex_7\
-    "**Listening to the sounds of nature makes me relax"**
-
-3.  DEEPCTN_em_5\
-    "**I am careful to not step on snails"**
-:::
+For Kurtosis, using the kurtosis function from the Moments package in R (Komsta & Novemstky, 2015), kurtosis was calculated for each item. Any item were the number is greater than +3, the distribution is too peaked. Likewise, a kurtosis of less than -3 indicates a distribution that is too flat. Two items have a high kurtosis:
 
 ```{r Kurtosis, include=TRUE, echo=FALSE}
 kurtosis <- as.data.frame(round(sort(kurtosis(factors),
      decreasing=T),2))
+
+kurtosis_items <- 
+kurtosis %>% 
+  rename("kurtosis" = "round(sort(kurtosis(factors), decreasing = T), 2)") %>% 
+  filter(kurtosis > 3 | kurtosis < -3) 
+
+if(nrow(kurtosis_items) == 0)
+{
+  print("No items had high or low kurtosis")
+}
+
+if(nrow(kurtosis_items) != 0)
+{
+  kurtosis_items %>% 
+  rownames_to_column("items") %>% 
+  flextable() %>% 
+  autofit()
+}  
+
 ```
 
-```{r Historgrams, include=FALSE, results='hide', eval=FALSE}
-
-# Deep
-factors %>% 
-     ggplot(aes(DEEPCTN_s_1)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
+```{r kurtosis items, echo=FALSE, message=FALSE, warning=FALSE}
 
 factors %>% 
-     ggplot(aes(DEEPCTN_s_2)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
+  ggplot() +
+  geom_freqpoly(aes(DEEPCTN_s_5),  binwidth = 1, color = "red") +
+  geom_freqpoly(aes(DEEPCTN_ex_7),  binwidth = 1, color = "blue") +
+  xlab(label = "Red = I have great respect for being alive on this earth and part of the universe \n 
+       Blue = Listening to the sounds of nature makes me relax") +
+  scale_x_continuous(breaks = c(1:7), limits = c(1,7))
 
-factors %>% 
-     ggplot(aes(DEEPCTN_s_3)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
 
-factors %>% 
-     ggplot(aes(DEEPCTN_s_4)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_s_5)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_s_7)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_s_8)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_s_9)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_s_10)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-# Experience
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_1)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_2)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_3)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_4)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_5)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_6)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_7)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_ex_8)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-# Emotion
-factors %>% 
-     ggplot(aes(DEEPCTN_emo_1)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_emo_2)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_emo_3)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_emo_4)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_em_5)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_em_6)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-# Presence
-factors %>% 
-     ggplot(aes(DEEPCTN_m_1)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_m_2)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_m_3)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_m_4)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_m_5)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
-
-factors %>% 
-     ggplot(aes(DEEPCTN_m_6)) +
-     geom_histogram() +
-     scale_x_continuous(breaks = c(1:7))
 ```
 
-## Inter-item Correlation
-
-::: {style="color: blue"}
-*None are strongly ( \>.75) correlated so no need to remove any*
-:::
+### Inter-item Correlation
 
 ```{r Correlation Matrix, echo=FALSE, out.width="100%"}
 #see if any item is too strongly correlated
@@ -380,8 +278,9 @@ corrplot(cor(factors),
 
 ```
 
-```{r Correlations Large, include=FALSE}
+```{r Correlations Large, echo=FALSE}
 #pull out too strong ones
+high_cor <- 
 factors %>% 
     select_if(is.numeric) %>%
     cor() %>% 
@@ -392,11 +291,22 @@ factors %>%
     group_by(rowname) %>%
   filter(abs(value) >= 0.75) %>%
   filter(abs(value) != 1)
+
+if(nrow(high_cor) == 0)
+{
+  print("No items were correlated > .75")
+}
+
+if(nrow(high_cor) != 0)
+{
+  print(high_cor)
+}  
+
 ```
 
-## Multivariate normality
+### Multivariate normality
 
-#### Notes on Multivariate Normality
+##### Notes on Multivariate Normality
 
 -   Quantiative test of normality: shapiro is fine for univariate normality test. But I also need to test for multivariate normality. This package is both. Use this.
 -   Can just look at univariate for now, but REPEAT THIS with my final variables to check for multivariate normality
@@ -406,11 +316,9 @@ factors %>%
     -   [How to perform multivariate normality tests in R](https://www.statology.org/multivariate-normality-test-r/)
     -   [How to transform data in R](https://www.statology.org/transform-data-in-r/)
 
-::: {style="color: blue"}
-*Using the Mardia Test of multivariate AND univariate normality. Mardia test shows that my data is [**not normal**]{.underline}. This indicates that I need to use a rotation method that is robust to non-normal data.*
-:::
+A Mardia Test of multivariate normality from the MVN package in R ([Korkmaz et al., 2021](https://cran.r-project.org/web/packages/MVN/vignettes/MVN.html)) indicated that this data is not normal, suggesting that a rotation-method that is robust to non-normal data should be used.
 
-```{r Mardia Test, echo=FALSE}
+```{r Mardia Test, include=FALSE}
 #this tells you multivariate normality of all the items AND univariate normality of each item
 norm_result <- mvn(data= factors, 
     mvnTest="mardia",  
@@ -422,29 +330,41 @@ norm_result <- mvn(data= factors,
 
 ```
 
-##### Multivariate Normality
+###### Multivariate Normality
 
 ```{r Mardia multivariate, results=TRUE, echo=FALSE}
-print(norm_result$multivariateNormality)
+norms <- 
+norm_result$multivariateNormality 
+
+norms <-
+norms %>% 
+ rename(p = `p value`) %>% 
+  mutate(p = format.pval(as.numeric(as.character(p)), eps = .001,
+                         scientific = F)) %>% 
+  mutate(Statistic = round(as.numeric(as.character(Statistic)),2)) %>% 
+  flextable() %>% 
+  autofit()
+
+norms
 
 ```
 
-##### Univariate Normality
+###### Univariate Normality
 
 ```{r Mardia Univariate, results=TRUE, echo=FALSE}
 print(norm_result$univariateNormality)
-print(norm_result$Descriptives)
+
 
 ```
 
-##### Norm Descriptives for each item
+###### Norm Descriptives for each item
 
 ```{r Mardia Norm Descriptives, results=TRUE, echo=FALSE}
 print(norm_result$univariateNormality)
 
 ```
 
-## CFA Preparation
+### CFA Preparation
 
 ::: {style="color: blue"}
 *Only items that were decided upon during EFA pilots to be concluded*
@@ -538,9 +458,9 @@ flextable(final_items) %>%
 
 ------------------------------------------------------------------------
 
-# CFA {.tabset .tabset-fade}
+## CFA {.tabset .tabset-fade}
 
-## Four Factor Hierarchical Model
+### Four Factor Hierarchical Model
 
 Testing a structure which includes an overall Connection to Nature factor and four dimensions:
 
@@ -696,7 +616,7 @@ as_tibble(Fit_table_heir) %>%
 #        rsquare=T)
 ```
 
-## Four Factor Model
+### Four Factor Model
 
 Testing a structure which only includes the four dimensions:
 
@@ -853,7 +773,7 @@ as_tibble(Fit_table_4factor) %>%
 
 ```
 
-## Single Factor Model
+### Single Factor Model
 
 Testing a structure which includes only a single overall Connection to Nature factor
 
@@ -992,7 +912,7 @@ as_tibble(Fit_table_flat) %>%
 
 ```
 
-## Comparing Fit of each Model
+### Comparing Fit of each Model
 
 Comparing the fit of the three models
 
@@ -1093,4 +1013,3 @@ test_2<-anova(fit_model_flat,
 ```{r model comparison anova, echo=FALSE}
 test_2
 ```
-

@@ -3,15 +3,67 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>/categories/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>/tag/connection-to-nature/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>/tag/deep-ctn/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/efa_nov22/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/efa_apr23/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/efa_sona23/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/category/efa/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/tag/paper-1/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/tags/</loc>
+    <lastmod>2024-01-19T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/efa_overview/</loc>
+    <lastmod>2024-01-12T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/category/cfa/</loc>
+    <lastmod>2023-12-14T16:48:46-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/cfa_sp23/</loc>
+    <lastmod>2023-12-14T16:48:46-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/post/peb_validity_sp23/</loc>
+    <lastmod>2024-01-04T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/tag/pro-environmental-behavior/</loc>
+    <lastmod>2024-01-04T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>/category/validity/</loc>
+    <lastmod>2024-01-04T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>/talk/example-talk/</loc>
@@ -26,36 +78,8 @@
     <lastmod>2023-12-15T09:43:36-08:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
-    <loc>/post/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/tag/pro-environmental-behavior/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
     <loc>/event/</loc>
     <lastmod>2023-12-15T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/tags/</loc>
-    <lastmod>2023-12-15T09:43:36-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/category/cfa/</loc>
-    <lastmod>2023-12-14T16:48:46-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/post/cfa-data/</loc>
-    <lastmod>2023-12-14T16:48:46-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/tag/paper-1/</loc>
-    <lastmod>2023-12-14T16:48:46-08:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/post/blog-with-jupyter/</loc>
-    <lastmod>2023-11-04T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>/</loc>
@@ -100,10 +124,6 @@
   </url><url>
     <loc>/tag/regression/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>/post/writing-technical-content/</loc>
-    <lastmod>2019-07-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>/publication/preprint/</loc>

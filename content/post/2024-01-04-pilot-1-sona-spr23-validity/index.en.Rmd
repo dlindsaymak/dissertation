@@ -23,6 +23,9 @@ projects: []
 output:
   blogdown::html_page:
     toc: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -122,9 +125,20 @@ val_data <-
 
 ```
 
-Pilot data collected during the Spring quarter (2023) on SONA students. This was piloting the CFA that will be run on Prolific participants Jan 2024. See [DEEP CTN CFA](/post/cfa_sp23/) for descriptives from this sample.
+Pilot data collected during the Spring quarter (2023) on SONA students.
+This was piloting the CFA that will be run on Prolific participants Jan
+2024. See [DEEP CTN CFA](/post/cfa_sp23/) for descriptives from this
+sample.
 
 # Convergent Validity
+
+We assessed the convergent validity of the new DEEP CTN scale, that is
+how closely our new measure is related to other established measures of
+the same construct. We tested this by looking at the zero order
+correlation between our new measure and its subscales and two
+established measures: The Connectedness to Nature Scale (CNS - Mayer &
+Franz, 2004) and the Environmental Identity Scale revised (EID-R -
+Clayton et al., 2021)
 
 ```{r Validation, include=FALSE}
 
@@ -241,17 +255,17 @@ print(validation_plot)
 
 # Predictive Validity
 
-::: {style="color: blue"}
-*Linear regression model where dimensions of the DEEP CTN scale were entered simultaneously to predict PEB.*
+We assessed the predictive validity of the new DEEP CTN scale (i.e., how
+well our measure can predict participant scores on two theoretically
+related constructs). The “gold standard” for predictive validity of CTN
+measures is how well it predicts pro-environmental behavior (PEB)
+(Clayton, 2003; Clayton et al., 2021; Mayer & Frantz, 2004; Tam, 2013).
+A zero-order correlation found moderate correlations between PEB and the
+new subscales of the DEEP CTN scale.
 
-*Unique variance explained:*
-
--   *Deep CTN: 9%*
--   *Emotional CTN: 7%*
--   *Presence CTN: 7%*
-
-*Note: because overall CTN was highly intercorrelated with Deep and Emotional, it was left out and only the four dimensions were included.*
-:::
+A linear regression with only the subscales of CTN predicting PEB showed
+that Deep, Emotional, and Presence were adequate to predcict PEB, but
+not Experiential.
 
 ```{r linear regression with only dimensions predicting PEB, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -371,17 +385,19 @@ plot_model_dim_only
 
 # Incremental Validity
 
-::: {style="color: blue"}
-*Linear regression model where dimensions of the DEEP CTN scale and the existing CTN measures (CNS and EIDR) were entered simultaneously to predict PEB.*
+We explored if the DEEP CTN scale and its facets would perform above and
+beyond existing CTN scales (i.e., CNS and EID-R) when predicting PEB. A
+linear regression model was run, which included the dimensions of the
+DEEP CTN scale and the existing CTN measures (CNS and EIDR) were entered
+simultaneously to predict PEB. Note that because overall CTN was highly
+intercorrelated with Deep and Emotional, it was left out and only the
+four dimensions were included.
 
-*Unique variance explained:*
-
--   *Deep CTN: became NS*
--   *Emotional CTN: 6% (less 1%)*
--   *Presence CTN: 6% (less 1%)*
-
-*Note: because overall CTN was highly intercorrelated with Deep and Emotional, it was left out and only the four dimensions were included.*
-:::
+We found that the Emotional and Presence subscales remained significant
+predictors when existing measures of CTN were entered into the model.
+The Deep subscale was no longer a significant predictor. Both our
+subscales were of equal predictive value compared to the existing
+measures.
 
 ```{r predictive validity PEB,include=FALSE, warning=FALSE}
 
@@ -509,31 +525,37 @@ plot_model_peb
 
 # Robustness
 
-Covariates tested on the basis of past research finding relationships between them and PEB
+We also tested the robustness of our new DEEP CTN scale, by testing if
+the DEEP CTN scale and its facets are significant predictors of PEB
+after controlling for known covariates of these outcomes: political
+ideology, gender, and socio-economic status (SES). We fist inspected a
+zero order correlation to identify which covariates should be included.
+Including any variable that:
 
--   Primal Beliefs - Everything is Connected
--   Politics (more liberal = more PEB)
--   Gender (female more likely to engage in PEB)
--   SES (higher SES more likely to engage in PEB)
--   Locus of Control (more locus of control = more PEB)
+1.  strongly correlated with PEB AND
 
-[*Note: other covariates may be included based on a zero-order Spearman correlation matrix that includes all variables in the study. If a variable is...*]{style="color: red"}
+2.  weakly correlated with the Deep CTN Scale may reduce variance in the
+    dependent variable and therefore enhance the likelihood of seeing
+    significant effects of the DEEP CTN scale.
 
-a.  [*strongly correlated with the any of the dependent variable cited in Prediction 4 above AND*]{style="color: red"}
-b.  [*weakly correlated with the Deep CTN Scale*]{style="color: red"}
+Further, if an additional variable is…
 
-[*...its inclusion in the model will reduce variance in the dependent variable and therefore enhance the likelihood of seeing significant effects of the state-FFMQ. Further, if an additional variable is...*]{style="color: red"}
+1.  strongly correlated with BOTH PEB AND
 
-c.  [*strongly correlated with BOTH any DV (in Prediction 4 above) AND*]{style="color: red"}
-d.  [*the Deep CTN Scale,*]{style="color: red"}
+2.  the Deep CTN Scale,
 
-[*...its inclusion in the model will address potential mediating effects regarding the relationship between the Deep CTN Scale and a DV of interest. In either case this would suggest it's important to include as a covariate.*]{style="color: red"}
+its inclusion in the model will address potential mediating effects
+regarding the relationship between the Deep CTN Scale and a DV of
+interest. In either case this would suggest it’s important to include as
+a covariate.
 
-These include
+This resulted in including the following covariates:
 
--   Politics (r = .19\*\* with PEB & r = .18\*\* to .23\*\* with DEEP CTN dimensions)
+-   Politics (r = .19\*\* with PEB & r = .18\*\* to .23\*\* with DEEP
+    CTN dimensions)
 
--   Primal Beliefs - The world is interconnect (r = .21\*\* with PEB & r = .22\*\* to .38\*\* with DEEP CTN dimensions)
+-   Primal Beliefs - The world is interconnect (r = .21\*\* with PEB & r
+    = .22\*\* to .38\*\* with DEEP CTN dimensions)
 
 ```{r Robustness Covariates, echo=FALSE, include=FALSE}
 
@@ -597,19 +619,11 @@ robustness_plot <-
 print(robustness_plot)
 ```
 
-::: {style="color: blue"}
-*Linear regression model where dimensions of the DEEP CTN scale and existing CTN measures (CNS and EIDR) were entered simultaneously at Step 1 to predict PEB. Then at Step 2 covariates (Primal beliefs - connectedness and politics) were added.*
+A multiple linear regression model where dimensions of the DEEP CTN scale and existing CTN measures (CNS and EIDR) and the covariates (politics & primal belief interconnectedness) were entered simultaneously to predict PEB is reported in the table below.
 
-*Unique variance explained at Step 2 (after controlling for covariates)*
 
--   *Emotional CTN: 5% (less 1%)*
--   *Presence CTN: 5% (less 1%)*
--   *CNS: 5% (but CI included 0)*
+By adding the covariates, both Emotional and Prescence subscales remained significant predictors of PEB
 
-*Adding covariates did not improve the fit of the model*
-
-*Note: because overall CTN was highly intercorrelated with Deep and Emotional, it was left out and only the four dimensions were included.*
-:::
 
 ```{r Robustness Existing measures, echo=FALSE, include=FALSE, warning=FALSE}
 #dummycode gender
@@ -733,7 +747,8 @@ plot_model_robustPEB
 
 ## Comparing Incremental and Robust models
 
-Adding robust variables did not improve the fit of the model above the variables in the incremental validity model
+Adding robust variables did not improve the fit of the model above the
+variables in the incremental validity model
 
 ```{r robust anova table, echo=FALSE, message=FALSE, warning=FALSE}
 #Compare models
