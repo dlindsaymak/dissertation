@@ -10,25 +10,38 @@ main:
   - name: EFA
     url: '/category/efa'
     weight: 20
-    main:
-      - name: "Pilot 1 Prolific Nov22"
-        url: 'post/efa_nov22'
-        weight: 10
-      - name: "Pilot 2 Prolific Apr23"
-        url: 'post/efa_apr23'
-        weight: 20
-      - name: "Pilot 3 SONA Win/Spr23"
-        url: 'post/efa_sona23'
-        weight: 30
+    identifier: efa
+  - name: Pilot 1 Nov22
+    parent: efa
+    url: '/post/efa_nov22'
+    weight: 10
+  - name: Pilot 2 Apr23
+    parent: efa
+    url: '/post/efa_apr23'
+    weight: 20
+  - name: Pilot 3 Win/Spr23
+    parent: efa
+    url: '/post/efa_sona23'
+    weight: 30
+  - name: EFA Overview
+    parent: efa
+    url: '/post/efa_overview'
+    weight: 40
   - name: CFA
     url: '/category/cfa'
     weight: 30
-  - name: Validity
-    url: '/category/validity'
-    weight: 40
+    identifier: cfa
+  - name: Pilot 1 Spr23 CFA
+    parent: cfa
+    url: '/post/cfa_spr23'
+    weight: 10
+  - name: Pilot 1 Spr23 Validity
+    parent: cfa
+    url: '/post/peb_validity_spr23'
+    weight: 20 
   - name: Exploratory
     url: 'category/exploratory'
-    weight: 50
+    weight: 40
 
 
 
