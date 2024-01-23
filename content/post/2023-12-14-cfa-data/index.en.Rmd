@@ -69,7 +69,7 @@ m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
 sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
 ```
 
-394 undergraduate students participated for course credit in May 2023. Thirty-one participants did not complete the study and twenty-two people failed to pass attention checks so their data was not analysed. The final analysis consisted of `r paste(n)` participants with ages ranging from `r paste(min_age)` - `r paste(max_age)` (M = `r paste(m_age)`, `r paste(sd_age)`). The same was primarily made up of females (68.3%) and people of Asian ethnicity (42.1%). See the table below for full descriptives.
+394 undergraduate students participated for course credit in May 2023. Thirty-one participants did not complete the study and twenty-two people failed to pass attention checks so their data was not analysed. The final analysis consisted of `r paste(n)` participants with ages ranging from `r paste(min_age)` - `r paste(max_age)` (M = `r paste(m_age)`, `r paste(sd_age)`). The sample was primarily made up of females (68.3%) and people of Asian ethnicity (42.1%). See the table below for full descriptives.
 
 ```{r agegraph, message=FALSE, warning=FALSE, include=FALSE}
 

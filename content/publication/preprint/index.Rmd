@@ -3,7 +3,7 @@ abstract: TBA
 authors:
 - Debra Lindsay
 - Karen Dobkins
-date: "2024-01-23"
+date: "`r Sys.Date()`"
 doi: ""
 featured: false
 projects:
@@ -12,7 +12,7 @@ publication: ""
 publication_short: ""
 publication_types:
 - article
-publishDate: "2024-01-23"
+publishDate: "`r Sys.Date()`"
 show_date: false
 tags:
 - Connection to Nature
@@ -23,9 +23,17 @@ links:
     url: "https://osf.io/5xbvp/" 
 ---
 
+```{r Packages and Functions required, include=FALSE}
 
+## Add required packages here
 
+```
 
+```{r loading data, include=FALSE}
+
+## load data here
+
+```
 
 # Introduction
 
@@ -33,7 +41,25 @@ links:
 
 # Methods
 
+```{r participants, eval=FALSE, include=FALSE}
 
+# update code relevant to this sample
+# change eval=TRUE
+
+n <- paste(round((length(CFA1$id)), 2))
+     
+m_age <- paste(round(mean(CFA1$age, na.rm = T),2))
+sd_age <- paste(round(sd(CFA1$age, na.rm = T),2))
+min_age <- min(CFA1$age, na.rm = T)
+max_age <- max(CFA1$age, na.rm = T)
+
+m_ses <- paste(round(mean(CFA1$SES_family, na.rm = T),2))
+sd_ses <- paste(round(sd(CFA1$SES_family, na.rm = T),2))
+
+m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
+sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
+
+```
 
 ## Power Analysis
 
@@ -49,17 +75,50 @@ XX participants were recruited from Prolific, an online research platform, in Ja
 
 Table 1. Descriptive Statistics [update R code to generate table]
 
+```{r gender table, eval=FALSE, include=FALSE}
 
+# update code relevant to this sample
+# change eval=TRUE
+
+desc_table <-
+CFA1 %>% 
+     group_by(gender) %>% 
+     summarise(n = length(id),
+               `Age(mean)` = round(mean(age, na.rm = T),2),
+              `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
+
+```
 
 ::: row
 ::: {.col-xs-12 .col-md-6}
+```{r printdesctable, eval=FALSE, message=FALSE, include=FALSE, paged.print=FALSE}
 
+# update code relevant to this sample
+# change eval=TRUE include=TRUE
+ 
+     flextable(desc_table) %>% 
+  autofit() 
+     #%>% 
+ # set_caption(caption = "Gender")
 
+```
 
+`r officer::run_columnbreak()`
 :::
 
 ::: {.col-xs-12 .col-md-6}
+```{r race, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE include=TRUE
 
+CFA1 %>% 
+     group_by(ethnoracial) %>% 
+     summarise(n = length(id)) %>% 
+     flextable() %>% 
+  autofit() #%>% 
+ # set_caption(caption = "Ethnoracial")
+
+```
 :::
 :::
 
@@ -127,11 +186,18 @@ See Supplementary Documents for details of these pilot studies.
 
 Table 2. DEEP CTN Scale Items
 
+```{r final items, eval=FALSE, include=FALSE}
 
+# code to display a table of all the items used in the CFA
+# change eval=TRUE include=TRUE
+```
 
 ### Convergent Validity measures
 
-
+```{r cronbachs alpha CTN measures, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE 
+```
 
 Two pre-existing CTN scales were used to identify convergent validity. The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021). The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnected one’s self is to nature. It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree), Cronbach's Alpha = (r paste(alpha_CNS)). The EID-R is a 14-item scale designed to measure how interneconnected one’s self is to nature. It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me), Cronbach's Alpha = ((r paste(alpha_EIDR)).
 
@@ -139,13 +205,19 @@ Two pre-existing CTN scales were used to identify convergent validity. The Conne
 
 #### Pro-environmental behavior
 
-
+```{r cronbachs alpha PEB, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE 
+```
 
 Participants completed a modified version of the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors. Modifications were made to clarify existing items (to view the scale used in this study view Supplementary docs in the OSF project). This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always), Cronbach's Alpha = ((r paste(alpha_PEB)`).
 
 #### Psychological Well-being
 
-
+```{r cronbachs alpha WB, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE 
+```
 
 A single measure of psychological well-being measure was created by aggregating scores from three established measures of well-being: 1) the Ryff Well-being Scale (Ryff & Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick, 1997), Cronbach's Alpha = ((r paste(alpha_WB)).
 
@@ -153,13 +225,19 @@ A single measure of psychological well-being measure was created by aggregating 
 
 #### Interconnected Beliefs
 
-
+```{r cronbachs alpha Primals, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE 
+```
 
 Participants were also asked about their belief that the world is interconnected using the Interconnected subscale of the Primal Beliefs Inventory (Clifton et al., 2019). This was included as a covariate as pilot data showed this measure is correlated to both DEEP CTN and PEB (See supplementary documents for full analysis of the pilot data). The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]). All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree), Cronbach's Alpha = (r paste(alpha_primal)).
 
 #### Demographics
 
-
+```{r cronbachs alpha pol, eval=FALSE, include=FALSE}
+# update code relevant to this sample
+# change eval=TRUE 
+```
 
 Participants also answered several demographics questions (age, gender, political ideology, and social economic status). Political ideology was a composite of three items asking about overall political ideology, economic political ideology, and social political ideology measured on a Likert scale ranging from 1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative), Cronbach's Alpha = ((r paste(alpha_pol)). The Subjective Socio-economic Ladder (Adler et al., 2000) was used to measure SES. Participant's mark where they believe they are on the ladder, with 10 representing people who are the best off, and 1 representing people who are the worst off.
 

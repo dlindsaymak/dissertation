@@ -33,7 +33,7 @@ main:
     identifier: cfa
   - name: Pilot 1 Spr23 CFA
     parent: cfa
-    url: '/post/cfa_spr23'
+    url: '/post/cfa_sp23'
     weight: 10
   - name: Pilot 1 Spr23 Validity
     parent: cfa
@@ -42,6 +42,8 @@ main:
   - name: Exploratory
     url: 'category/exploratory'
     weight: 40
+  - name: Papers
+    url: '/publication'
 
 
 

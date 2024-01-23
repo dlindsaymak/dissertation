@@ -39,6 +39,8 @@ url_project: ""
 url_slides: ""
 url_source: ""
 url_video: ""
+_build:
+  list: never
 ---
 
 {{% callout note %}}

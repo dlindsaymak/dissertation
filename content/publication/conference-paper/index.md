@@ -39,6 +39,8 @@ url_project: ""
 url_slides: ""
 url_source: https://github.com/HugoBlox/hugo-blox-builder
 url_video: https://youtube.com
+_build:
+  list: never
 ---
 
 {{% callout note %}}
