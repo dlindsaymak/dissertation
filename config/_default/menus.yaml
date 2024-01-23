@@ -44,6 +44,7 @@ main:
     weight: 40
   - name: Papers
     url: '/publication'
+    weight: 50
 
 
 
