@@ -73,7 +73,7 @@ sections:
       tag: ""
     offset: 0
     order: desc
-    subtitle: ""
+    subtitle: "Pilot study using SONA participants to run a confirmatory factor analysis on the new DEEP CTN Items identified in the EFA studies above"
     text: ""
     title: CFA
   design:
@@ -94,7 +94,7 @@ sections:
       tag: ""
     offset: 0
     order: desc
-    subtitle: ""
+    subtitle: "Two pilot studies using SONA participants testing the validity of the new DEEP CTN scale before pre-registering a general population study on Prolific"
     text: ""
     title: Validity
   design:
@@ -115,7 +115,7 @@ sections:
       tag: ""
     offset: 0
     order: desc
-    subtitle: ""
+    subtitle: "Messing around with existing data to see what I can find"
     text: ""
     title: Exploratory
   design:

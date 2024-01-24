@@ -3271,7 +3271,7 @@ input[type="button"].btn-block {
 .navbar-light .navbar-brand {
   color: #fff; }
   .navbar-light .navbar-brand:hover, .navbar-light .navbar-brand:focus {
-    color: #DBFF76; }
+    color: #C0EAE2; }
 
 .navbar-light .navbar-nav .nav-link {
   color: #fff; }
@@ -3284,7 +3284,7 @@ input[type="button"].btn-block {
 .navbar-light .navbar-nav .active > .nav-link,
 .navbar-light .navbar-nav .nav-link.show,
 .navbar-light .navbar-nav .nav-link.active {
-  color: #DBFF76; }
+  color: #C0EAE2; }
 
 .navbar-light .navbar-toggler {
   color: #fff;
@@ -3296,9 +3296,9 @@ input[type="button"].btn-block {
 .navbar-light .navbar-text {
   color: #fff; }
   .navbar-light .navbar-text a {
-    color: #DBFF76; }
+    color: #C0EAE2; }
     .navbar-light .navbar-text a:hover, .navbar-light .navbar-text a:focus {
-      color: #DBFF76; }
+      color: #C0EAE2; }
 
 .navbar-dark .navbar-brand {
   color: #fff; }
@@ -8186,13 +8186,13 @@ a.summary-link {
         color: #fff; }
       .navbar .navbar-nav .nav-link.active {
         font-weight: bold !important;
-        color: #DBFF76 !important; }
+        color: #C0EAE2 !important; }
   .navbar .dropdown-menu {
     font-size: 13.86px; }
   .navbar .dropdown-item.active,
   .navbar .dropdown-item-active {
     font-weight: bold;
-    color: #DBFF76 !important; }
+    color: #C0EAE2 !important; }
 
 .dark .navbar {
   background: #282a36;
