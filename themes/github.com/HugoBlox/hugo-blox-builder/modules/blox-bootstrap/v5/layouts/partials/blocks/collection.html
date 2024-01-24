@@ -77,7 +77,7 @@
 
 {{ $columns := $block.design.columns | default "2" }}
 
-<div class="col-12 {{if eq $columns "2"}}col-lg-8{{end}}">
+<div class="col-12 {{if eq $columns "2"}}col-lg-6{{end}}">
 
   {{ with $block.content.text }}{{ . | emojify | $page.RenderString }}{{ end }}
 

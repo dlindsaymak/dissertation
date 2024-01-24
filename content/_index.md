@@ -52,12 +52,12 @@ sections:
       tag: ""
     offset: 0
     order: desc
-    subtitle: ""
+    subtitle: "Three pilot studies conducting exploratory factor analysis on the new DEEP Connection to Nature Scale"
     text: ""
     title: EFA
   design:
     columns: "2"
-    view: compact
+    view: showcase
   id: efa
 - block: collection
   content:
@@ -78,7 +78,7 @@ sections:
     title: CFA
   design:
     columns: "2"
-    view: compact
+    view: showcase
   id: cfa
 - block: collection
   content:
@@ -99,7 +99,7 @@ sections:
     title: Validity
   design:
     columns: "2"
-    view: compact
+    view: showcase
   id: validity
 - block: collection
   content:
@@ -120,7 +120,7 @@ sections:
     title: Exploratory
   design:
     columns: "2"
-    view: compact
+    view: showcase
   id: exploratory
 title: "Deb's Dissertation Data"
 type: landing

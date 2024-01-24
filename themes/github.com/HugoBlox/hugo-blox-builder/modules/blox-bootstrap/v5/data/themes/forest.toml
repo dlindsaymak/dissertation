@@ -3,14 +3,14 @@ name = "Forest"
 
 [light]
   # Primary
-  primary = "#4caf50"
+  primary = "#397367"
 
   # Menu
-  menu_primary = "#4caf50"
+  menu_primary = "#397367"
   menu_text = "#fff"
-  menu_text_active = "#1b5e20"
+  menu_text_active = "#C0EAE2"
   menu_title = "#fff"
 
   # Home sections
-  home_section_odd = "rgb(255, 255, 255)"
-  home_section_even = "rgb(247, 247, 247)"
+  home_section_odd = "rgb(227, 255, 250)"
+  home_section_even = "rgb(237, 255, 252)"
