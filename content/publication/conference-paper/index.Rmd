@@ -12,11 +12,12 @@ image:
   focal_point: ""
   preview_only: false
 projects:
-- DEEP CTN Scale
+  - Paper 1
 publication: SPSP Conference 2024
 publication_short: 
 publication_types:
-- paper-conference
+  - paper-conference
+  - article
 publishDate: "2024-02-09"
 summary: Poster Presentation at SPSP Conference 2024, San Diego
 tags: 
@@ -33,6 +34,8 @@ url_project: ""
 url_slides: ""
 url_source: https://github.com/HugoBlox/hugo-blox-builder
 url_video: https://youtube.com
+_build:
+  list: always
 ---
 
 1. replace image with poster

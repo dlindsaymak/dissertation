@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 slug: CFA_sp23
 categories: 
   - CFA
+  - Paper 1
 tags:
   - Connection to Nature
   - Paper 1

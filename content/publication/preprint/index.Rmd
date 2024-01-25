@@ -1,31 +1,31 @@
 ---
 abstract: TBA
 authors:
-- Debra Lindsay
-- Karen Dobkins
+  - Debra Lindsay
+  - Karen Dobkins
 date: "`r Sys.Date()`"
 doi: ""
 featured: false
 projects:
-- Paper 1
+  - Paper 1
 category:
   - "Paper1"
 publication: ""
 publication_short: ""
 publication_types:
-- article
+  - article
 publishDate: "`r Sys.Date()`"
 show_date: false
 tags:
-- Connection to Nature
-- DEEP CTN
-- Paper 1
+  - Connection to Nature
+  - DEEP CTN
+  - Paper 1
 title: "Going Deeper: Development and Validation of a Multi-dimensional DEEP Connection to Nature Scale"
 links:
   - name: OSF
     url: "https://osf.io/5xbvp/" 
-id:
-  - paper1
+_build:
+  list: always
 ---
 
 ```{r Packages and Functions required, include=FALSE}
