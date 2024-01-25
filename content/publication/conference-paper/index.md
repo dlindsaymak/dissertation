@@ -8,7 +8,7 @@ date: "2024-01-25"
 doi: ""
 featured: true
 image:
-  caption: 'Image credit: [**Unsplash**](https://unsplash.com/photos/pLCdAaMFLTE)'
+  caption: 
   focal_point: ""
   preview_only: false
 projects:
