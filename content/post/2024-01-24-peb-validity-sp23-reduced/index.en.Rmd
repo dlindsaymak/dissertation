@@ -37,6 +37,7 @@ library(car) # Type 2 Anova
 library(effectsize) #effect sizes
 library(ggplot2) #plots
 library(relaimpo) #calculates unique variance
+library(gridExtra) # better figure layouts
 ```
 
 ```{r loading data, include=FALSE}
@@ -226,26 +227,79 @@ print(validation_plot)
 
 
 ```
+```{r cor plots, include=FALSE}
+# deep_ctn_z - #77AB90
+# exp_ctn_z - #2D99B1
+# emo_ctn_z - #EC8C65
+# presc_ctn_z - #F9C36C
 
-::: {style="color: blue"}
-*Zero-order correlation betweens dimensions of CTN and existing scales:*
+deep_plot <- 
+val_data %>% 
+  ggplot() +
+  geom_point(aes(y = PEB_Z, x = deep_ctn_z), colour = "#77AB90") + #deep
+  geom_smooth(aes(y = PEB_Z, x = deep_ctn_z), method = "lm", colour = "#77AB90")+
+  xlab(label = "Deep CTN") +
+  ylab(label = "Pro-Environmental Behavior") +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
 
--   *Deep*
-    -   *CNS: .73\*\* (strong)*
-    -   *EIDR: .61\*\* (moderate)*
--   *Experiential*
-    -   *CNS: .57\*\* (moderate)*
-    -   *EIDR: .77\*\* (strong)*
--   *Emotional*
-    -   *CNS: .45\*\* (moderate)*
-    -   *EIDR: .54\*\* (moderate)*
--   *Presence*
-    -   *CNS: .46\*\* (moderate)*
-    -   *EIDR: .50\*\* (moderate)*
--   *Overall CTN*
-    -   *CNS: .71\*\* (strong)*
-    -   *EIDR: .74\*\* (strong)*
-:::
+#element_line(colour = "#ECEFF2")
+exp_plot <- 
+val_data %>% 
+  ggplot() +
+  geom_point(aes(y = PEB_Z, x = exp_ctn_z), colour = "#2D99B1") + #experiential
+  geom_smooth(aes(y = PEB_Z, x = exp_ctn_z), method = "lm", colour = "#2D99B1") +
+  xlab(label = "Experiential CTN") +
+  ylab(label = "Pro-Environmental Behavior") +
+    theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+emo_plot <- 
+val_data %>% 
+  ggplot() +
+  geom_point(aes(y = PEB_Z, x = emo_ctn_z), colour = "#EC8C65") + #emotional
+  geom_smooth(aes(y = PEB_Z, x = emo_ctn_z), method = "lm", colour = "#EC8C65") +
+  xlab(label = "Emotional CTN") +
+  ylab(label = "Pro-Environmental Behavior") +
+    theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+presence_plot <- 
+val_data %>% 
+  ggplot() +
+  geom_point(aes(y = PEB_Z, x = presc_ctn_z), colour = "#F9C36C") + #presence
+  geom_smooth(aes(y = PEB_Z, x = presc_ctn_z), method = "lm", colour = "#F9C36C") +
+  xlab(label = "Presence CTN") +
+  ylab(label = "Pro-Environmental Behavior") +
+    theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+cor_plots <- 
+grid.arrange(deep_plot, exp_plot, emo_plot, presence_plot, 
+             padding = 1)
+
+
+
+```
+
+```{r printing plots, echo=FALSE, message=FALSE, warning=FALSE}
+
+print(cor_plots)
+
+
+
+
+```
+
+
 
 # Predictive Validity
 

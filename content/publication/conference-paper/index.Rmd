@@ -4,7 +4,7 @@ abstract: Connection to Nature (CTN) is a deeply held identity that includes nat
 authors:
 - Debra Lindsay
 - Karen Dobkins
-date: "2024-02-09"
+date: "`r Sys.Date()`"
 doi: ""
 featured: true
 image:
