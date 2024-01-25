@@ -135,10 +135,7 @@ cormatrix <-
                  presc_ctn_z,
                  CNS_Z,
                  EIDR_Z,
-                 PEB_Z,
-                 PI_me_Z,
-                 PI_hierarchy_Z,
-                 PI_connect_Z) %>% 
+                 PEB_Z) %>% 
           as.matrix() 
             
 correlations <-
@@ -190,30 +187,43 @@ corp <-
 #         insig = "label_sig",
 #         pch.cex = .75)
 
+vars = c("CTN Overall", "Deep", "Experiential", "Emotional", "Presence", "CNS (Mayer & Frantz, 2004)", "EID-R (Clayton et al., 2021)", "PEB (Brick et al., 2017)")
+
 nm = rownames(correlations$r)
 m = t(combn(nm, 2))
 d = cbind(data.frame(m), R = correlations$r[m], P = correlations$P[m])
 d$label = round(d$R, 2)
 d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
-d$X1 = factor(d$X1, nm)
-d$X2 = factor(d$X2, rev(nm))
+d$X1 = factor(d$X1, nm, labels = vars)
+d$X2 = factor(d$X2, rev(nm), labels = rev(vars))
+
+
 
 graphics.off()
 validation_plot <- 
   ggplot(d, aes(X1, X2, fill = R, label = label)) +
     geom_tile(color = "white") +
     scale_fill_viridis_c() +
-    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
+    geom_text(color = ifelse(d$R > 0.50, "black", "white"), size = 2) +
     theme_bw() +
     coord_equal() +
-     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+     theme(axis.text.x = element_text(angle = 45, hjust = 1),
+           axis.title = element_blank(),
+           panel.background = element_rect(fill='transparent'), #transparent panel bg
+    plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+    panel.grid.major = element_blank(), #remove major gridlines
+    panel.grid.minor = element_blank(), #remove minor gridlines
+    legend.background = element_rect(fill='transparent'), #transparent legend bg
+    legend.box.background = element_rect(fill='transparent') #transparent legend panel
+  ) 
 
 
 ```
 
 ```{r validation plot 2, echo=FALSE}
 print(validation_plot)
+
+
 
 ```
 
