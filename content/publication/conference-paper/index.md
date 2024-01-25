@@ -19,7 +19,11 @@ publication_types:
 - paper-conference
 publishDate: "2024-02-09"
 summary: Poster Presentation at SPSP Conference 2024, San Diego
-tags: []
+tags: 
+  - Connection to Nature
+  - DEEP CTN
+  - Paper 1
+  - Pro-Environmental Behavior
 title: "Going Deeper: Validation of the DEEP Connection to Nature Scale"
 url_code: https://github.com/HugoBlox/hugo-blox-builder
 url_dataset: https://github.com/HugoBlox/hugo-blox-builder
@@ -29,7 +33,6 @@ url_project: ""
 url_slides: ""
 url_source: https://github.com/HugoBlox/hugo-blox-builder
 url_video: https://youtube.com
-
 ---
 
 1. replace image with poster
