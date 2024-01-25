@@ -1,9 +1,10 @@
 ---
 date: false
 external_link: ""
-summary: All the CFA data.
+summary: Creating & Validating the DEEP CTN Scale.
 tags:
-title: CFA Data
+  - Paper 1
+title: Paper 1 - DEEP CTN Scale
 url_code: ""
 url_pdf: ""
 url_slides: ""
@@ -13,7 +14,7 @@ sections:
   content:
     count: 5
     filters:
-      category: "CFA"
+      category: "EFA"
       exclude_featured: false
       exclude_future: false
       exclude_past: false
@@ -23,12 +24,13 @@ sections:
       tag: ""
     offset: 0
     order: desc
-    subtitle: ""
+    subtitle: "Three pilot studies conducting exploratory factor analysis on the new DEEP Connection to Nature Scale"
     text: ""
-    title: CFA
+    title: EFA
   design:
-    columns: "2"
+    columns: "1"
     view: compact
-  id: cfa
+  id: efa
 type: page
 ---
+

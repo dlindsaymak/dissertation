@@ -36,8 +36,6 @@ sections:
       gradient_end: '#1976d2'
       gradient_start: '#004ba0'
       text_color_light: true
-    
-
 - block: collection
   content:
     count: 5
@@ -56,8 +54,8 @@ sections:
     text: ""
     title: EFA
   design:
-    columns: "2"
-    view: showcase
+    columns: "1"
+    view: compact
   id: efa
 - block: collection
   content:
@@ -77,8 +75,8 @@ sections:
     text: ""
     title: CFA
   design:
-    columns: "2"
-    view: showcase
+    columns: "1"
+    view: compact
   id: cfa
 - block: collection
   content:
@@ -98,8 +96,8 @@ sections:
     text: ""
     title: Validity
   design:
-    columns: "2"
-    view: showcase
+    columns: "1"
+    view: compact
   id: validity
 - block: collection
   content:
@@ -119,9 +117,26 @@ sections:
     text: ""
     title: Exploratory
   design:
-    columns: "2"
-    view: showcase
-  id: exploratory
+    columns: "1"
+    view: compact
+  id: validity
+- block: portfolio
+  id: projects
+  content:
+    title: Projects
+    filters:
+      folders:
+        - project
+    default_button_index: 0
+    buttons:
+      - name: All
+        tag: '*'
+      - name: Going Deeper (Paper 1)
+        tag: Paper 1
+  design:
+    columns: '1'
+    view: compact
+    flip_alt_rows: false
 title: "Deb's Dissertation Data"
 type: landing
 ---
