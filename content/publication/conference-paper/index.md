@@ -1,18 +1,10 @@
 ---
-abstract: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis posuere tellus
-  ac convallis placerat. Proin tincidunt magna sed ex sollicitudin condimentum. Sed
-  ac faucibus dolor, scelerisque sollicitudin nisi. Cras purus urna, suscipit quis
-  sapien eu, pulvinar tempor diam. Quisque risus orci, mollis id ante sit amet, gravida
-  egestas nisl. Sed ac tempus magna. Proin in dui enim. Donec condimentum, sem id
-  dapibus fringilla, tellus enim condimentum arcu, nec volutpat est felis vel metus.
-  Vestibulum sit amet erat at nulla eleifend gravida.
-author_notes:
-- Equal contribution
-- Equal contribution
+abstract: Connection to Nature (CTN) is a deeply held identity that includes nature in the self. Recent studies suggest a multi-dimensional structure; however, the dimensional structure is still unclear. We propose four dimensions to describe CTN - 1) A deeply held spiritual identity; 2) the experiential relationship with nature; 3) an emotional relationship with nature; and 4) mindful engagement with nature. This poster presents the results of two studies which validate these dimensions. Study 1 suggests a four-dimensional structure using exploratory factor analysis (n = 1,152). Study 2 confirms this using confirmatory factor analysis (n = 341), suggesting a four-dimensional structure has better fit (RMSEA = 0.07, 95%CI = 0-0.9) than a unidimensional structure (RMSEA = 0.10, 95%CI = 0 - 0.9). We also show convergent validity with Connectedness to Nature (Mayer & Frantz, 2004) (r­_deep = .73**, r_exp = .57**, r_emo = .45**, r_pres = .46**), Environmental Identity (Clayton et al., 2021) (r­_deep = .61**, r_exp = .77**, r_emo = .54**, r_pres = .50**), and predictive validity with pro-environmental behaviors (r_deep = .46**, r_exp = .39**, r_emo = .45**, r_pres = .42**).
+
 authors:
 - admin
-- Robert Ford
-date: "2013-07-01T00:00:00Z"
+- Karen Dobkins
+date: "2024-02-09"
 doi: ""
 featured: true
 image:
@@ -20,17 +12,15 @@ image:
   focal_point: ""
   preview_only: false
 projects:
-- example
-publication: In *Hugo Blox Builder Conference*
-publication_short: In *ICW*
+- DEEP CTN Scale
+publication: SPSP Conference 2024
+publication_short: 
 publication_types:
 - paper-conference
-publishDate: "2017-01-01T00:00:00Z"
-slides: example
-summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis posuere tellus
-  ac convallis placerat. Proin tincidunt magna sed ex sollicitudin condimentum.
+publishDate: "2024-02-09"
+summary: Poster Presentation at SPSP Conference 2024, San Diego
 tags: []
-title: An example conference paper
+title: "Going Deeper: Validation of the DEEP Connection to Nature Scale"
 url_code: https://github.com/HugoBlox/hugo-blox-builder
 url_dataset: https://github.com/HugoBlox/hugo-blox-builder
 url_pdf: ""
@@ -39,8 +29,7 @@ url_project: ""
 url_slides: ""
 url_source: https://github.com/HugoBlox/hugo-blox-builder
 url_video: https://youtube.com
-_build:
-  list: never
+
 ---
 
 {{% callout note %}}

@@ -1013,3 +1013,339 @@ test_2<-anova(fit_model_flat,
 ```{r model comparison anova, echo=FALSE}
 test_2
 ```
+
+## Reduced CFA
+
+```{r reduced CFA, include=FALSE}
+
+reduced <- 
+  final_factors %>% 
+  select(DEEPCTN_s_1,
+         DEEPCTN_s_2,
+         DEEPCTN_s_3,
+         DEEPCTN_s_7,
+         DEEPCTN_s_8,
+         
+         DEEPCTN_ex_1,
+         DEEPCTN_ex_2,
+         DEEPCTN_ex_3,
+         DEEPCTN_ex_4,
+         DEEPCTN_ex_5,
+         
+         DEEPCTN_emo_1,
+         DEEPCTN_emo_2,
+         DEEPCTN_emo_3,
+         DEEPCTN_emo_4,
+         DEEPCTN_em_6,
+         
+         DEEPCTN_m_1,
+         DEEPCTN_m_2,
+         DEEPCTN_m_4,
+         DEEPCTN_m_5,
+         DEEPCTN_m_6)
+
+```
+
+### Four Factor Hierarchical
+```{r CFA - reduced 4 factor hier, echo=FALSE, include=FALSE}
+reduced_hier_4 <-  'deep =~ 
+  DEEPCTN_s_1 + 
+  DEEPCTN_s_2 +
+  DEEPCTN_s_3 +
+  DEEPCTN_s_7 +
+  DEEPCTN_s_8 
+
+experience =~ 
+   DEEPCTN_ex_4 +
+   DEEPCTN_ex_5 +
+   DEEPCTN_ex_1 +
+   DEEPCTN_ex_2 +
+   DEEPCTN_ex_3
+
+emotion =~ 
+  DEEPCTN_emo_1 +
+  DEEPCTN_emo_2 +
+  DEEPCTN_emo_3 +
+  DEEPCTN_emo_4 +
+  DEEPCTN_em_6
+
+presence =~
+  DEEPCTN_m_1 +
+  DEEPCTN_m_2 +
+  DEEPCTN_m_4 +
+  DEEPCTN_m_5 +
+  DEEPCTN_m_6
+
+
+deepctn =~ deep + experience + emotion + presence'
+
+fit_reduced_hier_4 <- cfa(reduced_hier_4, data=reduced,
+                        std.lv=F, #set to T to get Std.Err!!!
+                        estimator = "MLR") #robust against non normal data #https://lavaan.ugent.be/tutorial/est.html
+
+
+
+Plot_reduced <-
+     semPaths(fit_reduced_hier_4, 
+         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "'Shared breath' between myself and plants", 
+                       "All life is grounded on this planet", 
+                       "My favorite is in nature", #experience 
+                       "Walking through a forest makes me forget worries", 
+                       "I like to get outdoors when I can", 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "Seeing a cleared forest is upsetting", #emotional
+                       "If my plants died I would blame myself", 
+                       "Someone carving a tree makes me cringe", 
+                       "I catch and release insects in my home", 
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Deep", 
+                       "Experience", 
+                       "Emotion", 
+                       "Presence",
+                       "Overall CTN")
+        )
+
+Fit_table_heir_red <- matrix(fitMeasures(fit_reduced_hier_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+
+colnames(Fit_table_heir_red) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_heir_red) <- c("Fit Indices")
+Fit_table_heir_red <- round(Fit_table_heir_red,3)
+
+
+```
+
+```{r 4 factor reduced hierarchical plot, include=TRUE, echo=FALSE, out.width="100%"}
+plot(Plot_reduced)
+
+as_tibble(Fit_table_heir_red) %>% 
+  add_column(c(""), .before = "df") %>%
+      rename(`Fit Indices` = `c("")`) %>% 
+     flextable() %>% 
+     autofit() %>% 
+     footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+     
+
+
+```
+
+### Single Factor
+```{r CFA - reduced flat, echo=FALSE, include=FALSE}
+reduced_flat <-  'overall =~
+  DEEPCTN_s_1 + 
+  DEEPCTN_s_2 +
+  DEEPCTN_s_3 +
+  DEEPCTN_s_7 +
+  DEEPCTN_s_8 +
+
+   DEEPCTN_ex_4 +
+   DEEPCTN_ex_5 +
+   DEEPCTN_ex_1 +
+   DEEPCTN_ex_2 +
+   DEEPCTN_ex_3 +
+
+  DEEPCTN_emo_1 +
+  DEEPCTN_emo_2 +
+  DEEPCTN_emo_3 +
+  DEEPCTN_emo_4 +
+  DEEPCTN_em_6 +
+
+  DEEPCTN_m_1 +
+  DEEPCTN_m_2 +
+  DEEPCTN_m_4 +
+  DEEPCTN_m_5 +
+  DEEPCTN_m_6
+'
+
+fit_reduced_flat <- cfa(reduced_flat, data=reduced,
+                        std.lv=F, #set to T to get Std.Err!!!
+                        estimator = "MLR") #robust against non normal data #https://lavaan.ugent.be/tutorial/est.html
+
+
+
+Plot_reduced_flat <-
+     semPaths(fit_reduced_flat, 
+         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "'Shared breath' between myself and plants", 
+                       "All life is grounded on this planet", 
+                       "My favorite is in nature", #experience 
+                       "Walking through a forest makes me forget worries", 
+                       "I like to get outdoors when I can", 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "Seeing a cleared forest is upsetting", #emotional
+                       "If my plants died I would blame myself", 
+                       "Someone carving a tree makes me cringe", 
+                       "I catch and release insects in my home", 
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Overall CTN")
+        )
+
+Fit_table_flat_red <- matrix(fitMeasures(fit_reduced_flat, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+
+colnames(Fit_table_flat_red) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_flat_red) <- c("Fit Indices")
+Fit_table_flat_red <- round(Fit_table_flat_red,3)
+
+
+```
+
+```{r 4 factor flat reduced plot, include=TRUE, echo=FALSE, out.width="100%"}
+plot(Plot_reduced_flat)
+
+as_tibble(Fit_table_flat_red) %>% 
+  add_column(c(""), .before = "df") %>%
+      rename(`Fit Indices` = `c("")`) %>% 
+     flextable() %>% 
+     autofit() %>% 
+     footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+     
+
+
+```
+
+### Comaparing Fit
+
+```{r fit measures reduced, echo=FALSE}
+#cutoffs:
+# fit_reduced_flat
+# fit_reduced_hier_4
+
+
+ #(RMSEA + CI), (SRMR), (TFI), (CFI) , (AIC)
+# df4, chi-sq3, RMSEA47, RMSEACIL48, RMSEACIU49, SRMR67, TLI18, CFI17, AIC37
+# df, chisq, rmsea, rmsea.ci.lower, rmsea.ci.upper, srmr, tli cfi, aic
+# include the AIC and the confidence interval 
+
+
+Fit_table_reduced <- matrix(c(
+                  fitmeasures(fit_reduced_flat, "df"),
+                  fitmeasures(fit_reduced_flat, "chisq"),
+                  fitmeasures(fit_reduced_flat, "rmsea"),
+                  fitmeasures(fit_reduced_flat, "rmsea.ci.lower"),
+                  fitmeasures(fit_reduced_flat, "rmsea.ci.upper"),
+                  fitmeasures(fit_reduced_flat, "srmr"),
+                  fitmeasures(fit_reduced_flat, "tli"),
+                  fitmeasures(fit_reduced_flat, "cfi"),
+                  fitmeasures(fit_reduced_flat, "aic"),
+                  
+                  fitmeasures(fit_reduced_hier_4, "df"),
+                  fitmeasures(fit_reduced_hier_4, "chisq"),
+                  fitmeasures(fit_reduced_hier_4, "rmsea"),
+                  fitmeasures(fit_reduced_hier_4, "rmsea.ci.lower"),
+                  fitmeasures(fit_reduced_hier_4, "rmsea.ci.upper"),
+                  fitmeasures(fit_reduced_hier_4, "srmr"),
+                  fitmeasures(fit_reduced_hier_4, "tli"),
+                  fitmeasures(fit_reduced_hier_4, "cfi"),
+                  fitmeasures(fit_reduced_hier_4, "aic")
+                  ), 
+                    ncol=9,byrow=TRUE)
+
+#df4, chi-sq3, RMSEA32, RMSEACIUp, RMSEACILow, SRMR28, TFI10, CFI9, AIC 
+colnames(Fit_table_reduced) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+rownames(Fit_table_reduced) <- c("1-Factor",
+                         "4-Factor")
+Fit_table_reduced <- round(Fit_table_reduced,3)
+```
+
+```{r Fit table reduced, echo=FALSE}
+as_tibble(Fit_table_reduced) %>% 
+  add_column(c("1 Factor", "4 Factor Hierarchical"), .before = "df") %>%
+     rename(Model = `c("1 Factor", "4 Factor Hierarchical")`) %>% 
+     flextable() %>% 
+#  bold(i = 3:3,
+ #      part = "body") %>% 
+  autofit() %>% 
+   footnote(i = 1, j = 3:4, 
+              value = as_paragraph(c("Closer to 0 indicate better fit",
+                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
+              ref_symbols = c("a", "b"),
+              part = "header",
+              inline = FALSE) %>% 
+     footnote(i = 1, j = 7:10,
+              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
+                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
+                        "(Comparative fit index) Closer to 1 indicates better fit",
+                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
+              ref_symbols = c("c", "d", "e", "f"),
+              part = "header",
+              inline = FALSE)
+
+```

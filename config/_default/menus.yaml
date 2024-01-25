@@ -39,6 +39,10 @@ main:
     parent: cfa
     url: '/post/peb_validity_spr23'
     weight: 20 
+  - name: Pilot 1 Reduced Scale Spr23 Validity
+    parent: cfa
+    url: '/post/peb_validity_spr23_reduced'
+    weight: 40 
   - name: Exploratory
     url: 'category/exploratory'
     weight: 40
