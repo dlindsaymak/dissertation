@@ -4,7 +4,7 @@ abstract: Connection to Nature (CTN) is a deeply held identity that includes nat
 authors:
 - Debra Lindsay
 - Karen Dobkins
-date: "2024-01-25"
+date: "2024-01-26"
 doi: ""
 featured: true
 image:
@@ -12,12 +12,13 @@ image:
   focal_point: ""
   preview_only: false
 projects:
-- DEEP CTN Scale
+  - Paper 1
 publication: SPSP Conference 2024
 publication_short: 
 publication_types:
-- paper-conference
-publishDate: "2024-02-09"
+  - paper-conference
+  - article
+publishDate: "2024-01-26"
 summary: Poster Presentation at SPSP Conference 2024, San Diego
 tags: 
   - Connection to Nature
@@ -33,6 +34,8 @@ url_project: ""
 url_slides: ""
 url_source: https://github.com/HugoBlox/hugo-blox-builder
 url_video: https://youtube.com
+_build:
+  list: always
 ---
 
 1. replace image with poster
