@@ -4,7 +4,7 @@ abstract: "Connection to Nature (CTN) is a deeply held identity that includes na
 authors:
   - admin
   - Karen Dobkins
-date: "2024-01-26"
+date: "2024-01-27"
 doi: ""
 featured: true
 image:
@@ -12,14 +12,13 @@ image:
   focal_point: ""
   preview_only: false
 projects:
-  - "DEEP CTN Scale"
 publication: SPSP Conference 2024
 publication_short: 
 publication_types:
   - paper-conference
   - article
 list_format: 2
-publishDate: "2024-01-26"
+publishDate: "2024-01-27"
 summary: Poster Presentation at SPSP Conference 2024, San Diego
 tags: 
   - Connection to Nature

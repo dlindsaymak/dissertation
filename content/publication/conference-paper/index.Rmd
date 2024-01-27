@@ -12,7 +12,6 @@ image:
   focal_point: ""
   preview_only: false
 projects:
-  - "DEEP CTN Scale"
 publication: SPSP Conference 2024
 publication_short: 
 publication_types:
