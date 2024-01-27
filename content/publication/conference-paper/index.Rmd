@@ -155,6 +155,8 @@ items %>%
 
 # Exploratory Factor Analysis
 
+## Sample
+
 Two general population Prolific samples and one student sample were collected from November 2022 until April 2023 (See Table 2 for details of these samples)Three exploratory factor analyses were conducted on these samples.
 
 **Table 2. Sample details across three exploratory factor analyses**
@@ -226,8 +228,190 @@ A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adeq
 Exploration of individual items showed that no single item was \< .80.
 Inspection of box plots and histograms of distribution showed not items with ceiling/floor effects or high skewedness.
 
+
+## Number of Factors
+
+Despite the potential for overdetermination, an EFA was conducted using a principal analysis method of extraction. This method has been found to be robust with models with non-normal data (Briggs & MacCullum, 2003). The Psych package in R was used with a promax rotation and principal analysis factoring method.
+
+The number of factors to be extracted was estimated using both a scree plot and parallel analysis. The screen plot suggested ~3-4 factors, while parallel analysis suggested 6 factors across all three samples
+
+[insert plots here from all three samples]
+
+Four models were run across all three samples:
+* Six factors
+* Five factors
+* Four factors
+* Simplified four factors (removing dual loading and poor loading items from four factor model)
+
+[Link to pdf for these tables - all three samples]
+
+## Item Selection Based on Model Fit
+
+The simplified 4-factor model may be still be overdetermined: determinant < 0.00001, even though we have removed items with high covariance.
+
+Tests of shared variance between items and variance within items both suggest the data is suitable for factor analysis. 
+Sample 1 - Bartlett’s test of sphericity showed a 𝜲2 = 3171.39(595), p <.001). A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.97). 
+Sample 2 - Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p <.001). A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95). 
+Sample 3 -  Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p <.001). A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95). 
+
+
+We calculated several fit indices and found that the simplified four-factor model was an appropriate fit across all three samples. While the full four-factor model, shows better fit according to these indices. We chose to keep the simplified factor due to the full four factor model including items that cross loaded.
+
+The root mean square error of the approximate (RMSEA) should aim for > 0.05. The root mean square of the residuals (RMSR) should be close to 0. The Tucker-Lewis Index (TLI) aims for scores > 0.9. The Baysean Information Criteria (BIC) should be smaller and more negative.
+
+[insert table off all sample fit indices]
+
+Based on these results we selected xx items to test in a confirmatory factor analysis.
+
+[go into more details based on EFA Overview document]
+
+[insert table of items tested in CFA here]
+
 # Confirmatory Factor Analysis
 
+## Sample
+394 undergraduate students participated for course credit in May 2023. Thirty-one participants did not complete the study and twenty-two people failed to pass attention checks so their data was not analysed. The final analysis consisted of 341 participants with ages ranging from 18 - 42 (M = 20.88, SD = 2.7). The same was primarily made up of females (68.3%) and people of Asian ethnicity (42.1%). See the table below for full descriptive statistics. Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was 5.04(1.17), showing that this sample skewed more liberal. This is to be expected with our student sample.
+
+## Convergent Validity Measures
+Two pre-existing CTN scales were used to identify convergent validity. The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021). The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree). The EID-R is a 14-item scale designed to measure how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me).
+
+## Predictive Validity measures
+### Pro-environmental behavior
+Participants completed the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors. This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always).
+
+### Primal Beliefs 
+Three subscales of the primals beliefs inventory (Clifton et al., 2019) were used to identify worldviews held by participants. The About Me subscale consists of five questions asking how egocentric ones beliefs are (e.g., Whatever is happening around me often feels related to me or something I’ve done). The Hierarchical subscale consists of five questions exploring beliefs about the hierarchical nature of the world (e.g., Things are rarely equal. Most plants and animals, even people, are better or worse than one another.). The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]). All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree).
+
+## Covariate measures
+### Locus of Control
+Participants completed a brief version of the Locus of Control Scale (Sapp & Harrod, 1993) which includes 9 items revealing how much people perceived they have internal control over events (e.g., To a great extent, my life is controlled by accidental happenings). Measured on a Likert scale from 1(strongly disagree) to 7(strongly agree).
+
+### Demographics
+They also answered several demographics questions (age, gender, political  ideology, and social economic status).
+
+## Analysis & Results
+
+### Items Removed
+Several assumptions need to be met before running a confirmatory factor analysis. We identified that no item had a high inter-correlation > .75. Next, we checked the skewedness and kurtosis of each item to be included in the CFA. The closer to zero for both skewedness and kurtosis, the closer to a normal distribution. Any items whose distributions exhibited skewness and/or kurtosis that exceed general guidelines were considered non-normal removed from the analysis (Hair et al., 2017, p. 61). 
+
+For skewedness, using the skewness function from the Moments package in R (Komsta & Novemstky, 2015), skewness was calculated for each item. Any item where the number is greater than +1 (right skewed) or lower than -1 (left skewed), this is an indication of a substantially skewed distribution. No items were heavily skewed in this dataset.
+
+For Kurtosis, using the kurtosis function from the Moments package in R (Komsta & Novemstky, 2015), kurtosis was calculated for each item. Any item were the number is greater than +3, the distribution is too peaked. Likewise, a kurtosis of less than -3 indicates a distribution that is too flat. Two items showed high kurtosis: “I have great respect for being alive on this earth and part of the universe” and “Listening to the sounds of nature makes me relax” and were removed from the CFA.
+
+[insert kurtosis figure]
+
+A Mardia Test of multivariate normality from the MVN package in R (Korkmaz et al., 2021) indicated that this data is not normal, suggesting that a rotation-method that is robust to non-normal data should be used (Mardia Skewedness = 7681.36, p < .001 and Mardia Kurtosis = 28.32, p < .001).
+
+### Model Fitting
+#### Four factor hierachical Model
+Testing a structure which includes an overall Connection to Nature factor and four dimensions:
+
+1. Deep: Deeply seeing the self as part of nature
+2. Experiential: Spending more time in nature and enjoying spending time in nature
+3. Emotional: Emotional desire to connect with nature and protect it
+4. Presence: Engaging mindfully and consciously with nature
+
+Items load onto their dimensions well, with the exception of 1 item (“Thinking of someone carving their initials into a tree makes me cringe”) which loaded onto the Emotion dimension at 0.33.
+
+All dimensions loaded onto the single CTN dimension, but these loaded quite highly (especially Deep and Emotion) which suggests these might be driving the overall CTN score.
+
+[insert cfa figure]
+
+#### Four Factor
+Testing a structure which only includes the four dimensions:
+
+1. Deep: Deeply seeing the self as part of nature
+2. Experiential: Spending more time in nature and enjoying spending time in nature
+3. Emotional: Emotional desire to connect with nature and protect it
+4. Presence: Engaging mindfully and consciously with nature
+
+Items load onto their dimensions similarly well to the hierarchical model. Again, 1 item loads weakly: (“Thinking of someone carving their initials into a tree makes me cringe”) which loaded onto the Emotion dimension at 0.33.
+
+Dimensions are intercorrelated reasonable well - not too high as to have multi-collinearity (none above .80)
+
+[insert cfa figure]
+
+#### Single Factor
+Testing a structure which includes only a single overall Connection to Nature factor
+
+Loadings are slightly weaker onto a single overall CTN factor. Again, 1 item loads weakly: (“Thinking of someone carving their initials into a tree makes me cringe”) which loaded onto the Emotion dimension at 0.31.
+
+[insert cfa figure]
+
+### Item Selection Based on Model Fit
+Both four-factor models (flat and hierarchical) perform better than the single-factor model. There is no difference between the hierarchical and the flat models.
+
+[inset fit incides table]
+
+[insert final item table]
+
 # Validation
+## Sample
+Same sample as Confirmatory Factor Analysis
+
+## Convergent Validity
+
+Two pre-existing CTN scales were used to identify convergent validity. The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021). The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree). The EID-R is a 14-item scale designed to measure how interneconnect one’s self is to nature. It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me).
+
+We assessed the convergent validity of the new DEEP CTN scale, that is how closely our new measure is related to other established measures of the same construct. We tested this by looking at the zero order correlation between our new measure and its subscales and two established measures: The Connectedness to Nature Scale (CNS  - Mayer & Franz, 2004) and the Environmental Identity Scale revised (EID-R - Clayton et al., 2021). A zero-order correlation found moderate-strong correlation between existing CTN scales and the new subscales of the DEEP CTN scale. See table below:
+
+[insert table]
+
+## Predictive Validity
+Two measures of predictive validity were used: Pro-environmental behavior & three subscales of the primal beliefs invetory - the world is interconnected, the world is heirarchical, and the world is about me. 
+
+Participants completed the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors. This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always).
+
+Three subscales of the primals beliefs inventory (Clifton et al., 2019) were used to identify worldviews held by participants. The About Me subscale consists of five questions asking how egocentric ones beliefs are (e.g., Whatever is happening around me often feels related to me or something I’ve done). The Hierarchical subscale consists of five questions exploring beliefs about the hierarchical nature of the world (e.g., Things are rarely equal. Most plants and animals, even people, are better or worse than one another.). The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]). All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree).
+
+We assessed the predictive validity of the new DEEP CTN scale (i.e., how well our measure can predict participant scores on two theoretically related constructs). The “gold standard” for predictive validity of CTN measures is how well it predicts pro-environmental behavior (PEB) (Clayton, 2003; Clayton et al., 2021; Mayer & Frantz, 2004; Tam, 2013). A zero-order correlation found moderate correlations between PEB  and the new subscales of the DEEP CTN scale. See table below:
+
+[insert table]
+
+A linear regression with only the subscales of CTN predicting PEB showed that Deep, Emotional, and Presence were adequate to predcict PEB, but not Experiential.
+
+[insert table & effect sizes]
+
+We also suspected that DEEP CTN and its subscales would predict three types of primal world beliefs (Clifton et al., 2019): That the world is interconnected, that the world is not hierarchical, and that the world is not about me (i.e., less egocentric worldviews).  A zero-order correlation found weak -moderate correlations between interconnected beliefs and the new subscales of the DEEP CTN scale. We also found weak correlations between egocentric beliefs and the Deep, Presence, and Overall CTN. No relationship was found between any subscale and hierarchical worldviews. See table below:
+
+[insert table]
+
+## Incremental Validity
+
+We explored if the DEEP CTN scale and its facets would perform above and beyond existing CTN scales (i.e., CNS and EID-R) when predicting PEB. A linear regression model was run, which included the dimensions of the DEEP CTN scale and the existing CTN measures (CNS and EIDR) were entered simultaneously to predict PEB. Note that because overall CTN was highly intercorrelated with Deep and Emotional, it was left out and only the four dimensions were included. 
+
+We found that the Emotional and Presence subscales remained significant predictors when existing measures of CTN were entered into the model. The Deep subscale was no longer a significant predictor. Both our subscales were of equal predictive value compared to the existing measures.
+
+[insert table & effects figure]
+
+
+## Covariates
+Participants completed a brief version of the Locus of Control Scale (Sapp & Harrod, 1993) which includes 9 items revealing how much people perceived they have internal control over events (e.g., To a great extent, my life is controlled by accidental happenings). Measured on a Likert scale from 1(strongly disagree) to 7(strongly agree). Participants also answered several demographics questions (age, gender, political  ideology, and social economic status).
+
+We also tested the robustness of our new DEEP CTN scale, by testing if the DEEP CTN scale and its facets are significant predictors of PEB after controlling for known covariates of these outcomes: political ideology, gender, and socio-economic status (SES). We fist inspected a zero order correlation to identify which covariates should be included. Including any variable that:
+strongly correlated with PEB AND
+weakly correlated with the Deep CTN Scale
+may reduce variance in the dependent variable and therefore enhance the likelihood of seeing significant effects of the DEEP CTN scale. 
+Further, if an additional variable is…
+strongly correlated with BOTH PEB AND
+the Deep CTN Scale,
+its inclusion in the model will address potential mediating effects regarding the relationship between the Deep CTN Scale and a DV of interest. In either case this would suggest it’s important to include as a covariate.
+
+
+This resulted in including the following covariates:
+Politics (r = .19** with PEB & r = .18** to .23** with DEEP CTN dimensions)
+Primal Beliefs - The world is interconnect (r = .21** with PEB & r = .22** to .38** with DEEP CTN dimensions)
+
+[insert correlation matrix]
+
+A multiple linear regression model where dimensions of the DEEP CTN scale and existing CTN measures (CNS and EIDR) and the covariates (politics & primal belief interconnectedness) were entered simultaneously to predict PEB is reported in the table below.
+
+
+By adding the covariates, both Emotional and Prescence subscales remained significant predictors of PEB. Adding covariates to the model did not improve the fit of the model above the variables in the incremental validity model (F(2) = 1.731, p = 0.179).
+
+[insert table & effects figure]
+
+# Discussion
+[write up a summary of the findings here]
 
 # References
