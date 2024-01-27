@@ -7,14 +7,22 @@ interests:
 - Connection to Nature
 - Carbon Reduction Behavior
 - Awe & Transcendence
+education:
+  courses:
+    - course: MA Experimental Psychology
+      institution: University of California, San Deigo
+      year: 2020
+    - course: Post-Bacc in Psychology
+      institution: University of California, Irvine
+      year: 2018
+    - course: Bachelor of Psych Science
+      institution: University of Queensland
+      year: 2014
 last_name: Lindsay
 organizations:
 - name: UC San Diego
 role: PhD Candidate
 social:
-- icon: envelope
-  icon_pack: fas
-  link: dlindsay@ucsd.edu
 - display:
     header: true
 - icon: graduation-cap
@@ -30,7 +38,7 @@ social:
   icon_pack: ai
   link: uploads/resume.pdf
 status:
-  icon: ☕️
+  icon: 🍃
 superuser: true
 title: Deb Lindsay
 ---

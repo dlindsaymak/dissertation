@@ -1,31 +1,29 @@
 ---
-abstract: TBA
+abstract: 
 authors:
-- Debra Lindsay
-- Karen Dobkins
-date: "2024-01-25"
+  - Debra Lindsay
+  - Karen Dobkins
+date: "2024-01-26"
 doi: ""
 featured: false
 projects:
-- Paper 1
-category:
-  - "Paper1"
+  - DEEP CTN Scale
 publication: ""
 publication_short: ""
 publication_types:
-- article
-publishDate: "2024-01-25"
+  - article
+publishDate: "2024-01-26"
 show_date: false
 tags:
-- Connection to Nature
-- DEEP CTN
-- Paper 1
+  - Connection to Nature
+  - DEEP CTN Scale
+  - Pro-Environmental Behavior
+  - Well-being
 title: "Going Deeper: Development and Validation of a Multi-dimensional DEEP Connection to Nature Scale"
 links:
   - name: OSF
     url: "https://osf.io/5xbvp/" 
-id:
-  - paper1
+draft: true
 ---
 
 

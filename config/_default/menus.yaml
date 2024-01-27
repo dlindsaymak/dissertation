@@ -11,38 +11,30 @@ main:
     url: '/category/efa'
     weight: 20
     identifier: efa
-  - name: Pilot 1 Nov22
+  - name: Pilot 1 Nov22 EFA
     parent: efa
     url: '/post/efa_nov22'
     weight: 10
-  - name: Pilot 2 Apr23
+  - name: Pilot 2 Apr23 EFA
     parent: efa
     url: '/post/efa_apr23'
     weight: 20
-  - name: Pilot 3 Win/Spr23
+  - name: Pilot 3 Win/Spr23 EFA
     parent: efa
     url: '/post/efa_sona23'
     weight: 30
-  - name: EFA Overview
-    parent: efa
-    url: '/post/efa_overview'
-    weight: 40
   - name: CFA
     url: '/category/cfa'
     weight: 30
     identifier: cfa
-  - name: Pilot 1 Spr23 CFA
+  - name: Pilot 4 Spr23 CFA
     parent: cfa
-    url: '/post/cfa_sp23'
+    url: '/post/cfa_spr23'
     weight: 10
-  - name: Pilot 1 Spr23 Validity
+  - name: Pilot 4 Spr23 Validity PEB
     parent: cfa
-    url: '/post/peb_validity_spr23'
+    url: '/post/PEB_validity_spr23'
     weight: 20 
-  - name: Pilot 1 Reduced Scale Spr23 Validity
-    parent: cfa
-    url: '/post/peb_validity_sp23_reduced'
-    weight: 40 
   - name: Exploratory
     url: 'category/exploratory'
     weight: 40

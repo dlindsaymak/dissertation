@@ -1,4 +1,5 @@
-{{- define "main" -}}
+<!-- html for project pages -->
+{{- define "main" -}} 
 
 <article class="article article-project">
 
@@ -26,8 +27,8 @@
       {{ end }}
 
       {{ $items := where (where site.RegularPages "Type" "publication") ".Params.projects" "intersect" (slice $project) }}
-      {{ $pubs_len := len $items }}
-      {{ if ge $pubs_len 1 }}
+       {{ $pubs_len := len $items }} 
+      {{ if ge $pubs_len 1 }} 
         <h2>{{ (i18n "publications") }}</h2>
         {{ range $index, $item := $items }}
           {{ partial "functions/render_view" (dict "page" $ "item" . "view" (site.Params.projects.publication_view | default "compact") "index" $index) }}

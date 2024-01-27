@@ -4,16 +4,23 @@
 {{ $pub_type_display := "" }}
 {{ if .Params.publication_types }}
   {{ if reflect.IsSlice .Params.publication_types }}
-    {{ $pub_type_csl = index .Params.publication_types 0 }}
+    {{ $pub_type_csl = index .Params.publication_types 2 }}
     {{ $pub_type_display = i18n (printf "pub_%s" (strings.Replace $pub_type_csl "-" "_")) | default (strings.Title $pub_type_csl) }}
   {{ end }}
 {{ end }}
 
 <div class="pub">
 
-  {{ partial "page_header.html" . }}
+  
 
   <div class="article-container">
+    {{ partial "page_header.html" . }}
+    
+    
+     <div class="row">
+      
+      <div class="col-12 col-lg-9 article-style">
+   
 
     {{ if .Params.abstract }}
     <h3>{{ i18n "abstract" }}</h3>
@@ -22,9 +29,7 @@
 
     {{/* If the type is Uncategorized, hide the type. */}}
     {{ if $pub_type_display }}
-    <div class="row">
-      <div class="col-md-1"></div>
-      <div class="col-md-10">
+    
         <div class="row">
           <div class="col-12 col-md-3 pub-row-heading">{{ i18n "publication_type" }}</div>
           <div class="col-12 col-md-9">
@@ -53,9 +58,27 @@
     <div class="d-md-none space-below"></div>
     {{ end }}
 
-    <div class="space-below"></div>
+    <div class="space-below"></div> 
 
     <div class="article-style">{{ .Content }}</div>
+    
+    </div>
+    
+    <!-- HUGO variable which contains the TOC of the post -->
+          <div class="col-12 col-lg-3 docs-toc">
+        <ul class="nav toc-top">
+          <li>
+            <a href="#" id="back_to_top" class="docs-toc-title">
+              {{ i18n "on_this_page" }}
+            </a>
+          </li>
+        </ul>
+    
+        {{ .TableOfContents }} 
+        
+  </div>
+   <!-- HUGO variable which contains the TOC of the post --> 
+    
 
     {{ partial "page_footer" . }}
 

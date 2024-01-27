@@ -62,7 +62,7 @@
 {{ range $page.Params.projects }}
   {{ with (site.GetPage (printf "project/%s" .)) }}
   <a class="btn btn-outline-primary btn-page-header{{ if $is_list }} btn-sm{{end}}" href="{{ .RelPermalink }}">
-    {{ i18n "btn_project" }}
+    {{ .Title }}
   </a>
   {{ else }}
     {{/* errorf "The `projects` parameter in `content/%s` references a project file, `content/project/%s`, which cannot be found. Please either set `projects = []` or fix the reference." $page.File.Path . */}}

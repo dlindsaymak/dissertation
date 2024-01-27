@@ -7352,11 +7352,11 @@ a:focus {
 
 .dark a,
 .dark h3.article-title a:hover {
-  color: #bbdefb; }
+  color: #f76497; }
 
 .dark a:not(.btn):hover,
 .dark a:not(.btn):focus {
-  color: #bbdefb; }
+  color: #f76497; }
 
 pre,
 code {
@@ -8195,18 +8195,18 @@ a.summary-link {
     color: #C0EAE2 !important; }
 
 .dark .navbar {
-  background: #282a36;
+  background: #141622;
   box-shadow: 0 0.125rem 0.25rem 0 rgba(255, 255, 255, 0.11); }
   .dark .navbar .navbar-nav .nav-link {
     color: rgba(255, 255, 255, 0.85); }
     .dark .navbar .navbar-nav .nav-link.active, .dark .navbar .navbar-nav .nav-link:hover, .dark .navbar .navbar-nav .nav-link:focus {
-      color: rgba(255, 255, 255, 0.8); }
+      color: white; }
     .dark .navbar .navbar-nav .nav-link.active {
       font-weight: bold !important;
-      color: rgba(255, 255, 255, 0.8) !important; }
+      color: white !important; }
   .dark .navbar .dropdown-item.active,
   .dark .navbar .dropdown-item-active {
-    color: rgba(255, 255, 255, 0.8) !important; }
+    color: white !important; }
 
 .navbar-toggler {
   border: 0 !important;
@@ -8214,7 +8214,7 @@ a.summary-link {
   z-index: 1030; }
 
 .dark .navbar-toggler {
-  color: white; }
+  color: rgba(255, 255, 255, 0.6); }
 
 .navbar-toggler:focus,
 .navbar-toggler:active {
@@ -8247,7 +8247,7 @@ a.summary-link {
   z-index: 1030; }
 
 .dark .navbar-brand {
-  color: white; }
+  color: #fff; }
 
 .navbar-brand img {
   width: auto;
@@ -8262,7 +8262,7 @@ a.summary-link {
   color: #fff; }
 
 .dark #navbar-main .main-menu-item ul li .nav-link {
-  color: white; }
+  color: rgba(255, 255, 255, 0.6); }
 
 @media (max-width: 991.98px) {
   .navbar-brand-mobile-wrapper {
@@ -8287,7 +8287,7 @@ a.summary-link {
     background-color: #397367;
     text-align: center !important; }
   .dark .navbar-collapse {
-    background-color: #282a36; }
+    background-color: #141622; }
   #navbar-main .main-menu-item .nav-item {
     padding: 10px 15px !important; }
   #navbar-main .main-menu-item .nav-item .nav-link {
@@ -8310,16 +8310,16 @@ ul.nav-icons li.nav-item a.nav-link {
   padding: 0; }
 
 .dark .dropdown-menu {
-  background-color: #282a36 !important;
-  color: white !important; }
+  background-color: #141622 !important;
+  color: rgba(255, 255, 255, 0.6) !important; }
 
 .dropdown-item {
   background-color: #397367 !important;
   color: #fff !important; }
 
 .dark .dropdown-item {
-  background-color: #282a36 !important;
-  color: white !important; }
+  background-color: #141622 !important;
+  color: rgba(255, 255, 255, 0.6) !important; }
 
 /*************************************************
  *  Pager.
@@ -9015,7 +9015,7 @@ html[dir='rtl'] body {
   color: #397367; }
 
 .home-section.dark a {
-  color: #bbdefb; }
+  color: #f76497; }
 
 /* Override dark colors that may be inherited from body.dark */
 .home-section.dark,

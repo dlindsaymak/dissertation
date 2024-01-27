@@ -120,23 +120,12 @@ sections:
     columns: "1"
     view: compact
   id: validity
-- block: portfolio
-  id: projects
+- block: about.biography
+  id: about
   content:
-    title: Projects
-    filters:
-      folders:
-        - project
-    default_button_index: 0
-    buttons:
-      - name: All
-        tag: '*'
-      - name: Going Deeper (Paper 1)
-        tag: Paper 1
-  design:
-    columns: '1'
-    view: compact
-    flip_alt_rows: false
+    title: Biography
+    username: admin
 title: "Deb's Dissertation Data"
 type: landing
+
 ---
