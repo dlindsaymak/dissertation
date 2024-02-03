@@ -26,16 +26,91 @@ links:
 draft: true
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
 ```{r Packages and Functions required, include=FALSE}
 
-## Add required packages here
+#loading packages
+library(tidyverse)
+library(lubridate)
+library(flextable)
+library(moments) #skewness & kurtosis
+library(lavaan) #CFA 
+library(corrplot) #correlations
+library(MVN) #test of normality
+library(semPlot) #plotting paths in CFA
+library(Hmisc) #correlations 
+library(car) # Type 2 Anova
+library(effectsize)
+library(relaimpo) #calculates unique variance
+library(ggplot2) #grid arrange plots
+
+
+#flextable defaults
+set_flextable_defaults(digits = 2, layout = "autofit", width = .75)
 
 ```
 
-```{r loading data, include=FALSE}
+```{r loading & cleaning data, include=FALSE}
 
-## load data here
+#Loading data
+data <- 
+  read_csv("cfa_prolific_jan24.csv")
 
+### Data cleaning
+#Delete top two rows
+data <- data[-c(1:2),]
+
+#remove test subjects
+#any participant recorded before 29 Jan 2023, 10.14am
+data <- 
+  data %>% 
+  mutate(EndDate = ymd_hms(EndDate)) %>%
+  filter(RecordedDate > "2024-01-29 10:14:00 UTC")
+
+n_recruited <- length(unique(data$PROLIFIC_PID))
+
+#remove participants who did not complete the survey
+data <- 
+  data %>% 
+  filter(Progress == "100")
+
+n_completed <- length(unique(data$PROLIFIC_PID))
+
+#Attention checks
+#att_1[2] -> must answer 2 to pass
+#att_2[6] -> must answer 6 to pass
+#att_3[5] -> must answer 5 to pass
+
+data <- 
+  data %>% 
+  mutate(
+    `att_1[2]` = ifelse(`att_1[2]` == "2", 1, 0),
+    `att_2[6]` = ifelse(`att_2[6]` == "6", 1, 0),
+    `att_3[5]` = ifelse(`att_3[5]` == "5", 1, 0),
+    att_total = `att_1[2]` + `att_2[6]` + `att_3[5]`
+  ) 
+
+data %>% 
+  group_by(att_total) %>%
+  summarise(n = length(PROLIFIC_PID))
+
+#remove participants who failed 1 or more attention checks
+data <- 
+  data %>% 
+  filter(att_total >= 2)
+
+n_passed <- length(unique(data$PROLIFIC_PID))
+
+#remove participants who reported not paying attention or answering honestly in the subjective attention/validity check
+#keep the two top answers
+data <- 
+  data %>% 
+  filter(attention...146 == "1" | attention...146 == "2")
+
+n_valid <- length(unique(data$PROLIFIC_PID))
 ```
 
 # Introduction
@@ -44,82 +119,89 @@ draft: true
 
 # Methods
 
-```{r participants, eval=FALSE, include=FALSE}
-
-# update code relevant to this sample
-# change eval=TRUE
-
-n <- paste(round((length(CFA1$id)), 2))
-     
-m_age <- paste(round(mean(CFA1$age, na.rm = T),2))
-sd_age <- paste(round(sd(CFA1$age, na.rm = T),2))
-min_age <- min(CFA1$age, na.rm = T)
-max_age <- max(CFA1$age, na.rm = T)
-
-m_ses <- paste(round(mean(CFA1$SES_family, na.rm = T),2))
-sd_ses <- paste(round(sd(CFA1$SES_family, na.rm = T),2))
-
-m_pol <- paste(round(mean(CFA1$politics_overall, na.rm = T),2))
-sd_pol <- paste(round(sd(CFA1$politics_overall, na.rm = T),2))
-
-```
-
 ## Power Analysis
 
-Estimating the sample size needed for a factor analysis relies on rules of thumb. For this study, we use a commonly used rule of thumb of including 10-15 subjects per variable (Pett et al., 2003). Because our largest analysis involves 30 variables, we hope to obtain usable data from 10\*30 = 300 participants. Given that there will be some attrition and removals during data cleaning (estimated to be about 5% based on pilot data), we therefore hope to include about 315 participants total for this analysis.
+Estimating the sample size needed for a factor analysis relies on rules of thumb.
+For this study, we use a commonly used rule of thumb of including 10-15 subjects per variable (Pett et al., 2003).
+Because our largest analysis involves 30 variables, we hope to obtain usable data from 10\*30 = 300 participants.
+Given that there will be some attrition and removals during data cleaning (estimated to be about 5% based on pilot data), we therefore hope to include about 315 participants total for this analysis.
 
-An a priori power analysis for multiple linear regression was calculated for the predictive validity confirmatory analysis, with the following parameters: anticipated effect size f2 = 0.17 (based on pilot data and previous literature we anticipate a moderate effect size); statistical power = 0.8; up to 7 predictor variables (+ 6 covariates) in the largest confirmatory model; and an alpha of 0.0125 (to account for a Bonferonni correction for conducting four models). This results in a sample size of 290 participants. Given that there will be some attrition and removals during data cleaning (estimated to be about 5% based on pilot data), we therefore hope to include about 305 participants total for this analysis.
+An a priori power analysis for multiple linear regression was calculated for the predictive validity confirmatory analysis, with the following parameters: anticipated effect size f2 = 0.17 (based on pilot data and previous literature we anticipate a moderate effect size); statistical power = 0.8; up to 7 predictor variables (+ 6 covariates) in the largest confirmatory model; and an alpha of 0.0125 (to account for a Bonferonni correction for conducting four models).
+This results in a sample size of 290 participants.
+Given that there will be some attrition and removals during data cleaning (estimated to be about 5% based on pilot data), we therefore hope to include about 305 participants total for this analysis.
 
-As the confirmatory factor analysis requires a larger sample size, the total sample size required is determined by this analysis. Thus, we planned for a sample size of 315 participants.
+As the confirmatory factor analysis requires a larger sample size, the total sample size required is determined by this analysis.
+Thus, we planned for a sample size of 315 participants.
 
 ## Participants
 
-XX participants were recruited from Prolific, an online research platform, in January 2023. XX participants did not complete the study and XX people failed to pass attention checks so their data was not analysed. The final analysis consisted of r paste(n) participants with ages ranging from r paste(min_age) - r paste(max_age) (M = r paste(m_age), r paste(sd_age)`). [The same was primarily made up of females (68.3%) and people of Asian ethnicity (42.1%). See the Table 1. for full descriptive statistics. The study was approved by the IRB committee at UCSD (#806617). All participants gave their informed consent before participating and will be compensated at \$9 per hour (approximately \$2.18 for completing a 14.5 minute survey).
+```{r demos, message=FALSE, warning=FALSE, include=FALSE}
+data <-
+  data %>% 
+  mutate(age = as.numeric(age),
+         gender = factor(as.numeric(gender), 
+                         levels = c("1", "2", "3", "4", "5", "6", "7"),
+                         labels = c("Man", "Woman", "Trans Man", "Trans Woman", "Non-binary", "Other", "No response")),
+         race = factor(as.numeric(ethnoracial),
+                       levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9"),
+                       labels = c("Asian", "White", "Hispanic or Latino", "Black or African American", "Middle Eastern or North African", "Native Hawaiian or other Pacific Islander", "First Nation or Indigenous American", "Mixed", "No response")))
 
-Table 1. Descriptive Statistics [update R code to generate table]
+#age
+min_age <- min(data$age, na.rm = T)
+max_age <- max(data$age, na.rm = T)
+mean_age <- round(mean(data$age, na.rm = T),2)
+sd_age <- round(sd(data$age, na.rm = T),2)
 
-```{r gender table, eval=FALSE, include=FALSE}
+#gender
+gender_sum <- 
+data %>% 
+  group_by(gender) %>% 
+  summarise(n = length(id),
+            perc = (n/n_valid)*100)
 
-# update code relevant to this sample
-# change eval=TRUE
+#race
+  race_sum <- 
+  data %>% 
+  group_by(race) %>% 
+  summarise(n = length(id),
+            perc = (n/n_valid)*100) %>% 
+  arrange(dplyr::desc(perc))
 
-desc_table <-
-CFA1 %>% 
-     group_by(gender) %>% 
-     summarise(n = length(id),
-               `Age(mean)` = round(mean(age, na.rm = T),2),
-              `Age(sd)` = ifelse(is.na(sd(age, na.rm=T)), print(NaN), print(round(sd(age, na.rm = T),2)))) 
-
+  
 ```
 
-::: row
+`r n_recruited` participants were recruited from Prolific, an online research platform, in January 2023.
+`r n_completed - n_passed` people failed to pass attention checks so their data was not analysed.
+The final analysis consisted of `r n_valid` participants with ages ranging from `r paste(min_age)` - `r paste(max_age)` (M = `r paste(mean_age)`, `r paste(sd_age)`).
+The sample included `r gender_sum[2,2]` Women, `r gender_sum[1,2]` Men, `r gender_sum[4,2]` Trans Women, `r gender_sum[3,2]` Trans Men, `r gender_sum[5,2] + gender_sum[6,2]` Non-binary, and `r gender_sum[7,2]` no response.
+The sample was primarily made up of White participants (see Table 1. for full summary of participant race) The study was approved by the IRB committee at UCSD (#806617).
+All participants gave their informed consent before participating and were compensated at \$9 per hour (approximately \$2.18 for completing a 14.5 minute survey).
+
+**Table 1. Descriptive Statistics** 
+
+::: row 
 ::: {.col-xs-12 .col-md-6}
-```{r printdesctable, eval=FALSE, message=FALSE, include=FALSE, paged.print=FALSE}
 
-# update code relevant to this sample
-# change eval=TRUE include=TRUE
- 
-     flextable(desc_table) %>% 
-  autofit() 
-     #%>% 
- # set_caption(caption = "Gender")
+```{r print_gender, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+gender_sum %>% 
+    flextable() %>% 
+    set_header_labels(gender = "Gender", n = "N", perc = "%") %>%
+    colformat_double(j = "perc", digits = 2) %>% 
+    autofit()
 
 ```
 
-`r officer::run_columnbreak()`
+`r officer::run_columnbreak()` 
 :::
 
 ::: {.col-xs-12 .col-md-6}
-```{r race, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE include=TRUE
-
-CFA1 %>% 
-     group_by(ethnoracial) %>% 
-     summarise(n = length(id)) %>% 
-     flextable() %>% 
-  autofit() #%>% 
- # set_caption(caption = "Ethnoracial")
+```{r print_race, echo=FALSE, message=FALSE}
+  race_sum %>% 
+    flextable() %>% 
+    set_header_labels(race = "Race", n = "N", perc = "%") %>%
+    colformat_double(j = "perc", digits = 2) %>% 
+    autofit()
 
 ```
 :::
@@ -127,7 +209,42 @@ CFA1 %>%
 
 <!---BLOCK_MULTICOL_STOP{widths: [4,2], space: 0.1, sep: false}--->
 
-Political Ideology was scored on a 7-point Likert scale with 1 = Most Conservative and 7 = Most Liberal. The mean political ideology was r paste(m_pol)(r paste(sd_pol)), showing that this sample skewed more liberal. This is to be expected with our student sample. The mean SES was r paste(m_ses)(r paste(sd_ses)).
+```{r covariates, message=FALSE, warning=FALSE, include=FALSE}
+
+data <- 
+  data %>% 
+  mutate(across(starts_with("politics"), as.numeric),
+         politics = (politics_overall + politics_economic + politics_social)/3,
+         SES_peers = as.numeric(SES_peers))
+
+pol_alpha <- 
+data %>% 
+  dplyr::select(politics_overall, politics_economic, politics_social) %>% 
+  ltm::cronbach.alpha()
+
+pol_alpha <- pol_alpha$alpha
+pol_mean <- round(mean(data$politics, na.rm = T),2)
+pol_se <- round(sd(data$politics, na.rm = T),2)
+
+ses_mean <- round(mean(data$SES_peers, na.rm = T),2)
+ses_se <- round(sd(data$SES_peers, na.rm = T),2)
+
+```
+
+Political Ideology was scored on a 7-point Likert scale with 1 = Most Liberal and 7 = Most Conservative The mean political ideology was `r pol_mean`(`r pol_se`). There was a skew towards more liberal ideolgoies. 
+
+**Figure 1. Distribution of Political Ideology**
+```{r pol normality, echo=FALSE, message=FALSE, warning=FALSE}
+pol_normality <- 
+data %>% 
+  dplyr::select(politics) %>% 
+  mvn(mvnTest="mardia",  
+    univariateTest="SW",  #shaprio-wilkes
+    univariatePlot = "histogram",
+    # multivariatePlot = "qq"
+    )
+```
+
 
 ## Materials
 
@@ -137,11 +254,21 @@ The development of the DEEP CTN Scale was conducted in our lab over the past 2.5
 
 #### 1. Search of existing scales:
 
-An extensive search of the literature was conducted to source all existing adult measures of CTN. Based on this search, we identified two measures that showed promise for further adaptation: The AIMES Multidimensional CTN Scale (Meis-Harris et al., 2021) and the Disposition to Connect with Nature scale (Brügger et al., 2011). We identified in our search that a multi-dimensional structure should be maintained for the measure, however existing multi-dimensional measures showed conflicting dimensional structure (Hatty et al., 2020 and Meis-Harris et al., 2021 - the later having a more complex and theoretically driven dimensional structure which is why it was chosen to retain for adaptation). The Disposition to Connect with Nature scale addressed issues of self-report bias though given it was written for a European sample the items were not generalizable to other populations. The items from these two scales gave us a total of 59 items (AIMES = 19 items; Dispositional CTN = 40 items). Items were reworded for generalizability and clarity. Any reference to “connection to nature” was removed to avoid concerns about participants not fully understanding this concept. Items were also removed if they were redundant. This left a total of 39 items adapted from existing measures (AIMES = 17 items; Dispositional CTN = 28).
+An extensive search of the literature was conducted to source all existing adult measures of CTN.
+Based on this search, we identified two measures that showed promise for further adaptation: The AIMES Multidimensional CTN Scale (Meis-Harris et al., 2021) and the Disposition to Connect with Nature scale (Brügger et al., 2011).
+We identified in our search that a multi-dimensional structure should be maintained for the measure, however existing multi-dimensional measures showed conflicting dimensional structure (Hatty et al., 2020 and Meis-Harris et al., 2021 - the later having a more complex and theoretically driven dimensional structure which is why it was chosen to retain for adaptation).
+The Disposition to Connect with Nature scale addressed issues of self-report bias though given it was written for a European sample the items were not generalizable to other populations.
+The items from these two scales gave us a total of 59 items (AIMES = 19 items; Dispositional CTN = 40 items).
+Items were reworded for generalizability and clarity.
+Any reference to “connection to nature” was removed to avoid concerns about participants not fully understanding this concept.
+Items were also removed if they were redundant.
+This left a total of 39 items adapted from existing measures (AIMES = 17 items; Dispositional CTN = 28).
 
 #### 2. Development of new items:
 
-We chose to build upon the strong theoretical basis for the dimensional structure of the AIMES with some changes. Meis-Harris et al., (2021) based their dimensions off Ives et al., (2018) which lists five aspects of human-nature relationships that can lead to behavioral change. We agree with that three of these dimensions are part of the construct of CTN (these are also widely agreed to be part of the construct of CTN in the literature):
+We chose to build upon the strong theoretical basis for the dimensional structure of the AIMES with some changes.
+Meis-Harris et al., (2021) based their dimensions off Ives et al., (2018) which lists five aspects of human-nature relationships that can lead to behavioral change.
+We agree with that three of these dimensions are part of the construct of CTN (these are also widely agreed to be part of the construct of CTN in the literature):
 
 1.  Experiential (time spent in nature)
 
@@ -155,7 +282,8 @@ However, they included two value-based dimensions which, while strongly correlat
 
 5.  Philosophical views of nature (viewing humans as interrelated with nature e.g., universal values)
 
-We chose to remove the the material dimension entirely and adapt the philosophical dimension so it more accurately reflected the individual level of CTN. That is, it measured one’s own beliefs about how, as an individual, they are connected to nature.
+We chose to remove the the material dimension entirely and adapt the philosophical dimension so it more accurately reflected the individual level of CTN.
+That is, it measured one’s own beliefs about how, as an individual, they are connected to nature.
 
 In line with this re-analysis of the construct of CTN we further adapted the existing 39 items and created an additional 14 items in order to capture the following dimensions of CTN:
 
@@ -167,11 +295,17 @@ In line with this re-analysis of the construct of CTN we further adapted the exi
 
 4.  Spiritual (formerly philosophical)
 
-Items were created to capture, behavioral, embodied, and experiential relationships with nature (in line with Brügger et al., 2011’s Disposition to CTN) in order to overcome concerns with self-report bias. This resulted in items that asked about conscious attendance to nature. There was also an effort to create items that updated previous philosophical items to more individual relationships with nature which tapped into a more spiritual relationship. This resulted in a total of 58 items.
+Items were created to capture, behavioral, embodied, and experiential relationships with nature (in line with Brügger et al., 2011’s Disposition to CTN) in order to overcome concerns with self-report bias.
+This resulted in items that asked about conscious attendance to nature.
+There was also an effort to create items that updated previous philosophical items to more individual relationships with nature which tapped into a more spiritual relationship.
+This resulted in a total of 58 items.
 
 #### 3. Exploratory Factor Anlaysis:
 
-Two general population Prolific samples (N = 575, N = 577) and one student sample (N = 485) were collected from November 2022 until April 2023. Three exploratory factor analyses were conducted on these samples. Across the three EFA’s, four factors consistently arose as both the best fitting model and aligning with our theoretical framework. The four factors selected for analysis in a confirmatory factor analysis were:
+Two general population Prolific samples (N = 575, N = 577) and one student sample (N = 485) were collected from November 2022 until April 2023.
+Three exploratory factor analyses were conducted on these samples.
+Across the three EFA’s, four factors consistently arose as both the best fitting model and aligning with our theoretical framework.
+The four factors selected for analysis in a confirmatory factor analysis were:
 
 1.  Deep (deeply seeing the self as part of nature)
 
@@ -183,11 +317,15 @@ Two general population Prolific samples (N = 575, N = 577) and one student sampl
 
 #### 4. Pilot Confirmatory Factor Analysis:
 
-Using a student sample (N: 341), a confirmatory factor analysis found that the proposed four factor model was an adequate fit. It also showed that a hierarchical model had adequate fit. Further, both of these models fitted better than a model with one single uni-dimensional factor. The full list of items used in this study are displayed in Table 2.
+Using a student sample (N: 341), a confirmatory factor analysis found that the proposed four factor model was an adequate fit.
+It also showed that a hierarchical model had adequate fit.
+Further, both of these models fitted better than a model with one single uni-dimensional factor.
+The full list of items used in this study are displayed in Table 2.
 
 See Supplementary Documents for details of these pilot studies.
 
-Table 2. DEEP CTN Scale Items
+Table 2.
+DEEP CTN Scale Items
 
 ```{r final items, eval=FALSE, include=FALSE}
 
@@ -202,7 +340,12 @@ Table 2. DEEP CTN Scale Items
 # change eval=TRUE 
 ```
 
-Two pre-existing CTN scales were used to identify convergent validity. The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021). The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnected one’s self is to nature. It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree), Cronbach's Alpha = (r paste(alpha_CNS)). The EID-R is a 14-item scale designed to measure how interneconnected one’s self is to nature. It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me), Cronbach's Alpha = ((r paste(alpha_EIDR)).
+Two pre-existing CTN scales were used to identify convergent validity.
+The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021).
+The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnected one’s self is to nature.
+It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree), Cronbach's Alpha = (r paste(alpha_CNS)).
+The EID-R is a 14-item scale designed to measure how interneconnected one’s self is to nature.
+It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me), Cronbach's Alpha = ((r paste(alpha_EIDR)).
 
 ### Predictive Validity measures
 
@@ -213,7 +356,9 @@ Two pre-existing CTN scales were used to identify convergent validity. The Conne
 # change eval=TRUE 
 ```
 
-Participants completed a modified version of the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors. Modifications were made to clarify existing items (to view the scale used in this study view Supplementary docs in the OSF project). This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always), Cronbach's Alpha = ((r paste(alpha_PEB)`).
+Participants completed a modified version of the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors.
+Modifications were made to clarify existing items (to view the scale used in this study view Supplementary docs in the OSF project).
+This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always), Cronbach's Alpha = ((r paste(alpha_PEB)\`).
 
 #### Psychological Well-being
 
@@ -233,7 +378,10 @@ A single measure of psychological well-being measure was created by aggregating 
 # change eval=TRUE 
 ```
 
-Participants were also asked about their belief that the world is interconnected using the Interconnected subscale of the Primal Beliefs Inventory (Clifton et al., 2019). This was included as a covariate as pilot data showed this measure is correlated to both DEEP CTN and PEB (See supplementary documents for full analysis of the pilot data). The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]). All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree), Cronbach's Alpha = (r paste(alpha_primal)).
+Participants were also asked about their belief that the world is interconnected using the Interconnected subscale of the Primal Beliefs Inventory (Clifton et al., 2019).
+This was included as a covariate as pilot data showed this measure is correlated to both DEEP CTN and PEB (See supplementary documents for full analysis of the pilot data).
+The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]).
+All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree), Cronbach's Alpha = (r paste(alpha_primal)).
 
 #### Demographics
 
@@ -242,8 +390,17 @@ Participants were also asked about their belief that the world is interconnected
 # change eval=TRUE 
 ```
 
-Participants also answered several demographics questions (age, gender, political ideology, and social economic status). Political ideology was a composite of three items asking about overall political ideology, economic political ideology, and social political ideology measured on a Likert scale ranging from 1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative), Cronbach's Alpha = ((r paste(alpha_pol)). The Subjective Socio-economic Ladder (Adler et al., 2000) was used to measure SES. Participant's mark where they believe they are on the ladder, with 10 representing people who are the best off, and 1 representing people who are the worst off.
+Participants also answered several demographics questions (age, gender, political ideology, and social economic status).
+Political ideology was a composite of three items asking about overall political ideology, economic political ideology, and social political ideology measured on a Likert scale ranging from 1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative), Cronbach's Alpha = ((r paste(alpha_pol)).
+The Subjective Socio-economic Ladder (Adler et al., 2000) was used to measure SES.
+Participant's mark where they believe they are on the ladder, with 10 representing people who are the best off, and 1 representing people who are the worst off.
 
 ## Procedure
 
-The study was conducted entirely online and remotely. All data was collected via the survey program Qualtrics. Once a potential participant shows interest in the study by signing up on Prolific, they were self-directed to a Qualtrics survey, where they consented to participate. Participants are asked to submit an open-ended definition of nature (This was collected for a future exploratory qualitative study). Next participants were randomly shown the New DEEP CTN Scale, Connectedness to Nature Scale, Environmental Identity Scale, Recurring Pro-Environmental Behavior Scale , Primals Inventory - Interconnected sub-scale, Ryff Well-being scale, PANAS positivity sub-scale, and the Subjective Vitality Scale. Next, participants complete a demographics question block which includes items relating to covariates of interest (e.g., political ideology, SES, and age) Last, participants were asked to rate their effort and attention levels on the questionnaires. Participants were told that their responses to this question are completely anonymous, and will not in any way affect their Prolific payment, but were used to improve the validity of data included in our analyses.
+The study was conducted entirely online and remotely.
+All data was collected via the survey program Qualtrics.
+Once a potential participant shows interest in the study by signing up on Prolific, they were self-directed to a Qualtrics survey, where they consented to participate.
+Participants are asked to submit an open-ended definition of nature (This was collected for a future exploratory qualitative study).
+Next participants were randomly shown the New DEEP CTN Scale, Connectedness to Nature Scale, Environmental Identity Scale, Recurring Pro-Environmental Behavior Scale , Primals Inventory - Interconnected sub-scale, Ryff Well-being scale, PANAS positivity sub-scale, and the Subjective Vitality Scale.
+Next, participants complete a demographics question block which includes items relating to covariates of interest (e.g., political ideology, SES, and age) Last, participants were asked to rate their effort and attention levels on the questionnaires.
+Participants were told that their responses to this question are completely anonymous, and will not in any way affect their Prolific payment, but were used to improve the validity of data included in our analyses.

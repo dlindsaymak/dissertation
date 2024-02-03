@@ -7896,6 +7896,8 @@ svg {
  **************************************************/
 /* Based on Bootstrap's `table-responsive` style. */
 table {
+  display: table;
+  width: 100%;
   overflow-x: scroll;
   margin-bottom: 1rem;
   font-size: 0.8rem;
@@ -8791,6 +8793,15 @@ footer .powered-by {
 
 .dark .li-cite-author a {
   color: #f8f8f2; }
+
+.table {
+  width: 100%;
+  overflow-x: scroll;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  overflow-wrap: normal;
+  word-wrap: normal;
+  word-break: normal; }
 
 /*************************************************
  *  Style for right to left (RTL) languages.

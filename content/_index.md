@@ -31,11 +31,18 @@ sections:
       <script async defer src="https://buttons.github.io/buttons.js"></script>
     title: Hugo Academic Theme
   demo: true
+
+- block: portfolio
+  id: projects
+  content:
+    title: Projects
+    filters:
+      folders:
+        - project
   design:
-    background:
-      gradient_end: '#1976d2'
-      gradient_start: '#004ba0'
-      text_color_light: true
+    columns: '1'
+    view: showcase
+    flip_alt_rows: false
 - block: collection
   content:
     count: 5
