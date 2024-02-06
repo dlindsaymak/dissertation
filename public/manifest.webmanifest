@@ -2,14 +2,14 @@
   "name": "Deb's Dissertation Data",
   "short_name": "Deb's Dissertation Data",
   "lang": "en-us",
-  "theme_color": "#1565c0",
-  "background_color": "#1565c0",
+  "theme_color": "#397367",
+  "background_color": "#397367",
   "icons": [{
-    "src": "/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png",
+    "src": "/media/icon_huf8256892412782f54631383a6ffb2713_36721_192x192_fill_lanczos_center_3.png",
     "sizes": "192x192",
     "type": "image/png"
     }, {
-    "src": "/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_3.png",
+    "src": "/media/icon_huf8256892412782f54631383a6ffb2713_36721_512x512_fill_lanczos_center_3.png",
     "sizes": "512x512",
     "type": "image/png"
      }],

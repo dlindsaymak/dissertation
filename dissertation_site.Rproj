@@ -13,5 +13,8 @@ RnwWeave: Sweave
 LaTeX: pdfLaTeX
 
 BuildType: Website
+WebsitePath: C:/Users/debra/Dropbox/Education/PhD - UCSD/Thesis/dissertation_site
+
+MarkdownReferences: Document
 
 ZoteroLibraries: "My Library"
