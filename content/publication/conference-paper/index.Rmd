@@ -45,6 +45,7 @@ knitr::opts_chunk$set(collapse = TRUE)
 library(tidyverse) #base package that runs most functions
 library(flextable) #tables
 library(moments) #skewness & kurtosis
+library(DataExplorer) #plot histograms
 library(lavaan) #CFA 
 library(corrplot) #correlations
 library(MVN) #test of normality
@@ -55,6 +56,11 @@ library(effectsize) #effect sizes
 library(ggplot2) #plots
 library(knitr) #make life easier for tables
 library(kableExtra) # better tables (hopefully?)
+library(DT)#more better tables
+library(corpcor) #Factor analysis
+library(GPArotation) #Factor analysis
+library(psych) #Factor analysis
+library(lavaan)#Factor analysis
 ```
 
 ```{r loading data, include=FALSE}
@@ -144,15 +150,12 @@ This resulted in a total of 58 items.
 
 items <- read_csv("items.csv", na = " ")
 
+
 items %>% 
   select(`Original Scale`, `Original Item`, Reworded, Notes) %>% 
-  kbl(format = "html", 
-     label = "tab:1",
-     booktabs = T,
-     longtable = T) %>% 
-  kable_styling(bootstrap_options = "responsive", fixed_thead = T) %>% 
-  scroll_box(height = "350px")
-  
+  kbl("html") %>% 
+  scroll_box(height = "400px", fixed_thead = TRUE)
+
 ```
 
 # Study 1
@@ -161,53 +164,189 @@ items %>%
 
 ### Sample
 
-Two general population Prolific samples and one student sample were collected from November 2022 until April 2023 (See Table 2 for details of these samples)Three exploratory factor analyses were conducted on these samples.
+Two general population Prolific samples and one student sample were collected from November 2022 until April 2023 (See Table 2 for details of these samples) Three exploratory factor analyses were conducted on these samples.
 
 **Table 2. Sample details across three exploratory factor analyses**
 
-|              | Sample 1 (Prolific Nov 22) | Sample 2 (Prolific Apr 23) | Sample 3 (SONA Jan-Apr 23) |
-|----------------|:-----------------:|:-----------------:|:-----------------:|
-| N            |            575             |            578             |            485             |
-| Age          |        29.61(6.11)         |        20.37(2.38)         |        40.56(13.5)         |
-| **Gender**   |                            |                            |                            |
-| Male         |            283             |            257             |            113             |
-| Female       |            256             |            294             |            360             |
-| Trans man    |             6              |             7              |             0              |
-| Trans woman  |             1              |             2              |             1              |
-| Non-binary   |             24             |             11             |             11             |
-| No response  |             5              |             6              |             0              |
-| **Race**     |                            |                            |                            |
-| White        |            360             |            441             |             89             |
-| Black        |             40             |             41             |             9              |
-| Asian        |             68             |             31             |            187             |
-| Latinx\*     |                            |                            |            130             |
-| Mixed race   |             54             |             30             |             46             |
-| Other        |             38             |             18             |             21             |
-| No response  |             15             |             16             |             3              |
-| Politics\*\* |         5.18(1.55)         |         4.81(1.70)         |         5.02(1.14)         |
+```{r demotable, echo=FALSE, message=FALSE, warning=FALSE}
+#make empty dataframe with 14 rows and 5 columns
+# col 1 is for the label: "Gender" in rows 3 - 8; "Race" in rows 9 - 15
 
-\*Prolific does not capture this racial identity\
-\*\*1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative)
+set_flextable_defaults(na_str = "NA")
+
+  data.frame(matrix(ncol = 5, nrow = 15)) %>% 
+  mutate(X1 = c("N", "Age",
+                   "Gender", "Gender", "Gender", "Gender", "Gender", "Gender",
+                   "Race", "Race", "Race", "Race", "Race", "Race", "Race"),
+         X2 = c("N", "Age", 
+                      "Male", "Female", "Trans Man", "Trans Woman", "Non-binary", "No response",
+                      "White", "Black", "Asian", "Latinx", "Mixed race", "Other", "No response"),
+         X3 = c(575, "29.61(6.11)", 
+                        283, 256, 6, 1, 24, 5, 
+                        360, 40, 68, NA, 54, 38, 15),
+         X4 = c(578, "20.37(2.38)", 
+                        257, 294, 7, 2, 11, 6, 
+                        441, 41, 31, NA, 30, 18, 16),
+         X5 = c(485, "40.56(13.5)", 
+                        113, 360, 0, 1, 11, 0, 
+                        89, 9, 187, 130, 46, 21, 3)) %>% 
+  flextable() %>% 
+    autofit() %>% 
+  add_header_row(values = c("Variable", "Variable", "Sample 1", "Sample 2", "Sample 3")) %>% 
+  delete_rows(i = 2, part = "head") %>%
+  merge_h(part = "header") %>% 
+  merge_h_range(i = 1:2, 
+                j1 = "X1", 
+                j2 = "X2") %>% 
+  merge_v() %>% 
+  align(j = "X1", align = "left", part = "body") %>% 
+  align(j = c("X3", "X4", "X5"), align = "center", part = "body") %>%
+  valign(j = "X1", i = 3:14, valign = "top") %>% 
+  flextable::footnote(i = 12, j = 2,
+           value = as_paragraph("Prolific does not capture this racial identity"),
+           ref_symbols = c("*"),
+           part = "body") %>% 
+    theme_booktabs()
+
+
+
+```
 
 ### Items Removed
 
 Several items were removed in sample 1 before the EFA was conducted.
 These items were also excluded from samples 2 and 3.
-Five items were removed due to high collinearity
+
+[Three items removed for high colinearity]{.underline}
 
 A test for overdetermination revealed that the model may be overdetermined due to high colinearity between items (det \<.00001).
-Inspection of the correlations revealed five items with highly colinearity (see Table 2).
+Inspection of the correlations revealed five items with highly colinearity (see Figure 1).
+
+```{r colinearity table, message=FALSE, warning=FALSE, include=FALSE}
+#arrange in order of predicted dimensions
+col_order <- c("AIMES_4", "AIMES_1", "AIMES_2", "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
+               "DISPO_32", "DISPO_37", "DISPO_38", "DISPO_39", "DISPO_16", "DISPO_36",
+               "AIMES_8", "AIMES_6", "AIMES_5", "AIMES_7",
+               "AIMES_9", "AIMES_10", "AIMES_11",
+               "AIMES_15", "AIMES_14", "DISPO_28", "DISPO_8", "DISPO_13", "DISPO_18", "DISPO_26","DISPO_33", "DISPO_19", "NEW_4", "DISPO_1", "DISPO_5", "DISPO_6", "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
+               "DISPO_2", "DISPO_10", "DISPO_11", "DISPO_12", "DISPO_15", "NEW_6", "NEW_7", "NEW_8", "NEW_11", "NEW_12",
+               "AIMES_17", "NEW_1", "NEW_9", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12", "AIMES_18", "AIMES_19", "AIMES_20", "NEW_3")
+
+factor_order_prolific <-
+  efa_1[, col_order]
+
+factor_order_prolific <-
+  factor_order_prolific %>% 
+  select(-AIMES_18,
+         -AIMES_19,
+         -AIMES_9,
+         -AIMES_10,
+         -AIMES_11)
+
+
+#correlation
+big_corr_prolific <-
+factor_order_prolific %>% 
+  as.matrix() %>% 
+  rcorr()
+
+
+#correlations over 0.8
+correlation_table <-
+ round(big_corr_prolific$r, 2) %>% 
+  as.data.frame() %>%
+   rownames_to_column %>%
+    gather(colname, value, -rowname) %>%
+    filter(abs(value) >= 0.8 & abs(value) < 1)
+
+#table of the correlation over .8
+high_cor_items <- 
+correlation_table %>% 
+   pull(rowname) %>% 
+   unique()
+ 
+
+high_cor_items <-
+  factor_order_prolific %>% 
+  select(all_of(high_cor_items)) %>%
+   as.matrix() %>% 
+  rcorr()
+
+#correlation plot 
+nm = rownames(high_cor_items$r)
+m = t(combn(nm, 2))
+d = cbind(data.frame(m), R = high_cor_items$r[m], P = high_cor_items$P[m])
+d$label = round(d$R, 2)
+d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
+d$X1 = factor(d$X1, nm)
+d$X2 = factor(d$X2, rev(nm))
+
+graphics.off()
+validation_plot <- 
+  ggplot(d, aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c() +
+    geom_text(color = ifelse(d$R > 0.65, "black", "white"), size = 2) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ 
+```
+
+**Figure 1. Correlations of items \> .80**
+
+```{r corplot, echo=FALSE}
+ print(validation_plot)
+```
+
 The decision was made to remove AIMES_15, AIMES_7, and AIMES_2.
 However, removing these items did not improve the risk of overdetermination (det \<.00001).
 
+[Three items removed for low within-item variance]{.underline}
+
 Further assumptions were explored to see if other items should be removed.
 A Bartlett’s test of sphericity found there was adequate shared variance between items (𝜲2 = 17044.9(1225), p \<.001).
+
 A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.97).
 However, exploration of individual items identified three items which may not have sufficient variance: DISPO_32, DISPO_38, & DISPO_36 (MSA = 0.89, MSA = 0.82, & MSA = 0.84 respectively).
-Inspection for ceiling and floor effects confirms this, as well as identifying several other items that may have limited variance (See Figure 1).
-Several items also appeared to have high positive or negative skew (See Figure 2).
+Inspection for ceiling and floor effects confirms this, as well as identifying several other items that may have limited variance (See Figure 2).
+Several items also appeared to have high positive or negative skew (See Figure 3).
 Several items were removed due to high skewedness (NEW_9, DISPO_38, DISPO_39, DISPO_6, & DISPO_36).
 A final check of overdetermination revealed there is still the potential for the fit to be overdetermined (det \<.00001).
+
+**Figure 2. Box plots depicting ceiling and floor effects of items**
+
+```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.show='animate'}
+boxplot(factor_order_prolific[,c(1:7)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(8:14)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(15:21)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(22:28)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(29:35)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(36:42)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(43:48)],
+        las = 2)
+
+boxplot(factor_order_prolific[,c(49:53)],
+        las = 2)
+```
+
+**Figure 3. Histograms depicting skewedness of items**
+
+```{r histograms skew, echo=FALSE, message=FALSE, warning=FALSE}
+plot_histogram(factor_order_prolific)
+```
 
 Sample 2
 
@@ -219,6 +358,30 @@ A Bartlett’s test of sphericity found there was adequate shared variance betwe
 A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95).
 Exploration of individual items showed that no single item was \< .80.
 Inspection of box plots and histograms of distribution showed not items with ceiling/floor effects or high skewedness.
+
+```{r sample2prep, echo=FALSE, message=FALSE, warning=FALSE}
+
+#arrange in order of predicted dimensions
+col_order2 <- c("AIMES_4", "AIMES_1",  "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
+                "DISPO_37", "DISPO_16", 
+               "AIMES_8", "AIMES_6", "AIMES_5", 
+               "AIMES_9", "AIMES_10", "AIMES_11",
+                "DISPO_28", "DISPO_8", "DISPO_13",  "DISPO_33", "DISPO_19", "DISPO_1",  "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
+               "DISPO_2", "DISPO_10", "DISPO_11", "DISPO_12", "DISPO_15", "NEW_6", "NEW_7", "NEW_8", "NEW_11", "NEW_12",
+               "AIMES_17", "NEW_1", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12", "AIMES_18", "AIMES_19", "AIMES_20")
+
+efa_2 <-
+  efa_2[, col_order2]
+
+efa_2_items <-
+  efa_2 %>% 
+  select(-AIMES_18,
+         -AIMES_19,
+         -AIMES_9,
+         -AIMES_10,
+         -AIMES_11)
+
+```
 
 Sample 3
 
@@ -232,6 +395,27 @@ A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adeq
 Exploration of individual items showed that no single item was \< .80.
 Inspection of box plots and histograms of distribution showed not items with ceiling/floor effects or high skewedness.
 
+```{r sample 3 prep, echo=FALSE, message=FALSE, warning=FALSE}
+col_order3 <- c("AIMES_4", "AIMES_1",  "DISPO_29", "DISPO_21", "DISPO_22", "DISPO_34", 
+                "DISPO_37", "DISPO_16", 
+               "AIMES_8", "AIMES_6", "AIMES_5", 
+               "AIMES_9", "AIMES_10", "AIMES_11",
+                "DISPO_28", "DISPO_8", "DISPO_13",  "DISPO_33", "DISPO_19", "DISPO_1",  "DISPO_20", "NEW_5", "DISPO_7", "DISPO_23", 
+               "DISPO_2", "DISPO_10", "DISPO_11", "DISPO_12", "DISPO_15", "NEW_6", "NEW_7", "NEW_8", "NEW_11", "NEW_12",
+               "AIMES_17", "NEW_1", "NEW_10", "NEW_2", "SPIRIT_10", "SPIRIT_12", "AIMES_18", "AIMES_19", "AIMES_20")
+
+efa_3_items <-
+  efa_3[, col_order3]
+
+efa_3_items <-
+  efa_3_items %>% 
+  select(-AIMES_18,
+         -AIMES_19,
+         -AIMES_9,
+         -AIMES_10,
+         -AIMES_11)
+```
+
 ### Number of Factors
 
 Despite the potential for overdetermination, an EFA was conducted using a principal analysis method of extraction.
@@ -239,42 +423,559 @@ This method has been found to be robust with models with non-normal data (Briggs
 The Psych package in R was used with a promax rotation and principal analysis factoring method.
 
 The number of factors to be extracted was estimated using both a scree plot and parallel analysis.
-The screen plot suggested \~3-4 factors, while parallel analysis suggested 6 factors across all three samples
+The screen plot suggested \~3-4 factors, while parallel analysis suggested 6 factors across all three samples.
+(See Figure 3)
 
-[insert plots here from all three samples]
+```{r scree plot, message=FALSE, warning=FALSE, include=FALSE}
 
-Four models were run across all three samples: \* Six factors \* Five factors \* Four factors \* Simplified four factors (removing dual loading and poor loading items from four factor model)
+#sample 1
+efa_1_items <-
+  factor_order_prolific %>% 
+  select(-NEW_9,
+         -DISPO_38,
+         -DISPO_39,
+         -DISPO_6,
+         -DISPO_36,
+         -AIMES_15,
+         -AIMES_7,
+         -AIMES_2)
 
-[Link to pdf for these tables - all three samples]
+eigens_1 <-
+  eigen(cor(efa_1_items))
+
+parallel_1 <- 
+fa.parallel(efa_1_items, fa = "fa")
+
+
+#Sample 2
+eigens_2 <-
+  eigen(cor(efa_2_items))
+
+parallel_2 <- 
+fa.parallel(efa_2_items, fa = "fa")
+
+
+#Sample 3
+eigens_3 <-
+  eigen(cor(efa_3_items))
+
+scree(factor_order_prolific, pc=FALSE)
+
+parallel_3 <- 
+fa.parallel(efa_3_items, fa = "fa")
+
+#saving plots
+paraplot_1<- plot(parallel_1,)
+paraplot_2<- plot(parallel_2,)
+paraplot_3<- plot(parallel_3,)
+
+
+```
+
+**Figure 3. Scree plots and parallel analysis of the number of factors across three samples**
+
+```{r printing eigens, echo=FALSE, fig.show='animate'}
+
+plot(parallel_1,)
+plot(parallel_2,)
+plot(parallel_3,)
+
+
+```
+
+Four models were run across all three samples:
+
+-   Six factors
+-   Five factors
+-   Four factors
+-   Simplified four factors (removing dual loading and poor loading items from four factor model)
+
+[View the full factor loadings across the three samples.](https://osf.io/nrw35)
 
 ### Item Selection Based on Model Fit
 
-The simplified 4-factor model may be still be overdetermined: determinant \< 0.00001, even though we have removed items with high covariance.
+The simplified 4-factor model may be still be overdetermined: determinant \< 0.00001 (in all 3 samples), even though we have removed items with high covariance.
 
 Tests of shared variance between items and variance within items both suggest the data is suitable for factor analysis.
-Sample 1 - Bartlett’s test of sphericity showed a 𝜲2 = 3171.39(595), p \<.001).
-A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.97).
-Sample 2 - Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p \<.001).
-A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95).
-Sample 3 - Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p \<.001).
-A Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95).
+
+-   Sample 1
+
+    -   Bartlett’s test of sphericity showed a 𝜲2 = 3171.39(595), p \<.001).
+
+    -   Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.97).
+
+-   Sample 2
+
+    -   Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p \<.001).
+
+    -   Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95).
+
+-   Sample 3
+
+    -   Bartlett’s test of sphericity showed a 𝜲2 = 6674.74(406), p \<.001).
+
+    -   Kaiser-Meyer-Olkin test of factor adequacy found that, overall, there was adequate variance within items (MSA = 0.95).
 
 We calculated several fit indices and found that the simplified four-factor model was an appropriate fit across all three samples.
-While the full four-factor model, shows better fit according to these indices.
+(See Table 4.) While the full four-factor model, shows better fit according to these indices.
 We chose to keep the simplified factor due to the full four factor model including items that cross loaded.
 
-The root mean square error of the approximate (RMSEA) should aim for \> 0.05.
-The root mean square of the residuals (RMSR) should be close to 0.
-The Tucker-Lewis Index (TLI) aims for scores \> 0.9.
-The Baysean Information Criteria (BIC) should be smaller and more negative.
+```{r fit indices table, message=FALSE, warning=FALSE, include=FALSE}
+#Sample 1
+fit_6_efa1 <- 
+  fa(efa_1_items, 6, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_5_efa1 <- 
+  fa(efa_1_items, 5, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_4_efa1 <- 
+  fa(efa_1_items, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+#reduced four factor
+efa_1_items_reduced <-
+  efa_1_items %>% 
+  select(-AIMES_4, 
+        -AIMES_5,
+        -NEW_5,
+        -DISPO_5,
+        -DISPO_19,
+        -DISPO_13,
+        -DISPO_26,
+        -DISPO_32,
+        -NEW_8,
+        -DISPO_20,
+        -DISPO_23,
+        -NEW_6,
+        -NEW_4)
 
-[insert table off all sample fit indices]
+fit_4_red_efa1 <- 
+  fa(efa_1_items_reduced, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
 
-Based on these results we selected xx items to test in a confirmatory factor analysis.
+chi61 <- fit_6_efa1$chi
+df61 <- fit_6_efa1$dof
+rmsea61 <- paste0(round(fit_6_efa1$RMSEA[1],3), " (", 
+                  round(fit_6_efa1$RMSEA[2],3), " - ", 
+                  round(fit_6_efa1$RMSEA[3],3), ")")
+rmsr61 <- fit_6_efa1$rms
+tli61 <- fit_6_efa1$TLI
+bic61 <- fit_6_efa1$BIC
 
+chi51 <- fit_5_efa1$chi
+df51 <- fit_5_efa1$dof
+rmsea51 <- paste0(round(fit_5_efa1$RMSEA[1],3), " (", 
+                  round(fit_5_efa1$RMSEA[2],3), " - ", 
+                  round(fit_5_efa1$RMSEA[3],3), ")")
+rmsr51 <- fit_5_efa1$rms
+tli51 <- fit_5_efa1$TLI
+bic51 <- fit_5_efa1$BIC
+
+chi41 <- fit_4_efa1$chi
+df41 <- fit_4_efa1$dof
+rmsea41 <- paste0(round(fit_4_efa1$RMSEA[1],3), " (", 
+                  round(fit_4_efa1$RMSEA[2],3), " - ", 
+                  round(fit_4_efa1$RMSEA[3],), ")")
+rmsr41 <- fit_4_efa1$rms
+tli41 <- fit_4_efa1$TLI
+bic41 <- fit_4_efa1$BIC
+
+chi4S1 <- fit_4_red_efa1$chi
+df4S1 <- fit_4_red_efa1$dof
+rmsea4S1 <- paste0(round(fit_4_red_efa1$RMSEA[1],3), " (", 
+                  round(fit_4_red_efa1$RMSEA[2],3), " - ", 
+                  round(fit_4_red_efa1$RMSEA[3],3), ")")
+rmsr4S1 <- fit_4_red_efa1$rms
+tli4S1 <- fit_4_red_efa1$TLI
+bic4S1 <- fit_4_red_efa1$BIC
+
+#Sample 2
+fit_6_efa2 <- 
+  fa(efa_2_items, 6, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_5_efa2 <- 
+  fa(efa_2_items, 5, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_4_efa2 <- 
+  fa(efa_2_items, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+efa_2_items_reduced <-
+  efa_2_items %>% 
+  select(-NEW_7,
+         -DISPO_8,
+         -DISPO_1,
+         -SPIRIT_12,
+         -DISPO_16,
+         -DISPO_21,
+         -NEW_6,
+         -NEW_5,
+         -DISPO_23)
+fit_4_red_efa2 <- 
+  fa(efa_2_items_reduced, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+chi62 <- fit_6_efa2$chi
+df62 <- fit_6_efa2$dof
+rmsea62 <- paste0(round(fit_6_efa2$RMSEA[1],3), " (", 
+                  round(fit_6_efa2$RMSEA[2],3), " - ", 
+                  round(fit_6_efa2$RMSEA[3],3), ")")
+rmsr62 <- fit_6_efa2$rms
+tli62 <- fit_6_efa2$TLI
+bic62 <- fit_6_efa2$BIC
+
+chi52 <- fit_5_efa2$chi
+df52 <- fit_5_efa2$dof
+rmsea52 <- paste0(round(fit_5_efa2$RMSEA[1],3), " (", 
+                  round(fit_5_efa2$RMSEA[2],3), " - ", 
+                  round(fit_5_efa2$RMSEA[3],3), ")")
+rmsr52 <- fit_5_efa2$rms
+tli52 <- fit_5_efa2$TLI
+bic52 <- fit_5_efa2$BIC
+
+chi42 <- fit_4_efa2$chi
+df42 <- fit_4_efa2$dof
+rmsea42 <- paste0(round(fit_4_efa2$RMSEA[1],3), " (", 
+                  round(fit_4_efa2$RMSEA[2],3), " - ", 
+                  round(fit_4_efa2$RMSEA[3],3), ")")
+rmsr42 <- fit_4_efa2$rms
+tli42 <- fit_4_efa2$TLI
+bic42 <- fit_4_efa2$BIC
+
+chi4S2 <- fit_4_red_efa2$chi
+df4S2 <- fit_4_red_efa2$dof
+rmsea4S2 <- paste0(round(fit_4_red_efa2$RMSEA[1],3), " (", 
+                  round(fit_4_red_efa2$RMSEA[2],3), " - ", 
+                  round(fit_4_red_efa2$RMSEA[3],3), ")")
+rmsr4S2 <- fit_4_red_efa2$rms
+tli4S2 <- fit_4_red_efa2$TLI
+bic4S2 <- fit_4_red_efa2$BIC
+
+#Sample 3
+fit_6_efa3 <- 
+  fa(efa_3_items, 6, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_5_efa3 <- 
+  fa(efa_3_items, 5, rotate="promax", fm= "pa") %>% 
+  fa.sort
+fit_4_efa3 <- 
+  fa(efa_3_items, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+efa_3_items_reduced <-
+  efa_3_items %>% 
+  select(-AIMES_8,
+         -NEW_8,
+        -AIMES_5,
+        -NEW_5,
+        -DISPO_13,
+        -DISPO_8,
+        -NEW_6,
+        -DISPO_20)
+fit_4_red_efa3 <- 
+  fa(efa_3_items_reduced, 4, rotate="promax", fm= "pa") %>% 
+  fa.sort
+
+chi63 <- fit_6_efa3$chi
+df63 <- fit_6_efa3$dof
+rmsea63 <- paste0(round(fit_6_efa3$RMSEA[1],3)," (",
+                  round(fit_6_efa3$RMSEA[2],3), " - ",
+                  round(fit_6_efa3$RMSEA[3],3),")")
+rmsr63 <- fit_6_efa3$rms
+tli63 <- fit_6_efa3$TLI
+bic63 <- fit_6_efa3$BIC
+
+chi53 <- fit_5_efa3$chi
+df53 <- fit_5_efa3$dof
+rmsea53 <- paste0(round(fit_5_efa3$RMSEA[1], 3)," (",
+                  round(fit_5_efa3$RMSEA[2], 3)," - ",
+                  round(fit_5_efa3$RMSEA[3], 3), ")")
+rmsr53 <- fit_5_efa3$rms
+tli53 <- fit_5_efa3$TLI
+bic53 <- fit_5_efa3$BIC
+
+chi43 <- fit_4_efa3$chi
+df43 <- fit_4_efa3$dof
+rmsea43 <- paste0(round(fit_4_efa3$RMSEA[1], 3)," (",
+                  round(fit_4_efa3$RMSEA[2], 3)," - ",
+                  round(fit_4_efa3$RMSEA[3], 3), ")")
+rmsr43 <- fit_4_efa3$rms
+tli43 <- fit_4_efa3$TLI
+bic43 <- fit_4_efa3$BIC
+
+chi4S3 <- fit_4_red_efa3$chi
+df4S3 <- fit_4_red_efa3$dof
+rmsea4S3 <- paste0(round(fit_4_red_efa3$RMSEA[1], 3)," (",
+                  round(fit_4_red_efa3$RMSEA[2], 3)," - ",
+                  round(fit_4_red_efa3$RMSEA[3], 3), ")")
+rmsr4S3 <- fit_4_red_efa3$rms
+tli4S3 <- fit_4_red_efa3$TLI
+bic4S3 <- fit_4_red_efa3$BIC
+
+
+#creating the table
+Fit_table <- 
+  matrix(c( df61, df51, df41, df4S1, df62, df52, df42, df4S2, df63, df53, df43, df4S3,
+            chi61, chi51, chi41, chi4S1, chi62, chi52, chi42, chi4S2, chi63, chi53, 
+            chi43, chi4S3,
+            rmsea61, rmsea51, rmsea41, rmsea4S1, rmsea62, rmsea52, rmsea42, rmsea4S2, 
+            rmsea63, rmsea53, rmsea43, rmsea4S3,
+            rmsr61, rmsr51, rmsr41, rmsr4S1, rmsr62, rmsr52, rmsr42, rmsr4S2, rmsr63, 
+            rmsr53, rmsr43, rmsr4S3,
+            tli61, tli51, tli41, tli4S1, tli62, tli52, tli42, tli4S2, tli63, tli53, tli43,
+            tli4S3,
+            bic61, bic51, bic41, bic4S1, bic62, bic52, bic42, bic4S2, bic63, bic53, bic43,
+            bic4S3),
+            ncol=12, byrow=TRUE)
+
+colnames(Fit_table) <- c("6-Factor",
+                         "5-Factor", 
+                         "4-Factor",
+                         "4-Factor Simplified",
+                         "6-Factor",
+                         "5-Factor", 
+                         "4-Factor",
+                         "4-Factor Simplified",
+                         "6-Factor",
+                         "5-Factor", 
+                         "4-Factor",
+                         "4-Factor Simplified")
+rownames(Fit_table) <- c("df", "chi", "rmsea (95% CI)", "rmsr", "tli", "bic")
+Fit_table <- 
+  Fit_table%>% 
+  as.data.frame() 
+
+
+#change col names to repeat 1 - 4 after each existing label
+colnames(Fit_table) <- paste0(colnames(Fit_table), "_" ,rep(1:3, each = 4))
+                           
+Fit_table$Indices <- 
+ c("df", "chi", "rmsea (95% CI)", "rmsr", "tli", "bic")
+Fit_table <- 
+  Fit_table %>% 
+  select(Indices, everything())
+
+
+#pivot wide to long
+Fit_table <- 
+Fit_table %>% 
+  as_tibble() %>%
+  pivot_longer(2:13,
+               cols_vary = "slowest",
+               names_to = c("Model", "Sample"),
+               names_sep = "_") %>% 
+  mutate(Model = factor(Model, levels = c("6-Factor", "5-Factor", "4-Factor", "4-Factor Simplified"))) %>% 
+  pivot_wider(names_from = "Indices", values_from = "value") %>% #order by 6 factor, 5 factor, 4 factor, 4 factor simplified
+  arrange(Model, Sample) %>% 
+  mutate(chi = round(as.numeric(chi),3),
+         rmsr = round(as.numeric(rmsr),3),
+         tli = round(as.numeric(tli),3),
+         bic = round(as.numeric(bic),3)) 
+  
+
+  
+
+
+```
+
+**Table 4. Fit Indices for 6, 5, 4, and 4-factor simplified models across three samples**
+
+```{r print fit table, echo=FALSE}
+
+small_border = officer::fp_border(color="black", width = 1)
+
+Fit_table %>% 
+  flextable() %>% 
+  merge_v(j = "Model") %>%
+  set_header_labels(df = "df",
+                    chi = "\u03c7\u00B2",
+                    rmsea = "RMSEA (95% CI)",
+                    rmsr = "RMSR",
+                    tli = "TLI",
+                    bic = "BIC") %>%
+  colformat_double(j = 4, digits = 3) %>% 
+  hline(i = 3, j = 1:8) %>% 
+  hline(i = 6, j = 1:8) %>% 
+  hline(i = 9, j = 1:8) %>%
+  hline_bottom(border = small_border, part = "all") %>% 
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 4:8, 
+              value = as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit",
+                "Baysean Information Criterion: The lower the BIC, the more predictive")),
+              ref_symbols = c("a", "b","c", "d", "e"),
+              part = "header",
+              inline = FALSE) %>% 
+    align(j = 2:8, align = "center", part = "all") 
+```
+
+Based on these results we selected 38 items to test in a confirmatory factor analysis.
+
+::: {style="color:red"}
 [go into more details based on EFA Overview document]
+:::
 
-[insert table of items tested in CFA here]
+
+
+```{r table of decisions from efa, echo=FALSE}
+
+set_flextable_defaults(na_str = NULL)
+
+data.frame(matrix(ncol = 8, nrow = 38)) %>% 
+  mutate(X1 = c(rep("Deep", 14), 
+                rep("Experiential", 10),
+                rep("Emotional", 6),
+                rep("Presence", 8)), 
+         X2 = c("I view nature as a mother who nurtures and cares for me", #Deep
+                "Human beings and nature are connected by the same `energy` or `Life-force`",
+                "My connection to nature is something I would describe as `spiritual`",
+                "I think about the `shared breath` between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale",
+                "When I eat, I feel thankful for the animals, plants, and earth for  nourishing me",
+                "I often think about the fact that all life is grounded on this planet that is revolving around the sun",
+                "Every part of nature is sacred",
+               " I have great respect for being alive on this earth and part of the universe",
+                "I like the idea that, when I die, my body will return to the earth, nourishing the soil",
+               "Indoor plants are part of the family",
+                "My relationship with nature is a big part of how I think about myself",
+                "I think of myself as an `environmentalist`",
+                "I think of myself as someone who is very concerned about taking care of nature",
+                "I feel a strong emotional connection to nature",
+               "My favorite place is in nature", #Experiential
+               "Walking through a forest makes me forget about my daily worries",
+               "I prefer outdoor to indoor sports",
+               "Listening to the sounds of nature makes me relax",
+               "I hike or run in nearby nature",
+               "I like to get outdoors whenever I get the chance",
+               "I feel uneasy if I am away from nature for too long",
+               "I engage and participate with nature to find meaning and richness in life",
+               "I am aware of the feelings of nature around me - the sun on my skin, the breeze on my face, or the ground under my feet",
+               "I feel a strong emotional connection to nature",
+               "Seeing a cleared forest is upsetting to me", #Emotional
+               "If one of my plants died, I would blame myself ",
+               "I am careful to not step on snails ",
+               "Thinking of someone carving their initials into a tree makes me cringe",
+               "If there is an insect, such as a fly, in my home, I try to catch and release it rather than kill it ",
+               "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)",
+               "I take time to watch the clouds pass by", #Presence
+               "I deliberately take time to watch stars at night",
+               "When possible, I take time to watch the sunrise or the sunset without distractions",
+               "I consciously watch or listen to birds",
+               "I take time to consciously smell flowers",
+               "I pay attention to the current phase of the moon",
+               "I watch TV shows where the focus is on animals or plants",
+               "Even when it is very cold and rainy, I go out for a walk"),
+         X3 = c(0.84, 0.77, 0.75, 0.57, 0.54, 0.63, 0.53, 0.48, "<.40", #Pilot 1 Factor Deep
+                "<.40", "Dual loaded Deep & Experiential", "Removed 4Fac (F) < .40 Deep", "<.40", "Removed 4Fac (F) dual loading Deep & Experience", 
+                0.75, 0.71, 0.60, 0.60, #Pilot 1 Factor Experiential
+                "Removed 4Fac(F) dual loading Presence & Experience", 0.82, 0.62, 0.55, "Removed 4-fac(F) < .40 Experiential", "Removed 4Fac(F) dual loading Deep & Experience", 
+                0.62, 0.56, 0.45, 0.58, #Pilot 1 Factor Emotional
+                "Removed 4-fac(F) < .40 Emotional", "Removed 4-fac(F) dual loading Emotional & Presence", 
+                0.87, 0.84, 0.71, 0.67, 0.63, 0.57, 0.57,0.49), #Pilot 1 Factor Presence
+         X4 = c(rep(NA, 10), "Dual loaded Deep & Experiential", #Pilot 1 Alt Deep
+                "Removed 4Fac (F) < .40 Deep", NA, "Removed 4Fac (F) dual loading Deep & Experience", 
+                rep(NA, 4), "Removed 4Fac(F) dual loading Presence & Experience", #Pilot 1 Alt Experiential
+                rep(NA, 3), "Removed 4-fac(F) < .40 Experiential", #Pilot 1 Alt Emotional
+                "Removed 4Fac(F) dual loading Deep & Experience", 
+                rep(NA, 4), "Removed 4-fac(F) < .40 Emotional", "Removed 4-fac(F) dual loading Emotional & Presence", 
+                rep(NA, 8)), #Pilot 1 Alt Presence
+         X5 = c(0.94, 0.72,0.73,0.59,0.56,0.51, "Removed by error", #Pilot 2 Factor Deep
+                0.50, 0.51,0.48, "Removed 4Fac(F) dual loading Deep & Experience", "Removed 4Fac (F) < .40 Deep", NA, NA, 
+                0.81,0.71,0.65,0.60,0.50, "Error did not test", #Pilot 2 Factor Experiential
+                0.58,0.56,0.42,0.56, 
+                0.58,0.45,0.65,0.65,0.56, "Removed 4-fac (F) < .40 Emotional", #Pilot 2 Factor Emotional
+                0.72,0.86,0.70,0.57,0.53, 0.65, #Pilot 2 Factor Presence
+                "Removed 4-fac (F) < .40 Presence", "Removed < .40 Presence & not fitting"),
+        X6 = c(rep(NA, 6), "Removed by error", rep(NA, 3), #Pilot 2 Alt Deep
+               "Removed 4Fac(F) dual loading Deep & Experience", "Removed 4Fac (F) < .40 Deep", "Experience < .40", "Experience 0.56", 
+               rep(NA, 5), "Error did not test", rep(NA, 4), #Pilot 2 Alt Experiential
+               rep(NA, 5), "Removed 4-fac (F) < .40 Emotional", #Pilot 2 Alt Emotional
+               rep(NA, 6), "Removed 4-fac (F) < .40 Presence", #Pilot 2 Alt Presence
+               "Removed < .40 Presence & not fitting"),
+        X7 = c(0.89,0.63,0.89,0.40,0.50, "Removed 4Fac (F) < .40 Deep", #Pilot 3 Factor Deep
+               "Removed by error", "Removed 4Fac (F) < .40 Experience", 0.50, "Removed 4Fac (F) < .40 Emotional", 0.78,0.68,0.67, 0.63, 
+               0.69, 0.60,0.66,0.52,0.49, "Error did not test", #Pilot 3 Factor Experiential
+               NA, NA, 0.41, NA, 
+               0.49, 0.65,0.62, "Removed 4-fac(F) < .40 Emotional", #Pilot 3 Factor Emotional
+               "Removed 4-fac(F) < .40 Emotional", 0.50, 
+               0.73, 0.86, 0.72, 0.45, 0.53,0.45, #Pilot 3 Factor Presence
+               "Removed 4-fac (F) < .40 Presence", "Removed < .40 Presence & not fitting"),
+        X8 = c(rep(NA, 5), "Removed 4Fac (F) < .40 Deep", #Pilot 3 Alt Deep
+               "Removed by error", "Removed 4Fac (F) < .40 Experience", NA, "Removed 4Fac (F) < .40 Emotional", rep(NA, 4), 
+               rep(NA, 5), "Error did not test", "Deep 0.48", #Pilot 3 Alt Experiential
+               "Deep 0.58", NA, "Deep 0.63", 
+               rep(NA, 3), "Removed 4-fac(F) < .40 Emotional", #Pilot 3 Alt Emotional
+               "Removed 4-fac(F) < .40 Emotional", NA,
+               rep(NA, 6), "Removed 4-fac (F) < .40 Presence", #Pilot 3 Alt Presence
+               "Removed < .40 Presence & not fitting")) %>% 
+  rename("Subscale" = X1,
+         "Item" = X2,
+         "Pilot 1_Factor Loadings" = X3,
+         "Pilot 1_Alt Factor Loadings" = X4,
+         "Pilot 2_Factor Loadings" = X5,
+         "Pilot 2_Alt Factor Loadings" = X6,
+         "Pilot 3_Factor Loadings" = X7,
+         "Pilot 3_Alt Factor Loadings" = X8) %>%
+  as_grouped_data(groups = c("Subscale")) %>% 
+  as_flextable() %>% 
+  bold(j = 1, i = ~ !is.na(Subscale), bold = TRUE, part = "body") %>%
+  bold(part = "header", bold = TRUE) %>%
+  autofit() %>% 
+  separate_header(split = "_", fixed = T) %>% 
+  merge_h(part = "body") %>% 
+  align(j = 2:7, align = "center", part = "body") %>% 
+ #error formatting
+  bg(i = 8, j = 4:7, 
+           bg = "grey", part = "body") %>% 
+  bg(i = 22, j = 4:7, 
+           bg = "grey", part = "body") %>% 
+   #deep items formating
+  bg(i = 2:6, j = c(2,4,6), 
+     bg = "#EAF1DD", part = "body") %>% 
+  style(i = c(2:9), j = 2,
+        pr_t = fp_text_default(color = "#54682E", bold = TRUE)) %>% 
+  style(i = c(2:7,9:11), j = 4,
+       pr_t = fp_text_default(color = "#54682E", bold = TRUE)) %>% 
+  style(i = c(2:6,10,12:15), j = 6,
+       pr_t = fp_text_default(color = "#54682E", bold = TRUE)) %>% 
+  #experiential items formating
+  bg(i = 17:20, j = c(2,4,6), 
+     bg = "#cfe2f3", part = "body") %>% 
+  style(i = c(17:20,22:24), j = c(2),
+       pr_t = fp_text_default(color = "#2F5496", bold = TRUE)) %>% 
+  style(i = c(17:21,23:26), j = c(4),
+       pr_t = fp_text_default(color = "#2F5496", bold = TRUE)) %>% 
+  style(i = c(17:21,25), j = c(6),
+       pr_t = fp_text_default(color = "#2F5496", bold = TRUE)) %>% 
+   #emotional items formating
+  bg(i = 28:30, j = c(2,4,6), 
+     bg = "#F9B9B7", part = "body") %>% 
+  style(i = c(28:31), j = c(2),
+       pr_t = fp_text_default(color = "#A61C00", bold = TRUE)) %>% 
+  style(i = c(28:32), j = c(4),
+       pr_t = fp_text_default(color = "#A61C00", bold = TRUE)) %>% 
+  style(i = c(28:30,33), j = c(6),
+       pr_t = fp_text_default(color = "#A61C00", bold = TRUE)) %>% 
+  #presence items formating
+  bg(i = 35:40, j = c(2,4,6), 
+     bg = "#F5D491", part = "body") %>%
+  style(i = c(35:42), j = c(2),
+       pr_t = fp_text_default(color = "#745105", bold = TRUE)) %>% 
+  style(i = c(35:40), j = c(4),
+       pr_t = fp_text_default(color = "#745105", bold = TRUE)) %>% 
+  style(i = c(35:40), j = c(6),
+       pr_t = fp_text_default(color = "#745105", bold = TRUE)) %>% 
+  #formatting removed items
+  bg(i = c(12:15, 25:26, 41:42), j = 1:7,
+     bg = "#D1D1D1", part = "body") %>% 
+   style(i = c(12:15, 25:26, 41:42), j = 1:7,
+       pr_t = fp_text_default(color = "#5C5C5C"))
+
+
+
+
+
+```
+
 
 # Study 2
 
@@ -343,7 +1044,14 @@ Any item were the number is greater than +3, the distribution is too peaked.
 Likewise, a kurtosis of less than -3 indicates a distribution that is too flat.
 Two items showed high kurtosis: “I have great respect for being alive on this earth and part of the universe” and “Listening to the sounds of nature makes me relax” and were removed from the CFA.
 
+::: {style="color:red"}
 [insert kurtosis figure]
+:::
+
+```{r CFA Kurtosis Figure}
+
+```
+
 
 A Mardia Test of multivariate normality from the MVN package in R (Korkmaz et al., 2021) indicated that this data is not normal, suggesting that a rotation-method that is robust to non-normal data should be used (Mardia Skewedness = 7681.36, p \< .001 and Mardia Kurtosis = 28.32, p \< .001).
 
@@ -362,7 +1070,14 @@ Items load onto their dimensions well, with the exception of 1 item (“Thinking
 
 All dimensions loaded onto the single CTN dimension, but these loaded quite highly (especially Deep and Emotion) which suggests these might be driving the overall CTN score.
 
+::: {style="color:red"}
 [insert cfa figure]
+:::
+
+```{r four factor hierachical loading}
+
+```
+
 
 #### Four Factor
 
@@ -378,7 +1093,15 @@ Again, 1 item loads weakly: (“Thinking of someone carving their initials into 
 
 Dimensions are intercorrelated reasonable well - not too high as to have multi-collinearity (none above .80)
 
+::: {style="color:red"}
 [insert cfa figure]
+:::
+```{r four factor loading}
+
+
+
+```
+
 
 #### Single Factor
 
@@ -387,16 +1110,34 @@ Testing a structure which includes only a single overall Connection to Nature fa
 Loadings are slightly weaker onto a single overall CTN factor.
 Again, 1 item loads weakly: (“Thinking of someone carving their initials into a tree makes me cringe”) which loaded onto the Emotion dimension at 0.31.
 
+::: {style="color:red"}
 [insert cfa figure]
+:::
+
+```{r single factor loading}
+
+```
 
 ### Item Selection Based on Model Fit
 
 Both four-factor models (flat and hierarchical) perform better than the single-factor model.
 There is no difference between the hierarchical and the flat models.
 
+::: {style="color:red"}
 [inset fit incides table]
 
+```{r cfa fit indices}
+
+```
+
+
 [insert final item table]
+:::
+
+```{r deep ctn scale items}
+
+```
+
 
 ## Validation
 
@@ -414,7 +1155,9 @@ We tested this by looking at the zero order correlation between our new measure 
 A zero-order correlation found moderate-strong correlation between existing CTN scales and the new subscales of the DEEP CTN scale.
 See table below:
 
+::: {style="color:red"}
 [insert table]
+:::
 
 ### Predictive Validity
 
@@ -434,18 +1177,24 @@ The “gold standard” for predictive validity of CTN measures is how well it p
 A zero-order correlation found moderate correlations between PEB and the new subscales of the DEEP CTN scale.
 See table below:
 
+::: {style="color:red"}
 [insert table]
+:::
 
 A linear regression with only the subscales of CTN predicting PEB showed that Deep, Emotional, and Presence were adequate to predcict PEB, but not Experiential.
 
+::: {style="color:red"}
 [insert table & effect sizes]
+:::
 
 We also suspected that DEEP CTN and its subscales would predict three types of primal world beliefs (Clifton et al., 2019): That the world is interconnected, that the world is not hierarchical, and that the world is not about me (i.e., less egocentric worldviews).
 A zero-order correlation found weak -moderate correlations between interconnected beliefs and the new subscales of the DEEP CTN scale.
 We also found weak correlations between egocentric beliefs and the Deep, Presence, and Overall CTN. No relationship was found between any subscale and hierarchical worldviews.
 See table below:
 
+::: {style="color:red"}
 [insert table]
+:::
 
 ### Incremental Validity
 
@@ -457,7 +1206,9 @@ We found that the Emotional and Presence subscales remained significant predicto
 The Deep subscale was no longer a significant predictor.
 Both our subscales were of equal predictive value compared to the existing measures.
 
+::: {style="color:red"}
 [insert table & effects figure]
+:::
 
 ### Covariates
 
@@ -473,17 +1224,23 @@ In either case this would suggest it’s important to include as a covariate.
 
 This resulted in including the following covariates: Politics (r = .19\*\* with PEB & r = .18\*\* to .23\*\* with DEEP CTN dimensions) Primal Beliefs - The world is interconnect (r = .21\*\* with PEB & r = .22\*\* to .38\*\* with DEEP CTN dimensions)
 
+::: {style="color:red"}
 [insert correlation matrix]
+:::
 
 A multiple linear regression model where dimensions of the DEEP CTN scale and existing CTN measures (CNS and EIDR) and the covariates (politics & primal belief interconnectedness) were entered simultaneously to predict PEB is reported in the table below.
 
 By adding the covariates, both Emotional and Prescence subscales remained significant predictors of PEB.
 Adding covariates to the model did not improve the fit of the model above the variables in the incremental validity model (F(2) = 1.731, p = 0.179).
 
+::: {style="color:red"}
 [insert table & effects figure]
+:::
 
 # Discussion
 
+::: {style="color:red"}
 [write up a summary of the findings here]
+:::
 
 # References

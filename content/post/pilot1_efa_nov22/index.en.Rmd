@@ -251,10 +251,6 @@ First step is to remove items that have a correlation =\>0.8
   autofit()
  
 
-
-
-
-
 ```
 
 ```{r high multi-collinear variables, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
