@@ -3,6 +3,7 @@ cms_exclude: true
 header:
   caption: ""
   image: ""
-title: Posts
+title: Data
 view: 2
+
 ---

@@ -66,10 +66,6 @@ cfa_4 <-
 
 ```
 
-::: {style="color:red"}
-[add button to download pdf version of this doc]
-:::
-
 # Background
 
 There have been many iterations of a Connection to Nature (CTN) measure (see Ives et al., 2017, Restall & Conrad, 2015, and Tam 2013 for review).
@@ -2424,13 +2420,6 @@ bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>%
               ref_symbols = "*",
               part = "header") %>% 
   autofit()
-
-
-
-
-
-
-
 ```
 
 Total variance explained by the model = `r paste(robust_tot_var)`
