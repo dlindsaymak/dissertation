@@ -39,7 +39,14 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE)
 
-library(tidyverse)
+library(tidyverse) #base package that runs most functions
+library(flextable) #tables
+library(corrplot) #correlations
+library(Hmisc) #correlations 
+library(car) # Type 2 Anova
+library(effectsize) #effect sizes
+library(ggplot2) #plots
+library(relaimpo) #calculates unique variance
 ```
 
 ```{r loading data, include=FALSE}
@@ -63,7 +70,6 @@ cfa_4 <-
 [add button to download pdf version of this doc]
 :::
 
-
 # Background
 
 There have been many iterations of a Connection to Nature (CTN) measure (see Ives et al., 2017, Restall & Conrad, 2015, and Tam 2013 for review).
@@ -82,6 +88,8 @@ The dimensions include:
 2.  Experiential (spending and enjoying time in nature)
 3.  Emotional (Emotional desire to connect with nature and protect it.)
 4.  Presence (engaging mindfully and consciously with nature)
+
+------------------------------------------------------------------------
 
 # Selecting Initial Items
 
@@ -141,6 +149,8 @@ items %>%
   kableExtra::scroll_box(height = "400px", fixed_thead = TRUE)
 
 ```
+
+------------------------------------------------------------------------
 
 # Study 1
 
@@ -298,7 +308,8 @@ A final check of overdetermination revealed there is still the potential for the
 
 **Figure 2. Box plots depicting ceiling and floor effects of items**
 
-```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.show='animate'}
+::: {style=".vscroll-plot"}
+```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE}
 boxplot(factor_order_prolific[,c(1:7)],
         las = 2)
 
@@ -323,12 +334,15 @@ boxplot(factor_order_prolific[,c(43:48)],
 boxplot(factor_order_prolific[,c(49:53)],
         las = 2)
 ```
+:::
 
 **Figure 3. Histograms depicting skewedness of items**
 
+::: {style=".vscroll-plot"}
 ```{r histograms skew, echo=FALSE, message=FALSE, warning=FALSE}
 DataExplorer::plot_histogram(factor_order_prolific)
 ```
+:::
 
 [**Sample 2**]{.underline}
 
@@ -455,18 +469,14 @@ paraplot_3<- plot(parallel_3,)
 
 **Figure 3. Scree plots and parallel analysis of the number of factors across three samples**
 
-::: {style="color:red"}
-fix this plot
-:::
-
-```{r printing eigens, echo=FALSE, fig.show='animate'}
+::: {style=".vscroll-plot"}
+```{r printing eigens, echo=FALSE}
 
 plot(parallel_1,)
 plot(parallel_2,)
 plot(parallel_3,)
-
-
 ```
+:::
 
 Four models were run across all three samples:
 
@@ -475,7 +485,8 @@ Four models were run across all three samples:
 -   Four factors
 -   Simplified four factors (removing dual loading and poor loading items from four factor model)
 
-[Click here to view the full factor loadings across the three samples.](https://osf.io/nrw35)
+{{% callout hint %}} [Click here to view the full factor loadings across the three samples.](https://osf.io/nrw35)
+{{% /callout %}}
 
 ### Item Selection Based on Model Fit
 
@@ -979,6 +990,8 @@ data.frame(matrix(ncol = 8, nrow = 38)) %>%
 
 
 ```
+
+------------------------------------------------------------------------
 
 # Study 2
 
@@ -1679,9 +1692,86 @@ test_2
 
 ```
 
-[insert final item table] :::
+We continued with our validation using the Hierarchical four factor model.
 
-```{r deep ctn scale items}
+{{% callout note %}} You can access the final scale in our OSF project <https://osf.io/tpx2h>\
+{{% /callout %}}
+
+```{r final scale, include=FALSE}
+#pull out non-binary participants as the n is not big enough to run analyses
+#removed 9 participants
+cfa_4 <-    
+ cfa_4 %>% 
+     filter(gender == "Woman" | gender == "Man") 
+
+#create new measure based on CFA pilot 1
+val_data <-
+     cfa_4 %>% 
+     mutate(deep_ctn = (DEEPCTN_s_1 + 
+                             DEEPCTN_s_2 +
+                             DEEPCTN_s_3 +
+                             DEEPCTN_s_7 +
+                             DEEPCTN_s_10 +
+                             DEEPCTN_s_8 +
+                             DEEPCTN_s_4 +
+                             DEEPCTN_s_6 +
+                             DEEPCTN_s_9)/9,
+            deep_ctn_z = as.numeric(scale(deep_ctn, 
+                                          center = T, scale = T)),
+            exp_CTN = (DEEPCTN_ex_4 +
+                            DEEPCTN_ex_5 +
+                            DEEPCTN_ex_6 +
+                            DEEPCTN_ex_8 +
+                            DEEPCTN_ex_1 +
+                            DEEPCTN_ex_2 +
+                            DEEPCTN_ex_3)/7,
+            exp_ctn_z = as.numeric(scale(exp_CTN, 
+                                         center = T, scale = T)),
+            
+            emo_CTN = (DEEPCTN_emo_1 +
+                            DEEPCTN_emo_2 +
+                            DEEPCTN_emo_4 +
+                            DEEPCTN_em_6)/4,
+            emo_ctn_z = as.numeric(scale(emo_CTN,
+                                         center = T, scale = T)),
+            
+            presc_CTN = (DEEPCTN_m_1 +
+                              DEEPCTN_m_2 +
+                              DEEPCTN_m_3 +
+                              DEEPCTN_m_4 +
+                              DEEPCTN_m_5 +
+                              DEEPCTN_m_6)/6,
+            presc_ctn_z = as.numeric(scale(presc_CTN, 
+                                           center = T, scale = T)),
+            
+            CTN_overall = (DEEPCTN_s_1 + 
+                             DEEPCTN_s_2 +
+                             DEEPCTN_s_3 +
+                             DEEPCTN_s_7 +
+                             DEEPCTN_s_10 +
+                             DEEPCTN_s_8 +
+                             DEEPCTN_s_4 +
+                             DEEPCTN_s_6 +
+                             DEEPCTN_s_9 +
+                              DEEPCTN_ex_4 +
+                              DEEPCTN_ex_5 +
+                              DEEPCTN_ex_6 +
+                              DEEPCTN_ex_8 +
+                              DEEPCTN_ex_1 +
+                              DEEPCTN_ex_2 +
+                              DEEPCTN_ex_3 +
+                              DEEPCTN_emo_1 +
+                              DEEPCTN_emo_2 +
+                              DEEPCTN_emo_4 +
+                              DEEPCTN_em_6 +
+                                DEEPCTN_m_1 +
+                              DEEPCTN_m_2 +
+                              DEEPCTN_m_3 +
+                              DEEPCTN_m_4 +
+                              DEEPCTN_m_5 +
+                              DEEPCTN_m_6)/26,
+            CTN_overall_z = as.numeric(scale(CTN_overall, 
+                                             center = T, scale = T)))
 
 ```
 
@@ -1699,11 +1789,56 @@ It is measured on a Likert scale ranging from 1(not at all true of me) to 7(comp
 We assessed the convergent validity of the new DEEP CTN scale, that is how closely our new measure is related to other established measures of the same construct.
 We tested this by looking at the zero order correlation between our new measure and its subscales and two established measures: The Connectedness to Nature Scale (CNS - Mayer & Franz, 2004) and the Environmental Identity Scale revised (EID-R - Clayton et al., 2021).
 A zero-order correlation found moderate-strong correlation between existing CTN scales and the new subscales of the DEEP CTN scale.
-See table below:
+See figure below:
 
-::: {style="color:red"}
-[insert table]
-:::
+```{r Validation, include=FALSE}
+
+cormatrix <- 
+     val_data %>% 
+          dplyr::select(CTN_overall_z,
+                 deep_ctn_z,
+                 exp_ctn_z,
+                 emo_ctn_z,
+                 presc_ctn_z,
+                 CNS_Z,
+                 EIDR_Z,
+                 PEB_Z,
+                 PI_me_Z,
+                 PI_hierarchy_Z,
+                 PI_connect_Z) %>% 
+          as.matrix() 
+            
+correlations <-
+     rcorr(cormatrix, type = "spearman")
+
+corp <- 
+     cor.mtest(cormatrix)
+
+
+```
+
+```{r Correlation plot, echo=FALSE, include=TRUE, out.width="100%"}
+nm = rownames(correlations$r)
+m = t(combn(nm, 2))
+d = cbind(data.frame(m), R = correlations$r[m], P = correlations$P[m])
+d$label = round(d$R, 2)
+d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
+d$X1 = factor(d$X1, nm)
+d$X2 = factor(d$X2, rev(nm))
+
+graphics.off()
+validation_plot <- 
+  ggplot(d, aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c() +
+    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
 
 ### Predictive Validity
 
@@ -1721,26 +1856,261 @@ All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(
 We assessed the predictive validity of the new DEEP CTN scale (i.e., how well our measure can predict participant scores on two theoretically related constructs).
 The “gold standard” for predictive validity of CTN measures is how well it predicts pro-environmental behavior (PEB) (Clayton, 2003; Clayton et al., 2021; Mayer & Frantz, 2004; Tam, 2013).
 A zero-order correlation found moderate correlations between PEB and the new subscales of the DEEP CTN scale.
-See table below:
+See figure below:
 
-::: {style="color:red"}
-[insert table]
-:::
+```{r validation plot 2, echo=FALSE}
+print(validation_plot)
+
+```
 
 A linear regression with only the subscales of CTN predicting PEB showed that Deep, Emotional, and Presence were adequate to predcict PEB, but not Experiential.
 
-::: {style="color:red"}
-[insert table & effect sizes]
-:::
+```{r linear regression with only dimensions predicting PEB, echo=FALSE, message=FALSE, warning=FALSE}
+
+dimensions_peb <-
+      lm(PEB_Z ~ deep_ctn_z + exp_ctn_z + emo_ctn_z + presc_ctn_z, 
+         data = val_data)
+
+dimensions_peb_anova <-
+     Anova(dimensions_peb, type = "II")
+
+peb_r2 <-
+     calc.relimp(dimensions_peb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+p_vars <- c("Deep", "Experience", "Emotional", "Presence")
+peb_rvalues <- tibble(round(peb_r2$lmg,2)) #partial R2 of all variables
+peb_pvalues <- tibble(round(dimensions_peb_anova$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+peb_tot_var<-round(peb_r2$R2, 2) #variance explained by model
+
+#create table of R and P values
+R2_peb_table <- 
+     bind_cols(p_vars,peb_rvalues, peb_pvalues[-5,]) %>% 
+     rename("Variable" = `...1`, "Partial R2" = `round(peb_r2$lmg, 2)`, 
+            "p" = `round.dimensions_peb_anova..Pr..F....2.`)
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+dim_only_output <- broom::tidy(dimensions_peb)
+dim_only_conf <- broom::tidy(dimensions_peb, conf.int = T)
+
+model_dim_only <- forestmangr::round_df(dim_only_output, digits = 2)
+model_dim_only <- model_dim_only[-1,] #remove the intercept 
+
+coef_dim_only <- 
+     coef(dimensions_peb)
+ConfidenceInterval_dim_only <- 
+     confint(dimensions_peb, level = 0.95)
+coef_confint_dim_only <- 
+     cbind(coef_dim_only, ConfidenceInterval_dim_only)%>% 
+     as.data.frame()
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+     mutate(variable=c("Intercept", "Deep", "Experiential", "Emotional", "Presence"))
+
+
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+     rename(c("std Beta" = "coef_dim_only",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_dim_only <- 
+     coef_confint_dim_only[, col_order] #reorder variables in the data frame
+
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+  mutate_if(is.numeric, round, digits = 2) %>%  # round numeric into two significant digits 
+  rename(Variable = variable)
+
+plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(Variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 2,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 0.75,
+                position = "dodge", 
+                color="turquoise4",
+                width = 0.5) +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("DEEP CTN Factor") + 
+  ylab("\u03B2 coefficients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 0.5) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14))  +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+
+
+#ggsave("effects.png", plot_model_dim_only, dpi = 300)
+
+```
+
+```{r dimonly output PEB, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+bind_cols(coef_confint_dim_only[-1,], R2_peb_table[,-1]) %>% 
+     relocate(c(`Partial R2`, p), .after = Variable) %>% 
+     flextable() %>% 
+     bold(~p < .05, 1:3) %>% 
+     bold(~lower_bound > 0, c(1,4,5,6)) %>% 
+     footnote(i = 1, j = 4,
+              value = as_paragraph("< 0.29 = small; 
+                                   0.30-0.49 = medium;
+                                   > 0.50 = large"),
+              ref_symbols = "*",
+              part = "header") %>% 
+  autofit()
+
+
+
+
+```
+
+Total variance explained by the model = `r paste(peb_tot_var)`
+
+```{r ploteffectspredict PEB, echo=FALSE, message=FALSE, warning=FALSE}
+
+plot_model_dim_only
+
+```
 
 We also suspected that DEEP CTN and its subscales would predict three types of primal world beliefs (Clifton et al., 2019): That the world is interconnected, that the world is not hierarchical, and that the world is not about me (i.e., less egocentric worldviews).
-A zero-order correlation found weak -moderate correlations between interconnected beliefs and the new subscales of the DEEP CTN scale.
-We also found weak correlations between egocentric beliefs and the Deep, Presence, and Overall CTN. No relationship was found between any subscale and hierarchical worldviews.
+A zero-order correlation found weak - moderate correlations between interconnected beliefs and the new subscales of the DEEP CTN scale.
+We also found weak correlations between egocentric beliefs and the Deep, Presence, and Overall CTN. Only Deep CTN significantly predicted interconnected primal worldviews.
 See table below:
 
-::: {style="color:red"}
-[insert table]
-:::
+```{r linear regression with only dimensions predicting primal beliefs, echo=FALSE, message=FALSE, warning=FALSE}
+
+dimensions_primal <-
+      lm(PI_connect_Z ~ deep_ctn_z + exp_ctn_z + emo_ctn_z + presc_ctn_z, 
+         data = val_data)
+
+dimensions_primal_anova <-
+     Anova(dimensions_primal, type = "II")
+
+primal_r2 <-
+     calc.relimp(dimensions_primal, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+primal_vars <- c("Deep", "Experience", "Emotional", "Presence")
+primal_rvalues <- tibble(round(primal_r2$lmg,2)) #partial R2 of all variables
+primal_pvalues <- tibble(round(dimensions_primal_anova$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+primal_tot_var<-round(primal_r2$R2, 2) #variance explained by model
+
+#create table of R and P values
+R2_primal_table <- 
+     bind_cols(primal_vars,primal_rvalues, primal_pvalues[-5,]) %>% 
+     rename("Variable" = `...1`, "Partial R2" = `round(primal_r2$lmg, 2)`, 
+            "p" = `round.dimensions_primal_anova..Pr..F....2.`)
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+dim_only_output <- broom::tidy(dimensions_primal)
+dim_only_conf <- broom::tidy(dimensions_primal, conf.int = T)
+
+model_dim_only <- forestmangr::round_df(dim_only_output, digits = 2)
+model_dim_only <- model_dim_only[-1,] #remove the intercept 
+
+coef_dim_only <- 
+     coef(dimensions_primal)
+ConfidenceInterval_dim_only <- 
+     confint(dimensions_primal, level = 0.95)
+coef_confint_dim_only <- 
+     cbind(coef_dim_only, ConfidenceInterval_dim_only)%>% 
+     as.data.frame()
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+     mutate(variable=c("Intercept", "Deep", "Experiential", "Emotional", "Presence"))
+
+
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+     rename(c("std Beta" = "coef_dim_only",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_dim_only <- 
+     coef_confint_dim_only[, col_order] #reorder variables in the data frame
+
+coef_confint_dim_only <- 
+     coef_confint_dim_only %>% 
+  mutate_if(is.numeric, round, digits = 2) %>%  # round numeric into two significant digits 
+  rename(Variable = variable)
+
+plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(Variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 2,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 0.75,
+                position = "dodge", 
+                color="turquoise4",
+                width = 0.5) +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("DEEP CTN Factor") + 
+  ylab("\u03B2 coefficients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 0.5) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14))  +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+
+
+#ggsave("effects.png", plot_model_dim_only, dpi = 300)
+
+```
+
+```{r dimonly output primals, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+bind_cols(coef_confint_dim_only[-1,], R2_primal_table[,-1]) %>% 
+     relocate(c(`Partial R2`, p), .after = Variable) %>% 
+     flextable() %>% 
+     bold(~p < .05, 1:3) %>% 
+     bold(~lower_bound > 0, c(1,4,5,6)) %>% 
+     footnote(i = 1, j = 4,
+              value = as_paragraph("< 0.29 = small; 
+                                   0.30-0.49 = medium;
+                                   > 0.50 = large"),
+              ref_symbols = "*",
+              part = "header") %>% 
+  autofit()
+
+
+
+
+```
+
+Total variance explained by the model = `r paste(primal_tot_var)`
+
+```{r ploteffectspredict primals, echo=FALSE, message=FALSE, warning=FALSE}
+
+plot_model_dim_only
+
+```
 
 ### Incremental Validity
 
@@ -1752,9 +2122,121 @@ We found that the Emotional and Presence subscales remained significant predicto
 The Deep subscale was no longer a significant predictor.
 Both our subscales were of equal predictive value compared to the existing measures.
 
-::: {style="color:red"}
-[insert table & effects figure]
-:::
+```{r predictive validity PEB,include=FALSE, warning=FALSE}
+
+val_data <-
+     val_data %>% 
+  filter(!is.na(SES_peers_z)) %>% 
+     mutate(politics = (politics_overall_Z + politics_economic_z +
+                             politics_social_z)/3,
+            ses = (SES_family_z + SES_peers_z)/2)
+
+model_peb <- 
+     lm(PEB_Z ~ deep_ctn_z + exp_ctn_z + emo_ctn_z + presc_ctn_z +
+             CNS_Z + EIDR_Z, data = val_data)
+
+anova_model_peb <-
+     Anova(model_peb, type = "II")
+
+
+incremental_r2 <-
+     calc.relimp(model_peb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+incremental_vars <- c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z")
+incremental_rvalues <- tibble(round(incremental_r2$lmg,2)) #partial R2 of all variables
+incremental_pvalues <- tibble(round(anova_model_peb$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+inc_tot_var <-round(incremental_r2$R2, 2) #variance explained by model
+
+
+
+#create table of R and P values
+R2_incremental_table <- 
+     bind_cols(incremental_vars, incremental_rvalues, incremental_pvalues[-7,]) %>% 
+     rename("variable" = `...1`, "Partial R2" = `round(incremental_r2$lmg, 2)`, 
+            "p" = `round.anova_model_peb..Pr..F....2.`)
+
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+model_peb_output <- broom::tidy(model_peb)
+model_peb_conf <- broom::tidy(model_peb, conf.int = T)
+
+model_peb_out <- forestmangr::round_df(model_peb_conf, digits = 2)
+model_peb_out <- model_peb_out[-1,] #remove the intercept 
+
+coef_peb <- 
+     coef(model_peb)
+ConfidenceInterval_peb <- 
+     confint(model_peb, level = 0.95)
+coef_confint_peb <- 
+     cbind(coef_peb, ConfidenceInterval_peb)%>% 
+     as.data.frame()
+coef_confint_peb <- 
+     coef_confint_peb %>% 
+     mutate(variable=rownames(coef_confint_peb))
+
+
+coef_confint_peb <- 
+     coef_confint_peb %>% 
+     rename(c("std Beta" = "coef_peb",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_peb <- 
+     coef_confint_peb[, col_order] #reorder variables in the data frame
+
+coef_confint_peb <- 
+     coef_confint_peb %>% 
+  mutate_if(is.numeric, round, digits = 2) # round numeric into two significant digits 
+
+plot_model_peb <- coef_confint_peb[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
+     geom_hline(yintercept = 0, color = "red", size = 1) +
+  geom_point(shape = 15,
+             size  = 4,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 1,
+                position = "dodge", 
+                color="turquoise4") +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("Variables") + ylab("\u03B2 coeffecients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14)) 
+```
+
+```{r model PEB plots, echo=FALSE, warning=FALSE}
+
+bind_cols(coef_confint_peb[-1,], R2_incremental_table[,-1]) %>% 
+     relocate(c(`Partial R2`, p), .after = variable) %>% 
+     flextable() %>% 
+     bold(~p < .05, 1:3) %>% 
+     bold(~lower_bound > 0, c(1,4,5,6))%>% 
+     footnote(i = 1, j = 4,
+              value = as_paragraph("< 0.29 = small; 
+                                   0.30-0.49 = medium;
+                                   > 0.50 = large"),
+              ref_symbols = "*",
+              part = "header") %>% 
+  autofit()
+
+
+
+```
+
+Total variance explained by the model = `r paste(inc_tot_var)`
+
+```{r effectplotincremental, echo=FALSE, message=FALSE, warning=FALSE}
+plot_model_peb
+```
 
 ### Covariates
 
@@ -1770,23 +2252,237 @@ In either case this would suggest it’s important to include as a covariate.
 
 This resulted in including the following covariates: Politics (r = .19\*\* with PEB & r = .18\*\* to .23\*\* with DEEP CTN dimensions) Primal Beliefs - The world is interconnect (r = .21\*\* with PEB & r = .22\*\* to .38\*\* with DEEP CTN dimensions)
 
-::: {style="color:red"}
-[insert correlation matrix]
-:::
+```{r Robustness Covariates, echo=FALSE, include=FALSE}
+
+val_data <-
+  val_data %>% 
+  mutate(gender = case_when(gender == "Woman" ~ 0,
+                            gender == "Man" ~ 1))
+
+
+allvarscordata <- 
+     val_data %>% 
+         dplyr::select(CTN_overall_z,
+                 deep_ctn_z,
+                 exp_ctn_z,
+                 emo_ctn_z,
+                 presc_ctn_z,
+                 CNS_Z,
+                 EIDR_Z,
+                 PEB_Z,
+                 PI_me_Z,
+                 PI_hierarchy_Z,
+                 PI_connect_Z,
+                 politics,
+                 gender, #0 = female, 1=male
+                 ses,
+                 LOC_Z)  %>% 
+          as.matrix()
+
+
+     
+
+allvarscorrelation <-
+     rcorr(allvarscordata, type = "spearman")
+
+allvarscorp <- 
+     cor.mtest(allvarscordata)
+
+nm = rownames(allvarscorrelation$r)
+m = t(combn(nm, 2))
+d = cbind(data.frame(m), R = allvarscorrelation$r[m], P = allvarscorrelation$P[m])
+d$label = round(d$R, 2)
+d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
+d$X1 = factor(d$X1, nm)
+d$X2 = factor(d$X2, rev(nm))
+
+graphics.off()
+robustness_plot <- 
+  ggplot(d, aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c() +
+    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
+```{r full zero-order correlation, echo=FALSE}
+print(robustness_plot)
+```
 
 A multiple linear regression model where dimensions of the DEEP CTN scale and existing CTN measures (CNS and EIDR) and the covariates (politics & primal belief interconnectedness) were entered simultaneously to predict PEB is reported in the table below.
 
 By adding the covariates, both Emotional and Prescence subscales remained significant predictors of PEB.
 Adding covariates to the model did not improve the fit of the model above the variables in the incremental validity model (F(2) = 1.731, p = 0.179).
 
-::: {style="color:red"}
-[insert table & effects figure]
-:::
+```{r Robustness Existing measures, echo=FALSE, include=FALSE, warning=FALSE}
+#dummycode gender
+val_data <-
+val_data %>% 
+     mutate(gender_dummy = as.numeric(gender)) 
+
+
+robust_model_peb <-
+      lm(PEB_Z ~ deep_ctn_z + exp_ctn_z + emo_ctn_z + presc_ctn_z +
+             CNS_Z + EIDR_Z + 
+             PI_connect_Z + politics, data = val_data)
+
+robust_anova_peb <-
+     Anova(robust_model_peb, type = "II")
+
+
+robust_r2 <-
+     calc.relimp(robust_model_peb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
+robust_pvalues <- tibble(round(robust_anova_peb$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z", "PI_connect_Z", "politics"))
+
+robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
+
+
+
+#create table of R and P values
+R2_incremental_peb_robust <- 
+     bind_cols(vars, robust_rvalues, robust_pvalues[-9,])%>% 
+     rename("variable" = `c(...)`, "Partial R2" = `round(robust_r2$lmg, 2)`, 
+            "p" = `round.robust_anova_peb..Pr..F....2.`)
+     
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+model_robustPEB_output <- broom::tidy(robust_model_peb)
+model_robustPEB_conf <- broom::tidy(robust_model_peb, conf.int = T)
+
+model_robustPEB <- forestmangr::round_df(model_robustPEB_conf, digits = 2)
+model_robustPEB <- model_robustPEB[-1,] #remove the intercept 
+
+coef_robustPEB <- 
+     coef(robust_model_peb)
+ConfidenceInterval_robustPEB <- 
+     confint(robust_model_peb, level = 0.95)
+coef_confint_robustPEB <- 
+     cbind(coef_robustPEB, ConfidenceInterval_robustPEB)%>% 
+     as.data.frame()
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     mutate(variable=rownames(coef_confint_robustPEB))
+
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     rename(c("std Beta" = "coef_robustPEB",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB[, col_order] #reorder variables in the data frame
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+  mutate_if(is.numeric, round, digits = 2) # round numeric into two significant digits 
+
+plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 4,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 1,
+                position = "dodge", 
+                color="turquoise4") +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("Variables") + ylab("Beta coeffecients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14)) 
+
+```
+
+```{r robust PEB output, echo=FALSE, warning=FALSE}
+
+
+bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>% 
+     relocate(c(`Partial R2`, p), .after = variable) %>% 
+     flextable() %>% 
+     bold(~p < .05, 1:3) %>% 
+     bold(~lower_bound > 0, c(1,4,5,6))%>% 
+     footnote(i = 1, j = 4,
+              value = as_paragraph("< 0.29 = small; 
+                                   0.30-0.49 = medium;
+                                   > 0.50 = large"),
+              ref_symbols = "*",
+              part = "header") %>% 
+  autofit()
+
+
+
+
+
+
+
+```
+
+Total variance explained by the model = `r paste(robust_tot_var)`
+
+```{r effectplotrobust, echo=FALSE, message=FALSE, warning=FALSE}
+plot_model_robustPEB
+```
+
+------------------------------------------------------------------------
 
 # Discussion
 
-::: {style="color:red"}
-[write up a summary of the findings here]
-:::
+The findings from three exploratory factor analysis and one confirmatory factor analysis reveal that the construct of connection to nature can be described by four distinct factors:
+
+1.  Deep Identity: Deeply seeing the self as part of nature
+2.  Experiential Connection to nature: Spending and enjoying time in nature
+3.  Emotional Connection to nature: Desire to connect with and protect nature
+4.  Presence within nature: Being deliberately mindful and present within nature
+
+These factors were shown to both relate to and extend beyond two existing measures of connection to nature.
+The Connectedness to Nature scale [@mayer2004 ] was most strongly correlated with the deep identity factor.
+This aligns with the CNS as a cognitive measure of how much ones identity is interrelated with nature.
+The other three factors also correlated with the CNS, however they correlated only moderately.
+The revised Environmental Identity scale [@clayton2021] was most strongly corrleated with both the deep identity and experiential connection factors.
+This also aligns with past research that has shown the EID-r to be described as a multidimensional scale that describes ones identity and experiences within nature.
+Both emotional connection and presence within nature also correlated moderately with the EID-r.
+
+Our study also provided evidence for the predictive validity of the scale.
+We found differential predictive value across the four factors in predicting pro-environmental behavior and primal beliefs that the world is interconnected.
+All but the experiential connection factor uniquely predict pro-environmental behavior, with deep identity being the strongest predictor.
+However, when including previous measures of CTN, only emotional connection and presence within nature remained significant predictors of PEB (along both the existing measures).
+These two factors remained significant even after controlling for participants political ideology and their worldviews.
+Deep identity was the only factor that uniquely predicted primal beliefs that the world is interconnected suggesting that this factor best represents the more cognitive components of connection to nature.
+
+## Limitations
+
+The confirmatory factor analysis and validation of the DEEP CTN Scale was conducted on a student sample which restricts the generalizability of these results.
+It is evident from the three EFA samples that there are differences in how connection to nature is represented in student populations compared to a more general population sample.
+For example, many items that are classified as relating to ones identity as connected to nature loaded on the Deep Identity factor within the student sample, while these items failed to load on any factor or loaded on the Experiential connection factor in a general sample.
+Similarly, many of the spiritual items that were included in the Deep Identity factor loaded strongly in the general population samples but failed to load on any factor in the student sample.
+One explanation for this is that connection to nature appears to develop over the lifespan.
+It tends to decline during adolescence and not strengthen again until mid-to-late adulthood [@hughes2019].
+It may be that the Deep identity items that showed discrepancies across samples with varying ages picked up on this developmental trajectory.
+Because of this variation across age-groups we are currently collecting data from a general population to conduct a pre-registered CFA and validation that attempts to replicate the findings in this study.
+
+## Future Directions & Conclusion
+
+Based on these preliminary data we conclude that connection to nature is indeed a multi-dimensional construct and these constructs differentially predict important correlates such as pro-environmental behavior and worldviews.
+Most importantly, our results reveal that experiential connection to nature may be the least important when it comes to promoting PEB.
+Given that many interventions to promote CTN are focused on getting people "out into nature" it is concerning that these mere exposure may not be the driving factor in promoting PEB.
+Our results suggests that interventions should instead focus on building an emotional connection with nature and/or encouraging mindful engagement within nature.
+
+------------------------------------------------------------------------
 
 # References

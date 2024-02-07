@@ -1270,19 +1270,16 @@ summary_table
 
 # Validation
 
-Using the reduced scale of 19 items as it has adequate fit
+{{% callout note %}} Validation was completed using the reduced scale of
+19 items as it has adequate fit {{% /callout %}}
 
-## Convergent Validity
+## Hypothesis 2 - Convergent Validity
 
-We assessed the convergent validity of the new DEEP CTN scale, that is
-how closely our new measure is related to other established measures of
-the same construct. We tested this by looking at the zero order
-correlation between our new measure and its subscales and two
-established measures: The Connectedness to Nature Scale (CNS - Mayer &
-Franz, 2004) and the Environmental Identity Scale revised (EID-R -
-Clayton et al., 2021)
+The Deep CTN scale has convergent validity, which assesses *how closely
+our new measure is related to other established measures of the same
+construct.*
 
-```{r convergent validity, echo=FALSE, message=FALSE, warning=FALSE}
+```{r convergent validity, message=FALSE, warning=FALSE, include=FALSE}
 #select necessary items
 val_data <-
   data %>% 
@@ -1390,9 +1387,49 @@ val_data <-
                                    "Woman" ~ 1,
                                    .default = NA))
 
+#chronbacs alpha on cns and eidr
+cns_alpha <- 
+  ltm::cronbach.alpha(val_data[,c("CNS_1", "CNS_2", "CNS_3", "CNS_4", "CNS_5", "CNS_6", "CNS_7", "CNS_8", "CNS_9", "CNS_10", "CNS_11", "CNS_12", "CNS_13", "CNS_14")])
+
+eidr_alpha <-
+  ltm::cronbach.alpha(val_data[,c("EIDR_1", "EIDR_2", "EIDR_3", "EIDR_4", "EIDR_5", "EIDR_6", "EIDR_7", "EIDR_8", "EIDR_9", "EIDR_10", "EIDR_11", "EIDR_12", "EIDR_13", "EIDR_14")])
+
 ```
 
-```{r cormatrix, include=FALSE}
+Two established measures of connection to nature were used:
+
+1.  The Connectedness to Nature Scale (CNS - Mayer & Franz, 2004)
+    (cronbach's alpha = `r round(cns_alpha$alpha,2)`)
+
+2.  Environmental Identity Scale revised (EID-R - Clayton et al.,
+    2021)(cronbach's alpha = `r round(eidr_alpha$alpha,2)`).
+
+### Hypothesis 2.A
+
+-   The Deep Identity facet of the DEEP CTN scale will strongly
+    correlate with the Connectedness to Nature Scale (CNS)
+
+-   The other three facets will only weakly-moderately correlate with
+    the CNS
+
+*This is based on past research identifying the CNS as a uni-dimensional
+measure of nature connectedness which focuses on the cognitive aspect of
+connection to nature (Mayer & Frantz, 2004)*
+
+### Hypothesis 2.B
+
+-   The Experience and Emotional facets of the DEEP CTN scale will
+    strongly correlate with the Environmental Identity Scale revised
+    (EID-R)
+
+-   The Deep and Presence facets will weakly (or not at all) correlate.
+
+*This is based on previous research which identified multiple dimensions
+measuring enjoyment and appreciation of nature (Olivos & Aragones,
+2011)*
+
+```{r cormatrix, include=FALSE, fig.id=TRUE}
+#| fig.cap = "Spearman correlations between DEEP CTN facets and existing measures of CTN"
 
 cormatrix <- 
      val_data %>% 
@@ -1419,7 +1456,7 @@ nm = rownames(correlations$r)
 m = t(combn(nm, 2))
 d = cbind(data.frame(m), R = correlations$r[m], P = correlations$P[m])
 d$label = round(d$R, 2)
-d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
+d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n***")
 d$X1 = factor(d$X1, nm)
 d$X2 = factor(d$X2, rev(nm))
 
@@ -1428,27 +1465,65 @@ validation_plot <-
   ggplot(d, aes(X1, X2, fill = R, label = label)) +
     geom_tile(color = "white") +
     scale_fill_viridis_c() +
-    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
+    geom_text(color = ifelse(d$R > 0.56, "black", "white"), size = 4) +
     theme_bw() +
     coord_equal() +
      theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
+A zero-order Spearman correlation of the four Deep CTN scale facets, the
+CNS, and the EID-R found support for hypothesis 2A and partial
+supportfor hypothesis 2B tested (see Figure 7).
+
+-   Hypothesis 2A is supported as the Deep CTN scale facet correlated
+    strongly with the CNS (r = `r round(d[10,3],2)`), while the other
+    three facets only correlated moderately (experiential r =
+    `r round(d[14,3],2)`, emotional r = `r round(d[17,3],2)`, presence r
+    = `r round(d[20,3],2)`).
+
+-   Hypothesis 2B is partially supported. While the experiential facet
+    did correlate strongly with the EID-R (r = `r round(d[15,3],2)`),
+    the emotional facet only correlated moderately (r =
+    `r round(d[18,3],2)`). Additionally, the deep and presence facets
+    also correlated moderately (r = `r round(d[11,3],2)` and r =
+    `r round(d[20,3],2)` respectively).
+
+**Figure 7. Spearman correlations between DEEP CTN facets and existing
+measures of CTN**
+
 ```{r validation plot 2, echo=FALSE, message=FALSE}
 print(validation_plot)
 
 ```
 
+*Spearman’s correlation coefficient guidelines (Akoglu, 2018):\
+\|0.7\| ≤ r is Strong;\
+\|0.4\| ≤ r \< \|0.7\| is Moderate;\
+\|0.1\| ≤ r \< \|0.3\| is Weak*
+
+------------------------------------------------------------------------
+
 ## Predicting PEB
+
+```{r cronbachs for peb, message=FALSE, warning=FALSE, include=FALSE}
+
+peb_alpha <- 
+  val_data %>% 
+  dplyr::select(RPEBS_1, RPEBS_2, RPEBS_3, RPEBS_4, RPEBS_5, RPEBS_6, RPEBS_7, RPEBS_8, RPEBS_9, RPEBS_10, RPEBS_11, RPEBS_12, RPEBS_13, RPEBS_14, RPEBS_15, RPEBS_16, RPEBS_17, RPEBS_18, RPEBS_19, RPEBS_20) %>%
+  ltm::cronbach.alpha()
+
+
+```
 
 We assessed the predictive validity of the new DEEP CTN scale (i.e., how
 well our measure can predict participant scores on two theoretically
 related constructs). The “gold standard” for predictive validity of CTN
 measures is how well it predicts pro-environmental behavior (PEB)
 (Clayton, 2003; Clayton et al., 2021; Mayer & Frantz, 2004; Tam, 2013).
-A zero-order correlation found moderate correlations between PEB and the
-new subscales of the DEEP CTN scale.
+A zero-order correlation found moderate correlations between the
+Recurring PEB Scale (Brick et al., 2017)(cronbach's alpha =
+`r peb_alpha$alpha`) and the new subscales of the DEEP CTN scale.
 
 A linear regression with only the subscales of CTN predicting PEB showed
 ....
@@ -1925,9 +2000,36 @@ bind_cols(model_names, comparison) %>%
 
 ## Predicting Well-Being
 
+```{r wellbeing cronbachs}
+
+wb_alpha <-
+  val_data %>% 
+  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
+         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
+         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
+         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
+         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
+         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept, 
+         
+         PANAS_1, PANAS_2, PANAS_3, PANAS_4, PANAS_5, 
+         PANAS_6, PANAS_7, PANAS_8, PANAS_9, PANAS_10,
+         
+         VITALITY_1, VITALITY_2, VITALITY_3, 
+         VITALITY_4, VITALITY_5, VITALITY_6) %>%
+  ltm::cronbach.alpha()
+
+
+
+```
+
 Nature connectedness has also been shown to relate to various measures
 of psychological well-being (Capaldi et al., 2014; Pritchard et al.,
-2020).
+2020). To measure wellbeing we used a composite measure from three
+established measures of well-being: 1) the Ryff Well-being Scale (Ryff &
+Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et
+al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick,
+1997). The Cronbach’s Alpha for this composite measure is
+`r wb_alpha$alpha`.
 
 A linear regression with only the subscales of CTN predicting Well-being
 showed ....
