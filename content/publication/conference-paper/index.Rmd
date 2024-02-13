@@ -770,10 +770,6 @@ Fit_table %>%
          rmsr = round(as.numeric(rmsr),3),
          tli = round(as.numeric(tli),3),
          bic = round(as.numeric(bic),3)) 
-  
-
-  
-
 
 ```
 

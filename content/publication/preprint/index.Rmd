@@ -24,6 +24,7 @@ links:
   - name: OSF
     url: "https://osf.io/5xbvp/" 
 draft: true
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -122,7 +123,7 @@ n_valid <- length(unique(data$PROLIFIC_PID))
 ## Power Analysis
 
 Estimating the sample size needed for a factor analysis relies on rules of thumb.
-For this study, we use a commonly used rule of thumb of including 10-15 subjects per variable (Pett et al., 2003).
+For this study, we use a commonly used rule of thumb of including 10-15 subjects per variable [@anoverv2003].
 Because our largest analysis involves 30 variables, we hope to obtain usable data from 10\*30 = 300 participants.
 Given that there will be some attrition and removals during data cleaning (estimated to be about 5% based on pilot data), we therefore hope to include about 315 participants total for this analysis.
 
@@ -177,11 +178,10 @@ The sample included `r gender_sum[2,2]` Women, `r gender_sum[1,2]` Men, `r gende
 The sample was primarily made up of White participants (see Table 1. for full summary of participant race) The study was approved by the IRB committee at UCSD (#806617).
 All participants gave their informed consent before participating and were compensated at \$9 per hour (approximately \$2.18 for completing a 14.5 minute survey).
 
-**Table 1. Descriptive Statistics** 
+**Table 1. Demographic details**
 
-::: row 
+::: row
 ::: {.col-xs-12 .col-md-6}
-
 ```{r print_gender, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 gender_sum %>% 
@@ -192,7 +192,7 @@ gender_sum %>%
 
 ```
 
-`r officer::run_columnbreak()` 
+`r officer::run_columnbreak()`
 :::
 
 ::: {.col-xs-12 .col-md-6}
@@ -231,9 +231,11 @@ ses_se <- round(sd(data$SES_peers, na.rm = T),2)
 
 ```
 
-Political Ideology was scored on a 7-point Likert scale with 1 = Most Liberal and 7 = Most Conservative The mean political ideology was `r pol_mean`(`r pol_se`). There was a skew towards more liberal ideolgoies. 
+Political Ideology was scored on a 7-point Likert scale with 1 = Most Liberal and 7 = Most Conservative The mean political ideology was `r pol_mean`(`r pol_se`).
+There was a skew towards more liberal ideolgoies.
 
 **Figure 1. Distribution of Political Ideology**
+
 ```{r pol normality, echo=FALSE, message=FALSE, warning=FALSE}
 pol_normality <- 
 data %>% 
@@ -245,7 +247,6 @@ data %>%
     )
 ```
 
-
 ## Materials
 
 ### DEEP CTN Scale
@@ -255,8 +256,8 @@ The development of the DEEP CTN Scale was conducted in our lab over the past 2.5
 #### 1. Search of existing scales:
 
 An extensive search of the literature was conducted to source all existing adult measures of CTN.
-Based on this search, we identified two measures that showed promise for further adaptation: The AIMES Multidimensional CTN Scale (Meis-Harris et al., 2021) and the Disposition to Connect with Nature scale (Brügger et al., 2011).
-We identified in our search that a multi-dimensional structure should be maintained for the measure, however existing multi-dimensional measures showed conflicting dimensional structure (Hatty et al., 2020 and Meis-Harris et al., 2021 - the later having a more complex and theoretically driven dimensional structure which is why it was chosen to retain for adaptation).
+Based on this search, we identified two measures that showed promise for further adaptation: The AIMES Multidimensional CTN Scale [@meis-harris2021] and the Disposition to Connect with Nature scale [@brügger2011].
+We identified in our search that a multi-dimensional structure should be maintained for the measure, however existing multi-dimensional measures showed conflicting dimensional structure (@hatty2020; @meis-harris2021 - the later having a more complex and theoretically driven dimensional structure which is why it was chosen to retain for adaptation).
 The Disposition to Connect with Nature scale addressed issues of self-report bias though given it was written for a European sample the items were not generalizable to other populations.
 The items from these two scales gave us a total of 59 items (AIMES = 19 items; Dispositional CTN = 40 items).
 Items were reworded for generalizability and clarity.
@@ -267,7 +268,7 @@ This left a total of 39 items adapted from existing measures (AIMES = 17 items; 
 #### 2. Development of new items:
 
 We chose to build upon the strong theoretical basis for the dimensional structure of the AIMES with some changes.
-Meis-Harris et al., (2021) based their dimensions off Ives et al., (2018) which lists five aspects of human-nature relationships that can lead to behavioral change.
+Meis-Harris et al., (2021) based their dimensions off @ives2018 which lists five aspects of human-nature relationships that can lead to behavioral change.
 We agree with that three of these dimensions are part of the construct of CTN (these are also widely agreed to be part of the construct of CTN in the literature):
 
 1.  Experiential (time spent in nature)
@@ -276,7 +277,7 @@ We agree with that three of these dimensions are part of the construct of CTN (t
 
 3.  Emotional (affective relationship with nature).
 
-However, they included two value-based dimensions which, while strongly correlated to CTN, have been defined as separate constructs (Schwartz (1992, 1999), Schultz (2001); Stern & Dietz (1994))
+However, they included two value-based dimensions which, while strongly correlated to CTN, have been defined as separate constructs [@schwartz1992; @schwartz1999; @schultz2001; @stern1994].
 
 4.  Material values towards nature (viewing nature as a resource for human extraction e.g., extrinsic values)
 
@@ -322,76 +323,280 @@ It also showed that a hierarchical model had adequate fit.
 Further, both of these models fitted better than a model with one single uni-dimensional factor.
 The full list of items used in this study are displayed in Table 2.
 
-See Supplementary Documents for details of these pilot studies.
+See [Supplementary Documents](publication/conference-paper/) for details of these pilot studies.
 
-Table 2.
-DEEP CTN Scale Items
+```{r DEEPCTN Scale, include=FALSE}
+#create a table that shows the final items for the DEEP CTN scale
+items <- 
+  data %>%
+  dplyr::select(starts_with("CTN")) %>%
+  mutate_all(as.numeric) %>% 
+  dplyr::select(CTN_spirit_2,
+                CTN_spirit_3,
+                CTN_spirit_7,
+                CTN_spirit_1,
+                CTN_spirit_8,
 
-```{r final items, eval=FALSE, include=FALSE}
+                CTN_exp_4,
+                CTN_exp_1,
+                CTN_exp_3,
+                CTN_exp_2,
+                CTN_exp_5,
+         
+                CTN_emo_3,
+                CTN_emo_4,
+                CTN_emo_6,
+                
+                CTN_mind_2,
+                CTN_mind_1,
+                CTN_mind_3,
+                CTN_mind_5,
+                CTN_mind_4)
 
-# code to display a table of all the items used in the CFA
-# change eval=TRUE include=TRUE
+#col names from reduced
+codes <- colnames(items)
+scale <- matrix(c("I view nature as a mother who nurtures and cares for me", "Deep",
+    "Human beings and nature are connected by the same energy or Life-force", "Deep",
+    "My connection to nature is something I would describe as *spiritual*", "Deep",
+    "I think about the *shared breath* between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale", "Deep",
+    "I often think about the fact that all life is grounded on this planet that is revolving around the sun","Deep",
+    
+    
+    "I like to get outdoors whenever I get the chance", "Experience",
+     "I feel uneasy if I am away from nature for too long","Experience",
+     "I engage and participate with nature to find meaning and richness in life","Experience",
+    "My favorite place is in nature", "Experience",
+    "Walking through a forest makes me forget about my daily worries", "Experience",
+     
+    
+    "Thinking of someone carving their initials into a tree makes me cringe","Emotional",
+    "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it", "Emotional",
+    "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)",  "Emotional",
+    
+    "I take time to watch the clouds pass by", "Presence",
+    "I deliberately take time to watch stars at night", "Presence",
+    "I consciously watch or listen to birds", "Presence",
+    "I take time to consciously smell flowers", "Presence",
+    "I pay attention to the current phase of the moon", "Presence"),
+  ncol=2, 
+  byrow=TRUE) %>% 
+  as.data.frame() 
+colnames(scale) <- c("Item", "Scale")
+
+#Cronbach's Alpha for each subscale
+alpha_deep <- ltm::cronbach.alpha(items[,1:5])
+alpha_deep <- round(alpha_deep$alpha,2)
+alpha_exp <- ltm::cronbach.alpha(items[,6:10])
+alpha_exp <- round(alpha_exp$alpha,2)
+alpha_emo <- ltm::cronbach.alpha(items[,11:13])
+alpha_emo <- round(alpha_emo$alpha,2)
+alpha_pres <- ltm::cronbach.alpha(items[,14:18])
+alpha_pres <- round(alpha_pres$alpha,2)
+
+scale <- 
+scale %>% 
+  mutate(Alpha = case_when(Scale == "Deep" ~ alpha_deep,
+                           Scale == "Experience" ~ alpha_exp,
+                           Scale == "Emotional" ~ alpha_emo,
+                           Scale == "Presence" ~ alpha_pres)) %>% 
+  as.data.frame()
+
+summary_table <- 
+  flextable(scale) %>% 
+  set_header_labels(Scale = "CTN Subscale", Alpha = "Cronbach's Alpha") %>% 
+  valign(valign = "top") %>% 
+  autofit() %>%
+  merge_v(j = 2:3) %>% 
+#    theme_zebra() %>% 
+  hline(i = c(5, 10, 13))
+
+```
+
+**Table 2. DEEP CTN Scale Items**
+
+```{r DEEP CTN scale printed, echo=FALSE}
+summary_table
 ```
 
 ### Convergent Validity measures
 
-```{r cronbachs alpha CTN measures, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE 
+```{r setting up the data, include=FALSE}
+val_data <-
+  data %>% 
+  dplyr::select(id, definition,
+         CTN_spirit_1, CTN_spirit_2, CTN_spirit_3, CTN_spirit_7,CTN_spirit_8,
+         CTN_exp_1, CTN_exp_2, CTN_exp_3, CTN_exp_4, CTN_exp_5,
+         CTN_emo_3, CTN_emo_4, CTN_emo_6,
+         CTN_mind_1, CTN_mind_2, CTN_mind_4, CTN_mind_5, CTN_mind_6,
+         
+         EIDR_1, EIDR_2, EIDR_3, EIDR_4, EIDR_5, EIDR_6, EIDR_7, 
+         EIDR_8, EIDR_9, EIDR_10, EIDR_11, EIDR_12, EIDR_13, EIDR_14,
+         
+         CNS_1, CNS_2, CNS_3, CNS_4, CNS_5, CNS_6, CNS_7,
+         CNS_8, CNS_9, CNS_10, CNS_11, CNS_12, CNS_13, CNS_14,
+         
+         RPEBS_1, RPEBS_2, RPEBS_3, RPEBS_4, RPEBS_5, RPEBS_6, RPEBS_7, 
+         RPEBS_8, RPEBS_9, RPEBS_10, RPEBS_11, RPEBS_12, RPEBS_13, RPEBS_14,
+         RPEBS_15, RPEBS_16, RPEBS_17, RPEBS_18, RPEBS_19, RPEBS_20,
+         
+         PI_interconnect_1, PI_interconnect_2, 
+         PI_interconnect_3, PI_interconnect_4,
+         
+         RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
+         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
+         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
+         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
+         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
+         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept, 
+         
+         PANAS_1, PANAS_2, PANAS_3, PANAS_4, PANAS_5, 
+         PANAS_6, PANAS_7, PANAS_8, PANAS_9, PANAS_10,
+         
+         VITALITY_1, VITALITY_2, VITALITY_3, 
+         VITALITY_4, VITALITY_5, VITALITY_6,
+         
+         SES_peers,
+         politics_overall, politics_economic, politics_social,
+         age, gender, race) %>% 
+  mutate(across(3:112, as.numeric))
+
+#reverse necessary items
+reverse_code <- function(data, columns_to_reverse) {
+  data[, columns_to_reverse] <- max(data[, columns_to_reverse]) - data[, columns_to_reverse] + min(data[, columns_to_reverse])
+  data
+}
+
+reverse_code(val_data, c("CNS_4", "CNS_14", "RPEBS_4", "RPEBS_6", "RPEBS_7", "RPEBS_14", "PI_interconnect_2", "RYFF_1_autonomy", "RYFF_4_enviromastery", "RYFF_9_growth", "RYFF_10_relations", "RYFF_12_relations", "RYFF_14_purpose", "RYFF_15_purpose", "RYFF_18_selfaccept"))
+
+#create scales & standardize
+val_data <-
+  val_data %>% 
+  mutate(DeepCTN = (rowSums(dplyr::select(., CTN_spirit_1:CTN_spirit_8))),
+         DeepCTN_z = (DeepCTN - mean(DeepCTN))/sd(DeepCTN),
+         ExpCTN = (rowSums(dplyr::select(., CTN_exp_1:CTN_exp_5))),
+         ExpCTN_z = (ExpCTN - mean(ExpCTN))/sd(ExpCTN),
+         EmoCTN = (rowSums(dplyr::select(., CTN_emo_3:CTN_emo_6))),
+         EmoCTN_z = (EmoCTN - mean(EmoCTN))/sd(EmoCTN),
+         PresCTN = (rowSums(dplyr::select(., CTN_mind_1:CTN_mind_6))),
+         PresCTN_z = (PresCTN - mean(PresCTN))/sd(PresCTN),
+         CTN_overall = DeepCTN + ExpCTN + EmoCTN + PresCTN,
+         CTN_z = (CTN_overall - mean(CTN_overall))/sd(CTN_overall),
+         EIDR = (rowSums(dplyr::select(., EIDR_1:EIDR_14))),
+         EIDR_z = (EIDR - mean(EIDR))/sd(EIDR),
+         CNS = (rowSums(dplyr::select(., CNS_1:CNS_14))),
+         CNS_z = (CNS - mean(CNS))/sd(CNS),
+         RPEBS = (rowSums(dplyr::select(., RPEBS_1:RPEBS_20))),
+         RPEBS_z = (RPEBS - mean(RPEBS))/sd(RPEBS),
+         PI_interconnect = 
+           (rowSums(dplyr::select(., PI_interconnect_1:PI_interconnect_4))),
+         PI_interconnect_z = 
+           (PI_interconnect - mean(PI_interconnect))/sd(PI_interconnect),
+         RYFF_autonomy = (rowSums(dplyr::select(., RYFF_1_autonomy:RYFF_3_autonomy))),
+         RYFF_enviromastery = 
+           (rowSums(dplyr::select(., RYFF_4_enviromastery:RYFF_6_enviromastery))),
+         RYFF_growth = (rowSums(dplyr::select(., RYFF_7_growth:RYFF_9_growth))),
+         RYFF_relations = 
+           (rowSums(dplyr::select(., RYFF_10_relations:RYFF_12_relations))),
+         RYFF_purpose = 
+           (rowSums(dplyr::select(., RYFF_13_purpose:RYFF_15_purpose))),
+         RYFF_selfaccept = 
+           (rowSums(dplyr::select(., RYFF_16_selfaccept:RYFF_18_selfaccept))),
+         RYFF_overall = RYFF_autonomy + RYFF_enviromastery + RYFF_growth + RYFF_relations + RYFF_purpose + RYFF_selfaccept,
+         RYFF_z = (RYFF_overall - mean(RYFF_overall))/sd(RYFF_overall),
+         PANAS = (rowSums(dplyr::select(., PANAS_1:PANAS_10))),
+         PANAS_z = (PANAS - mean(PANAS))/sd(PANAS),
+         VITALITY = (rowSums(dplyr::select(., VITALITY_1:VITALITY_6))),
+         Vitality_z = (VITALITY - mean(VITALITY))/sd(VITALITY),
+         WB = (RYFF_z + PANAS_z + Vitality_z)/3,
+         politics = (politics_overall + politics_economic + politics_social)/3)
+```
+
+```{r cronbachs alpha CTN measures, include=FALSE}
+cns_alpha <- 
+  ltm::cronbach.alpha(val_data[,c("CNS_1", "CNS_2", "CNS_3", "CNS_4", "CNS_5", "CNS_6", "CNS_7", "CNS_8", "CNS_9", "CNS_10", "CNS_11", "CNS_12", "CNS_13", "CNS_14")])
+
+eidr_alpha <-
+  ltm::cronbach.alpha(val_data[,c("EIDR_1", "EIDR_2", "EIDR_3", "EIDR_4", "EIDR_5", "EIDR_6", "EIDR_7", "EIDR_8", "EIDR_9", "EIDR_10", "EIDR_11", "EIDR_12", "EIDR_13", "EIDR_14")])
 ```
 
 Two pre-existing CTN scales were used to identify convergent validity.
-The Connectedenss to Nature Scale (CNS, Mayer & Frantz, 2004) and the Environmental Identity Scale revised (EID-R, Clayton et al., 2021).
-The CNS is a 14-item scale designed to measure the cognitive beliefs about how interneconnected one’s self is to nature.
-It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree), Cronbach's Alpha = (r paste(alpha_CNS)).
-The EID-R is a 14-item scale designed to measure how interneconnected one’s self is to nature.
-It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me), Cronbach's Alpha = ((r paste(alpha_EIDR)).
+The Connectedness to Nature Scale (CNS, @mayer2004) and the Environmental Identity Scale revised (EID-R, @clayton2021).
+
+The CNS is a 14-item scale designed to measure the cognitive beliefs about how interconnected one’s self is to nature.
+It is measured on a Likert scale ranging from 1(strongly disagree) to 5(strongly agree), Cronbach's Alpha = (`r round(cns_alpha$alpha,2)`).
+
+The EID-R is a 14-item scale designed to measure how interconnected one’s self is to nature.
+It is measured on a Likert scale ranging from 1(not at all true of me) to 7(completely true of me), Cronbach's Alpha = (`r round(eidr_alpha$alpha,2)`).
 
 ### Predictive Validity measures
 
 #### Pro-environmental behavior
 
-```{r cronbachs alpha PEB, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE 
+```{r cronbachs alpha PEB, include=FALSE}
+peb_alpha <- 
+  val_data %>% 
+  dplyr::select(RPEBS_1, RPEBS_2, RPEBS_3, RPEBS_4, RPEBS_5, RPEBS_6, RPEBS_7, RPEBS_8, RPEBS_9, RPEBS_10, RPEBS_11, RPEBS_12, RPEBS_13, RPEBS_14, RPEBS_15, RPEBS_16, RPEBS_17, RPEBS_18, RPEBS_19, RPEBS_20) %>%
+  ltm::cronbach.alpha()
 ```
 
-Participants completed a modified version of the Recurring Pro-environmental Behavior scale (Brick et al., 2017) which asks people to report how often they engage in various pro-environmental behaviors.
+Participants completed a modified version of the Recurring Pro-environmental Behavior scale [@brick2017] which asks people to report how often they engage in various pro-environmental behaviors.
 Modifications were made to clarify existing items (to view the scale used in this study view Supplementary docs in the OSF project).
-This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always), Cronbach's Alpha = ((r paste(alpha_PEB)\`).
+This scale includes 20 items measured on a Likert scale ranging from 1(never) to 5(always), Cronbach's Alpha = (`r round(peb_alpha$alpha,2)`).
 
 #### Psychological Well-being
 
-```{r cronbachs alpha WB, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE 
+```{r cronbachs alpha WB, include=FALSE}
+wb_alpha <-
+  val_data %>% 
+  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
+         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
+         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
+         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
+         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
+         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept, 
+         
+         PANAS_1, PANAS_2, PANAS_3, PANAS_4, PANAS_5, 
+         PANAS_6, PANAS_7, PANAS_8, PANAS_9, PANAS_10,
+         
+         VITALITY_1, VITALITY_2, VITALITY_3, 
+         VITALITY_4, VITALITY_5, VITALITY_6) %>%
+  ltm::cronbach.alpha()
 ```
 
-A single measure of psychological well-being measure was created by aggregating scores from three established measures of well-being: 1) the Ryff Well-being Scale (Ryff & Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick, 1997), Cronbach's Alpha = ((r paste(alpha_WB)).
+A single measure of psychological well-being measure was created by aggregating scores from three established measures of well-being: 1) the Ryff Well-being Scale [@ryff1995]; 2) the positive affect subscale of the PANAS [@watson1988]; and 3) the Subjective Vitality Scale [@ryan1997], Cronbach's Alpha = (`r round(wb_alpha$alpha,2)`).
 
 ### Covariate measures
 
 #### Interconnected Beliefs
 
-```{r cronbachs alpha Primals, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE 
+```{r cronbachs alpha Primals, include=FALSE}
+primals_alpha <-
+  val_data %>% 
+  dplyr::select(PI_interconnect_1, 
+                PI_interconnect_2,
+                PI_interconnect_3,
+                PI_interconnect_4) %>%
+  ltm::cronbach.alpha()
 ```
 
-Participants were also asked about their belief that the world is interconnected using the Interconnected subscale of the Primal Beliefs Inventory (Clifton et al., 2019).
+Participants were also asked about their belief that the world is interconnected using the Interconnected subscale of the Primal Beliefs Inventory [@clifton2019].
 This was included as a covariate as pilot data showed this measure is correlated to both DEEP CTN and PEB (See supplementary documents for full analysis of the pilot data).
 The Interconnected subscale consists of four items asking how connected or atomistic one believes the world to be (e.g., Most things are basically unconnected and independent from each other [reversed]).
-All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree), Cronbach's Alpha = (r paste(alpha_primal)).
+All items are measured on a Likert scale ranging from 1(strongly disagree) to 6(strongly agree), Cronbach's Alpha = (`r round(primals_alpha$alpha,2)`).
 
 #### Demographics
 
-```{r cronbachs alpha pol, eval=FALSE, include=FALSE}
-# update code relevant to this sample
-# change eval=TRUE 
+```{r cronbachs alpha pol, include=FALSE}
+alpha_pol <-
+  val_data %>% 
+  dplyr::select(politics_overall,
+                politics_economic,
+                politics_social) %>%
+  ltm::cronbach.alpha()
 ```
 
 Participants also answered several demographics questions (age, gender, political ideology, and social economic status).
-Political ideology was a composite of three items asking about overall political ideology, economic political ideology, and social political ideology measured on a Likert scale ranging from 1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative), Cronbach's Alpha = ((r paste(alpha_pol)).
+Political ideology was a composite of three items asking about overall political ideology, economic political ideology, and social political ideology measured on a Likert scale ranging from 1 (extremely liberal) - 4(middle of the road) - 7(extremely conservative), Cronbach's Alpha = (`r round(alpha_pol$alpha,2)`).
 The Subjective Socio-economic Ladder (Adler et al., 2000) was used to measure SES.
 Participant's mark where they believe they are on the ladder, with 10 representing people who are the best off, and 1 representing people who are the worst off.
 
@@ -404,3 +609,5 @@ Participants are asked to submit an open-ended definition of nature (This was co
 Next participants were randomly shown the New DEEP CTN Scale, Connectedness to Nature Scale, Environmental Identity Scale, Recurring Pro-Environmental Behavior Scale , Primals Inventory - Interconnected sub-scale, Ryff Well-being scale, PANAS positivity sub-scale, and the Subjective Vitality Scale.
 Next, participants complete a demographics question block which includes items relating to covariates of interest (e.g., political ideology, SES, and age) Last, participants were asked to rate their effort and attention levels on the questionnaires.
 Participants were told that their responses to this question are completely anonymous, and will not in any way affect their Prolific payment, but were used to improve the validity of data included in our analyses.
+
+# References

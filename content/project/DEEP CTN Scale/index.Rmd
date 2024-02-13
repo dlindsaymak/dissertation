@@ -20,6 +20,7 @@ editor_options:
   markdown: 
     wrap: 72
 diagram: true
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -41,10 +42,10 @@ library(car) # Type 2 Anova
 library(effectsize)
 library(relaimpo) #calculates unique variance
 library(ggplot2) #grid arrange plots
-
+library(knitr) # has kable() to generate simple tables
 
 #flextable defaults
-set_flextable_defaults(digits = 2, layout = "autofit", width = .75)
+set_flextable_defaults(digits = 2, layout = "autofit", width = 1)
                       
 
 #Loading data
@@ -117,13 +118,17 @@ Data collected on 29 Jan 2024
 ```
 
 ```{r demographics, echo=FALSE, include=FALSE}
-
+#dummycode gender
+#man = 0; woman = 1; other = NA (will remove these from anlaysis as there isn't enough for sufficient power)
 data <-
   data %>% 
   mutate(age = as.numeric(age),
          gender = factor(as.numeric(gender), 
                          levels = c("1", "2", "3", "4", "5", "6", "7"),
                          labels = c("Man", "Woman", "Trans Man", "Trans Woman", "Non-binary", "Other", "No response")),
+         gender_dummy = dplyr::case_when(gender == "Man" ~ 0,
+                                         gender == "Woman" ~ 1,
+                                         .default = NA),
          race = factor(as.numeric(ethnoracial),
                        levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9"),
                        labels = c("Asian", "White", "Hispanic or Latino", "Black or African American", "Middle Eastern or North African", "Native Hawaiian or other Pacific Islander", "First Nation or Indigenous American", "Mixed", "No response")))
@@ -192,245 +197,12 @@ items <-
   dplyr::select(starts_with("CTN")) %>%
   mutate_all(as.numeric)
 
-```
-
-# Assumptions
-
-Several assumptions need to be met before running a confirmatory factor
-analysis. First we checked the skewedness and kurtosis of each item to
-be included in the CFA. The closer to zero for both skewedness and
-kurtosis, the closer to a normal distribution. Any items whose
-distributions exhibited skewness and/or kurtosis that exceed general
-guidelines were considered non-normal removed from the analysis (Hair et
-al., 2017, p. 61). [Statology
-Link](https://urldefense.com/v3/__https://www.statology.org/skewness-kurtosis-in-r/__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16GWFhwP6w$)).
-
-### Skewness
-
-For skewedness, using the skewness function from the Moments package in
-R ([Komsta & Novemstky,
-2015](https://cran.r-project.org/web/packages/moments/moments.pdf)),
-skewness was calculated for each item. Any item where the number is
-greater than +1 (right skewed) or lower than -1 (left skewed), this is
-an indication of a substantially skewed distribution. No items were
-heavily skewed in this dataset.
-
-```{r Skewness, include=TRUE, echo=FALSE}
-skew <-as.data.frame(round(sort(skewness(items),
-     decreasing = T),2))
-
-skewed_items <- 
-skew %>% 
-  rename("skew" = "round(sort(skewness(items), decreasing = T), 2)") %>% 
-  filter(skew > 1 | skew < -1)
-
-if(nrow(skewed_items) == 0)
-{
-  print("No items were heavily skewed")
-}
-
-if(length(skewed_items) != 0)
-{
-  skewed_items %>% 
-  rownames_to_column("items") %>% 
-  flextable() %>% 
-  autofit()
-}  
-```
-
-Three items with high skew (these items were also skewed in the pilot)
-
--   I have great respect for being alive on this earth and part of the
-    universe
-
--   I am careful to not step on snails
-
--   Listening to the sounds of nature makes me relax
-
-### Kurtosis
-
-For Kurtosis, using the kurtosis function from the Moments package in R
-(Komsta & Novemstky, 2015), kurtosis was calculated for each item. Any
-item were the number is greater than +3, the distribution is too peaked.
-Likewise, a kurtosis of less than -3 indicates a distribution that is
-too flat. Two items have a high kurtosis:
-
-```{r Kurtosis, include=TRUE, echo=FALSE}
-kurtosis <- as.data.frame(round(sort(kurtosis(items),
-     decreasing=T),2))
-
-kurtosis_items <- 
-kurtosis %>% 
-  rename("kurtosis" = "round(sort(kurtosis(items), decreasing = T), 2)") %>% 
-  filter(kurtosis > 3 | kurtosis < -3) 
-
-if(nrow(kurtosis_items) == 0)
-{
-  print("No items had high or low kurtosis")
-}
-
-if(nrow(kurtosis_items) != 0)
-{
-  kurtosis_items %>% 
-  rownames_to_column("items") %>% 
-  flextable() %>% 
-  autofit()
-}  
-
-```
-
-Five items with high kurtosis
-
--   I have great respect for being alive on this earth and part of the
-    universe
-
--   I am careful to not step on snails
-
--   Listening to the sounds of nature makes me relax
-
--   Seeing a cleared forest is upsetting to me
-
--   Every part of nature is sacred
-
-### Inter-item Correlation
-
-```{r Correlation Matrix, echo=FALSE, out.width="100%"}
-#see if any item is too strongly correlated
-
-corrplot(cor(items),
-         method="shade",
-         type="upper",
-         order="original",
-         addCoef.col = "black",
-         tl.col="black", 
-         tl.srt=55, 
-         tl.cex=.65,
-         sig.level = 0.05, 
-         insig = "blank",
-         number.cex = .35,
-         cl.pos = "n") 
-
-```
-
-```{r Correlations Large, echo=FALSE}
-#pull out too strong ones
-high_cor <- 
-items %>% 
-    dplyr::select_if(is.numeric) %>%
-    cor() %>% 
-    round(digits = 2) %>%
-    as.data.frame() %>%
-    rownames_to_column %>%
-    gather(colname, value, -rowname) %>%
-    group_by(rowname) %>%
-  filter(abs(value) >= 0.75) %>%
-  filter(abs(value) != 1)
-
-if(nrow(high_cor) == 0)
-{
-  print("No items were correlated > .75")
-}
-
-if(nrow(high_cor) != 0)
-{
-  print(high_cor)
-}  
-
-```
-
-### Multivariate normality
-
-##### Notes on Multivariate Normality
-
--   Quantiative test of normality: shapiro is fine for univariate
-    normality test. But I also need to test for multivariate normality.
-    This package is both. Use this.
--   Can just look at univariate for now, but REPEAT THIS with my final
-    variables to check for multivariate normality
--   Sources:
-    -   [Lavaan Package
-        notes](https://shiny.rit.albany.edu/stat/cfa1test/data.html)
-    -   [MVN Package
-        Notes](https://cran.r-project.org/web/packages/MVN/MVN.pdf)
-    -   [How to perform multivariate normality tests in
-        R](https://www.statology.org/multivariate-normality-test-r/)
-    -   [How to transform data in
-        R](https://www.statology.org/transform-data-in-r/)
-
-A Mardia Test of multivariate normality from the MVN package in R
-([Korkmaz et al.,
-2021](https://cran.r-project.org/web/packages/MVN/vignettes/MVN.html))
-indicated that this data is not normal, suggesting that a
-rotation-method that is robust to non-normal data should be used.
-
-```{r Mardia Test, include=FALSE}
-#this tells you multivariate normality of all the items AND univariate normality of each item
-norm_result <- mvn(data= items, 
-    mvnTest="mardia",  
-    univariateTest="SW",  #shaprio-wilkes
-    # transform="log", #what are results if you transform all variables like this?
-    # univariatePlot = "histogram",
-    # multivariatePlot = "qq"
-    )
-
-```
-
-###### Multivariate Normality
-
-```{r Mardia multivariate, results=TRUE, echo=FALSE}
-norms <- 
-norm_result$multivariateNormality 
-
-norms <-
-norms %>% 
- rename(p = `p value`) %>% 
-  mutate(p = format.pval(as.numeric(as.character(p)), eps = .001,
-                         scientific = F)) %>% 
-  mutate(Statistic = round(as.numeric(as.character(Statistic)),2)) %>% 
-  flextable() %>% 
-  autofit()
-
-norms
-
-```
-
-###### Univariate Normality
-
-```{r Mardia Univariate, results=TRUE, echo=FALSE}
-print(norm_result$univariateNormality)
-
-```
-
-### CFA Preparation
-
-*Remove items with too heavy kurtosis (see above)*
-
-*All analyses going forward will only include the following items:*
-
-```{r remove high kurtosis, include=FALSE}
-
-cfa_items <-
-     items %>% 
-     dplyr::select(-CTN_exp_7,
-            -CTN_spirit_5, 
-            -CTN_emo_5,
-            -CTN_spirit_4,
-            -CTN_emo_1)
-
-```
-
-```{r variables names, include=FALSE}
-
-#"CTN_spirit_1"  "CTN_spirit_2"  "CTN_spirit_3"  "CTN_spirit_6"  "CTN_exp_1"    
-#"CTN_exp_2"     "CTN_exp_3"     "CTN_spirit_7"  "CTN_spirit_8"  "CTN_spirit_9" 
-#"CTN_exp_4"     "CTN_exp_5"     "CTN_exp_6"     "CTN_emo_2"     "CTN_emo_3"    
-#"CTN_emo_4"     "CTN_spirit_10" "CTN_exp_8"     "CTN_mind_1"    "CTN_mind_2"   
-#"CTN_mind_3"    "CTN_mind_4"    "CTN_mind_5"    "CTN_mind_6"    "CTN_emo_6"    
-
 item_names <-
   c("I view nature as a mother who nurtures and cares for me",
     "Human beings and nature are connected by the same energy or Life-force",
     "My connection to nature is something I would describe as *spiritual*",
+    "Every part of nature is sacred",
+    "I have great respect for being alive on this earth and part of the universe",
     "I like the idea that, when I die, my body will return to the earth, nourishing the soil",
     "I like to get outdoors whenever I get the chance",
     "I feel uneasy if I am away from nature for too long",
@@ -441,6 +213,8 @@ item_names <-
     "My favorite place is in nature",
     "Walking through a forest makes me forget about my daily worries",
     "I prefer outdoor to indoor sports",
+    "Listening to the sounds of nature makes me relax",
+    "Seeing a cleared forest is upsetting to me",
     "If one of my plants died, I would blame myself",
     "Thinking of someone carving their initials into a tree makes me cringe",
     "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it",
@@ -452,182 +226,377 @@ item_names <-
     "I consciously watch or listen to birds",
     "I take time to consciously smell flowers",
     "I pay attention to the current phase of the moon",
+    "I am careful to not step on snails",
     "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)")
 
-cfa_item_table <- data_frame(variable.names(cfa_items), item_names) %>% 
+
+deepscaleitems <- 
+  data_frame(variable.names(items), item_names) %>% 
      print(n = Inf) %>% 
-     rename(Code  = `variable.names(cfa_items)`)
+     dplyr::rename(Code  = `variable.names(items)`,
+            Items = item_names)
+
+
+  
 
 ```
 
-```{r Final Items, echo=FALSE, warning=FALSE}
 
-flextable(cfa_item_table) %>% 
-     set_table_properties(layout = "autofit") %>% 
+# Confirmatory Factor Analysis
+
+## CFA Preparation
+
+Before conducting the CFA we tested the assumptions of CFA models to
+show multivariate normality via acceptable Mardia’s skewness and
+kurtosis values. We used the general guidelines that the closer to zero
+both skewedness and kurtosis values, the closer to a normal
+distribution. Any item whose skewedness value was greater than \|1\|
+and/or kurtosis value was greater than \|3\|, were considered non-normal
+(either strongly skewed or having peaked or flat kurtosis) would be
+removed from the analysis (Hair et al., 2017, p. 61).
+
+Five items showed high negative skew and two additional items showed
+high kurtosis and were removed from further analysis (see Table 1 for
+details). These items were also found to be extremes in the pilot
+studies.
+
+```{r Skewness kurtosis, message=FALSE, warning=FALSE, include=FALSE}
+#detect skew items 
+skew <- as.data.frame(round(sort(skewness(items),decreasing = T),2))
+
+#pull information of extremely skewed items
+skewed_items <- 
+skew %>% 
+  rename("skew" = "round(sort(skewness(items), decreasing = T), 2)") %>% 
+  filter(skew > 1 | skew < -1)
+
+skew_table <- 
+  skewed_items %>% 
+  rownames_to_column("Code") %>% 
+  left_join(deepscaleitems, by = "Code") %>%
+  mutate(kurtosis = NA, Data = NA) %>% 
+  dplyr::select(Code, Items, skew, kurtosis, Data)
+
+
+#detect kurtosis items
+kurtosis <- as.data.frame(round(sort(kurtosis(items),
+     decreasing=T),2))
+
+#pull information of extreme kurtosis items
+kurtosis_items <- 
+kurtosis %>% 
+  rename("kurtosis" = "round(sort(kurtosis(items), decreasing = T), 2)") %>% 
+  filter(kurtosis > 3 | kurtosis < -3) 
+
+kurtosis_table <-
+  kurtosis_items %>% 
+  rownames_to_column("Code") %>% 
+  left_join(deepscaleitems, by = "Code") %>%
+  mutate(skew = NA, Data = NA) %>% 
+  dplyr::select(Code, Items, skew, kurtosis, Data)
+
+#table of the extreme items
+extremetable <- 
+  bind_rows(skew_table, kurtosis_table) %>% 
+  group_by(Code) %>% 
+  summarise_all(~first(na.omit(.)))
+
+#pulling out the extreme codes
+extremes <-extremetable$Code
+
+#data for the extreme items
+extreme_data <- 
+  items %>% 
+  dplyr::select(extremes) %>% 
+  pivot_longer(cols = everything(), names_to = "Code", values_to = "Data") %>% 
+    left_join(deepscaleitems, by = "Code") %>%
+  group_by(Code, Items) %>% 
+  summarise(Data = list(Data)) %>% 
+  mutate(skew = NA, kurtosis = NA) %>% 
+  dplyr::select(Code, Items, skew, kurtosis, Data)
+
+#merging data and extreme item kurtosis and skewedness scores
+extremetable <- 
+  extremetable %>% 
+  arrange(skew) %>% 
+  left_join(extreme_data, by = "Code") %>% 
+  dplyr::select(Code, Items.x, skew.x, kurtosis.x, Data.y) %>% 
+  rename(Items = Items.x, skew = skew.x, kurtosis = kurtosis.x, Data = Data.y) 
+
+
+  
+items <- # remove extreme skew and kurtosis items from the data frame
+  items %>% 
+  dplyr::select(-c(extremes))
+
+```
+
+**Table 1. Items removed due to extreme skew & kurtosis**
+
+```{r extreme items table, echo=FALSE, message=FALSE, warning=FALSE}
+flextable(extremetable) %>% 
+  mk_par(j = "Data", value = as_paragraph(
+    plot_chunk(value = Data, type = "box")
+  ) ) %>% 
   autofit()
 
 ```
 
-## CFA {.tabset .tabset-fade}
+Zero order correlations for all items were calculated to ensure that
+items within a factor are not too weakly (r \< 0.30) correlated, and
+that items between factors are not too strongly (r \> 0.75) correlated.
 
-### Four Factor Hierarchical Model
+One item had consistently low correlation with other items in its
+expected factor (CTN_EMO_2: "If one of my plants died, I would blame
+myself") and was removed from further analysis (see Table 3). No items
+had high correlations with other items in other factors.
 
-Testing a structure which includes an overall Connection to Nature
-factor and four dimensions:
+**Table 3. Items from the Emotional factor with low inter-item
+correlations**
 
--   Deep: Deeply seeing the self as part of nature
+```{r Correlation plots within, echo=FALSE, out.width="100%"}
+# Deep
+deep_items <-
+  items %>% 
+  dplyr::select(CTN_spirit_1,
+         CTN_spirit_2,
+         CTN_spirit_3,
+         CTN_spirit_6,
+         CTN_spirit_7,
+         CTN_spirit_8,
+         CTN_spirit_9,
+         CTN_spirit_10) %>% 
+  as.matrix()
 
--   Experiential: Spending more time in nature and enjoying spending
-    time in nature
+deep_cor <-
+  rcorr(deep_items, type = "spearman")
+deep_row = rownames(deep_cor$r)
+deep_m = t(combn(deep_row, 2))
+deep_d = cbind(data.frame(deep_m), R = deep_cor$r[deep_m], P = deep_cor$P[deep_m])
+deep_d$label = round(deep_d$R, 2)
+deep_d$label[deep_d$P < 0.001] = paste0(deep_d$label[deep_d$P < 0.001], "\n***")
+deep_d$X1 = factor(deep_d$X1, deep_row)
+deep_d$X2 = factor(deep_d$X2, rev(deep_row))
+graphics.off()
+deep_plot <- 
+  deep_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 1, end = 0) +
+    geom_text(color = ifelse(deep_d$R < 0.60, "black", "white"), size = 1) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
--   Emotional: Emotional desire to connect with nature and protect it
+# Experiential
+exp_items <-
+  items %>% 
+  dplyr::select(CTN_exp_1,
+                CTN_exp_2,
+                CTN_exp_3,
+                CTN_exp_4,
+                CTN_exp_5,
+                CTN_exp_6,
+                CTN_exp_8) %>% 
+  as.matrix()
 
--   Presence: Engaging mindfully and consciously with nature
+exp_cor <-
+  rcorr(exp_items, type = "spearman")
+exp_row = rownames(exp_cor$r)
+exp_m = t(combn(exp_row, 2))
+exp_d = cbind(data.frame(exp_m), R = exp_cor$r[exp_m], P = exp_cor$P[exp_m])
+exp_d$label = round(exp_d$R, 2)
+exp_d$label[exp_d$P < 0.001] = paste0(exp_d$label[exp_d$P < 0.001], "\n***")
+exp_d$X1 = factor(exp_d$X1, exp_row)
+exp_d$X2 = factor(exp_d$X2, rev(exp_row))
+graphics.off()
+exp_plot <- 
+  exp_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 1, end = 0) +
+    geom_text(color = ifelse(exp_d$R < 0.60, "black", "white"), size = 1) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-```{r CFA - 4 factor hierarchical, echo=FALSE, include=FALSE}
-model_hier_4 <-  'deep =~ 
-  CTN_spirit_1 + 
-  CTN_spirit_2 +
-  CTN_spirit_3 +
-  CTN_spirit_6 +
-  CTN_spirit_7 +
-  CTN_spirit_8 +
-  CTN_spirit_9 +
-  CTN_spirit_10
+#Emotional
+emo_items <- 
+  items %>% 
+  dplyr::select(CTN_emo_2,
+                CTN_emo_3,
+                CTN_emo_4,
+                CTN_emo_6) %>% 
+  as.matrix()
 
-experience =~ 
-   CTN_exp_1 +
-   CTN_exp_2 +
-   CTN_exp_3 +
-   CTN_exp_4 +
-   CTN_exp_5 +
-   CTN_exp_6 +
-   CTN_exp_8
+emo_cor <-
+  rcorr(emo_items, type = "spearman")
+emo_row = rownames(emo_cor$r)
+emo_m = t(combn(emo_row, 2))
+emo_d = cbind(data.frame(emo_m), R = emo_cor$r[emo_m], P = emo_cor$P[emo_m])
+emo_d$label = round(emo_d$R, 2)
+emo_d$label[emo_d$P < 0.001] = paste0(emo_d$label[emo_d$P < 0.001], "\n***")
+emo_d$X1 = factor(emo_d$X1, emo_row)
+emo_d$X2 = factor(emo_d$X2, rev(emo_row))
+graphics.off()
+emo_plot <- 
+  emo_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 1, end = 0) +
+    geom_text(color = ifelse(emo_d$R < 0.60, "black", "white")) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-emotion =~ 
-  CTN_emo_2 +
-  CTN_emo_3 +
-  CTN_emo_4 +
-  CTN_emo_6
+#Presence
+presence_items <-
+  items %>% 
+  dplyr::select(CTN_mind_1, 
+                CTN_mind_2,
+                CTN_mind_3,
+                CTN_mind_4,
+                CTN_mind_5,
+                CTN_mind_6)%>% 
+  as.matrix()
 
-presence =~
-  CTN_mind_1 +
-  CTN_mind_2 +
-  CTN_mind_3 +
-  CTN_mind_4 +
-  CTN_mind_5 +
-  CTN_mind_6
+pres_cor <-
+  rcorr(presence_items, type = "spearman")
+pres_row = rownames(pres_cor$r)
+pres_m = t(combn(pres_row, 2))
+pres_d = cbind(data.frame(pres_m), R = pres_cor$r[pres_m], P = pres_cor$P[pres_m])
+pres_d$label = round(pres_d$R, 2)
+pres_d$label[pres_d$P < 0.001] = paste0(pres_d$label[pres_d$P < 0.001], "\n***")
+pres_d$X1 = factor(pres_d$X1, pres_row)
+pres_d$X2 = factor(pres_d$X2, rev(pres_row))
+graphics.off()
+pres_plot <- 
+  pres_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 1, end = 0) +
+    geom_text(color = ifelse(pres_d$R < 0.60, "black", "white"), size = 1) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+#set up so these plots are in a grid
+gridExtra::grid.arrange(deep_plot, exp_plot, emo_plot, pres_plot, ncol = 2)
 
-deepctn =~ deep + experience + emotion + presence'
+emo_d %>% 
+  dplyr::select(X1, X2, R, P) %>%
+  filter(R < .30) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:4, digits = 2) %>%
+  autofit()
+```
 
-fit_model_hier_4 <- cfa(model_hier_4, data=cfa_items,
-                        std.lv=F, #set to T to get Std.Err!!!
-                        estimator = "MLR") #robust against non normal data #https://lavaan.ugent.be/tutorial/est.html
+```{r Correlations Large, echo=FALSE}
+items <-
+  items %>% 
+  dplyr::select(-CTN_emo_2)
 
+high_cor <- 
+items %>% 
+    dplyr::select_if(is.numeric) %>%
+    cor() %>% 
+    round(digits = 2) %>%
+    as.data.frame() %>%
+    rownames_to_column %>%
+    gather(colname, value, -rowname) %>%
+    group_by(rowname) %>%
+  filter(abs(value) >= 0.75) %>%
+  filter(abs(value) != 1)
+```
 
+To ensure the correct rotation method was used, tests of multivariate
+and univariate normality were conducted. Using the MVN package in R, a
+Mardia test of multivariate and univariate normality found that this
+data is not normal distributed [@MVN]. As such, we chose to use a
+rotation-method that is robust to non-normal data. However, normality is
+not considered a critical assumption for factor analysis [@garson2022a,
+p 22].
 
-Plot <-
-     semPaths(fit_model_hier_4, 
-         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
-        layout="tree",
-        rotation = 4,
-        weighted = T, #makes lines bolder for higher numbers
-        nCharNodes = 10, #number of text characters to allow in each box
-        shapeMan = "rectangle", 
-        sizeMan = 35, 
-        sizeMan2 = 2,
-        border.width = .5,
-        label.prop = 0.8,
-        asize = 1.5,
-        mar = c(.5,5,.5,4),
-        residuals=F, #errors? how do I interpret this?
-        curvePivot = TRUE, 
-        edge.label.cex= .75, #size of numbers
-        cardinal = TRUE,    
-        nodeLabels = c("View nature as a mother", #Deep
-                       "Humans and nature connected by same #'Energy'", 
-                       "My connection is 'Spiritual'", 
-                       "When I die, my body will return to the earth",
-                       "'Shared breath' between myself and #plants", 
-                       "All life is grounded on this planet", 
-                       "Indoor plants are family",
-                       "When I eat, I feel thankful for animals and plants",
-                       "I like to get outdoors when I can", #experience 
-                       "I feel uneasy if away from nature for too long", 
-                       "I engage in nature to find meaning & richness",
-                       "My favorite is in nature", 
-                       "Walking through a forest makes me forget worries",
-                       "I prefer outdoor sports",
-                       "I hike or run in nearby nature", 
-                       "If my plants died I would blame myself", #emotional
-                       "Someone carving a tree makes me cringe",
-                       "I catch and release insects in my home",
-                       "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
-                       "I deliberately watch the Stars at night", 
-                       "I take time to watch the sunrise & sunset", 
-                       "I consciously listen to birds", 
-                       "I take time to consciously smell flowers", 
-                       "I pay attention to phases of the moon",
-                       "Deep", 
-                       "Experience", 
-                        "Emotion", 
-                       "Presence",
-                       "Overall CTN")
-        )
-                      
+```{r Mardia Test, include=FALSE}
+norm_result <- 
+  items %>% 
+  mvn(mvnTest="mardia",  
+    univariateTest="SW")
 
-Fit_table_heir <- matrix(fitMeasures(fit_model_hier_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
-                         ncol=9,
-                         byrow=TRUE)
+norms <- 
+norm_result$multivariateNormality
 
-colnames(Fit_table_heir) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
-rownames(Fit_table_heir) <- c("Fit Indices")
-Fit_table_heir <- round(Fit_table_heir,3)
+norms <-
+norms %>% 
+ rename(p = `p value`) %>% 
+  mutate(p = format.pval(as.numeric(as.character(p)), eps = .001,
+                         scientific = F)) %>% 
+  mutate(Statistic = round(as.numeric(as.character(Statistic)),2)) %>% 
+  flextable() %>% 
+  autofit()
+```
 
+**Table 4. Items tested for the DEEP Connection to Nature Scale**
+
+```{r Final Items, echo=FALSE, warning=FALSE}
+
+final_items <-
+  items %>% 
+  colnames()
+
+ctnflex <-
+deepscaleitems %>% 
+  filter(Code %in% final_items) %>% 
+  mutate(Subscale = case_when(grepl("emo", Code) ~ paste("Emotional"),
+                              grepl("exp", Code) ~ paste("Experiential"),
+                              grepl("mind", Code) ~ paste("Presence"),
+                              grepl("spirit", Code) ~ paste("Deep"))) %>% 
+  dplyr::select(Subscale, Code, Items) %>% 
+  arrange(factor(Subscale, levels = c("Deep", "Experiential", "Emotional", "Presence"))) %>% 
+  flextable() %>% 
+  width(j = 1, width = 2.5) %>%
+  width(j = 2, width = 2.5) %>% 
+  width(j = 3, width = 6) %>% 
+  autofit() %>% 
+  theme_zebra()
+
+ctnflex
 
 ```
 
-```{r 4 factor hierarchical plot, include=TRUE, echo=FALSE, out.width="100%"}
-plot(Plot)
 
-as_tibble(Fit_table_heir) %>% 
-  add_column(c(""), .before = "df") %>%
-      rename(`Fit Indices` = `c("")`) %>% 
-     flextable() %>% 
-     autofit() %>% 
-     footnote(i = 1, j = 3:4, 
-              value = as_paragraph(c("Closer to 0 indicate better fit",
-                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
-              ref_symbols = c("a", "b"),
-              part = "header",
-              inline = FALSE) %>% 
-     footnote(i = 1, j = 7:10,
-              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
-                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
-                        "(Comparative fit index) Closer to 1 indicates better fit",
-                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
-              ref_symbols = c("c", "d", "e", "f"),
-              part = "header",
-              inline = FALSE)
-     
+## Hypothesis 1 - Dimensional Structure
 
+Based on previous multi-dimensional CTN measures and [pilot data using
+both exploratory factor analysis and confirmatory factor
+analysis](/publication/conference-paper), our first hypothesis is that a
+confirmatory factor analysis (CFA) on the DEEP CTN Scale items will
+confirm a multidimensional structure with four distinct factors and that
+this multi-dimensional structure will be more informative than a single
+uni-dimensional structure.
 
-```
+### Hypothesis 1.A - Four-factor Structure
 
-### Four Factor Model
+A CFA will confirm a multidimensional structure with four unique factors
+defined as:
 
-Testing a structure which only includes the four dimensions:
+1.  Deep Identity (deeply seeing the self as part of nature)
+2.  Experiential Connection (spending and enjoying time in nature)
+3.  Emotional Connection (Emotional desire to connect with nature and
+    protect it)
+4.  Presence within Nature (engaging mindfully and consciously with
+    nature)
 
--   Deep: Deeply seeing the self as part of nature
+Using the Lavaan package in R [@lavaan], we used the Huber-White maximum
+likelihood estimation method which is robust to non-normal data. The
+number of factors was set to four and covariances allowed between them.
 
--   Experiential: Spending more time in nature and enjoying spending
-    time in nature
-
--   Emotional: Emotional desire to connect with nature and protect it
-
--   Presence: Engaging mindfully and consciously with nature
+Figure 2 shows the standardized estimates for each item regressed onto
+the four factors. All items significantly loaded onto their respective
+factors (p \< 0.001). In terms of fit indices, the chi-square, root mean
+square error of approximation, standardized root mean square residual,
+and the Tucker-Lewis fit index for the four-factor model were acceptable
+(see Table 5).
 
 ```{r 4 Factor flat, include=FALSE, echo=FALSE}
 model_flat_4 <-  'deep =~ 
@@ -650,7 +619,6 @@ experience =~
    CTN_exp_8
 
 emotion =~ 
-  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6
@@ -661,19 +629,44 @@ presence =~
   CTN_mind_3 +
   CTN_mind_4 +
   CTN_mind_5 +
-  CTN_mind_6'
-fit_model_flat_4 <- cfa(model_flat_4, data=cfa_items,
-                        std.lv=F, #set to T to get Std.Err!!!
-                        estimator = "MLR") #robust against non normal data #https://urldefense.com/v3/__https://lavaan.ugent.be/tutorial/est.html__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16Hy0Ekyig$ 
+  CTN_mind_6
 
+deep ~~ experience
+deep ~~ emotion
+deep ~~ presence
+experience ~~ emotion
+experience ~~ presence
+emotion ~~ presence'
 
+fit_model_flat_4 <- 
+  lavaan::cfa(model_flat_4, 
+              data = items,
+              std.lv = F,
+              estimator = "MLR",
+              orthogonal = F) 
+
+#Standardized Beta here are the factor loadings
+estimates <-
+  parameterEstimates(fit_model_flat_4, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
 
 
 Plot_4_flat <-
      semPaths(fit_model_flat_4, 
-         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+         whatLabels = "std",
         layout="tree",
         rotation = 4,
+        fade=T,
+        curve = 1.5,
         weighted = T, #makes lines bolder for higher numbers
         nCharNodes = 10, #number of text characters to allow in each box
         shapeMan = "rectangle", 
@@ -688,7 +681,7 @@ Plot_4_flat <-
         edge.label.cex=.75, #size of numbers
         cardinal = TRUE,
         nodeLabels = c("View nature as a mother", #Deep
-                       "Humans and nature connected by same #'Energy'", 
+                       "Humans and nature connected by same 'Energy'", 
                        "My connection is 'Spiritual'", 
                        "When I die, my body will return to the earth",
                        "'Shared breath' between myself and #plants", 
@@ -702,8 +695,7 @@ Plot_4_flat <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "If my plants died I would blame myself", #emotional
-                       "Someone carving a tree makes me cringe",
+                       "Someone carving a tree makes me cringe",  #emotional
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -718,51 +710,406 @@ Plot_4_flat <-
                        "Presence")
         )
 
-
 Fit_table_4factor <- matrix(fitMeasures(fit_model_flat_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
                          ncol=9,
                          byrow=TRUE)
+chi_df4 <- paste0(round(Fit_table_4factor[2],2), " (",
+                 Fit_table_4factor[1],")")
+rmsea_ci4 <- paste0(round(Fit_table_4factor[3],2), " (", 
+                  round(Fit_table_4factor[4],2), " - ", 
+                  round(Fit_table_4factor[5],2), ")")
+srmr4 <- round(Fit_table_4factor[6],2)
+tli4 <- round(Fit_table_4factor[7],2)
+cfi4 <- round(Fit_table_4factor[8],2)
+aic4 <- round(Fit_table_4factor[9],2)
 
-colnames(Fit_table_4factor) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
-rownames(Fit_table_4factor) <- c("Fit Indices")
-Fit_table_4factor <- round(Fit_table_4factor,3)
+fit_4 <- tibble(chi_df4, rmsea_ci4, srmr4, tli4)
+colnames(fit_4) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI")
+
+#gives me the correlations between factors
+cov2cor(inspect(fit_model_flat_4, what = "est")$psi) %>% 
+  round(2) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>%
+  dplyr::rename(" " = "rowname") %>%
+  flextable 
+
+
 
 
 
 ```
+
+**Figure 2. Four-factor dimensional structure with standardized
+estimates**
 
 ```{r flat 4 factor model plot, echo=FALSE, out.width="100%"}
 plot(Plot_4_flat)
 
+```
 
-as_tibble(Fit_table_4factor) %>% 
-  add_column(c(""), .before = "df") %>%
-      rename(`Fit Indices` = `c("")`) %>% 
-     flextable() %>% 
-     autofit() %>% 
-     footnote(i = 1, j = 3:4, 
-              value = as_paragraph(c("Closer to 0 indicate better fit",
-                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
-              ref_symbols = c("a", "b"),
-              part = "header",
-              inline = FALSE) %>% 
-     footnote(i = 1, j = 7:10,
-              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
-                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
-                        "(Comparative fit index) Closer to 1 indicates better fit",
-                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
-              ref_symbols = c("c", "d", "e", "f"),
-              part = "header",
-              inline = FALSE)
+**Table 5. Fit indices for the four-factor model**
 
+```{r factor four fit indices, echo=FALSE}
+
+flextable(fit_4) %>% 
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 1:4, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit")),
+              ref_symbols = c("a", "b","c", "d"))
+```
+
+```{r model 4 mod indices, eval=FALSE, include=FALSE}
+#This was looking at better model fit
+#may be relevant in exploratory supplementary details
+modindices(fit_model_flat_4, sort = T) %>% 
+  as.data.frame() %>% 
+  arrange(-mi) %>% 
+  filter(mi > 11) %>% 
+  dplyr::select(lhs, op, rhs, mi, epc)
+
+#moving exp_3 onto deep because of better model fit
+model_flat_4_MI <- 'deep =~ 
+  CTN_spirit_1 + 
+  CTN_spirit_2 +
+  CTN_spirit_3 +
+  CTN_spirit_6 +
+  CTN_spirit_7 +
+  CTN_spirit_8 +
+  CTN_spirit_9 +
+  CTN_spirit_10 +
+  CTN_exp_3      
+
+experience =~ 
+   CTN_exp_1 +
+   CTN_exp_2 +
+   CTN_exp_4 +
+   CTN_exp_5 +
+   CTN_exp_6 +
+   CTN_exp_8
+
+emotion =~ 
+  CTN_emo_3 +
+  CTN_emo_4 +
+  CTN_emo_6
+
+presence =~
+  CTN_mind_1 +
+  CTN_mind_2 +
+  CTN_mind_3 +
+  CTN_mind_4 +
+  CTN_mind_5 +
+  CTN_mind_6
+
+deep ~~ experience
+deep ~~ emotion
+deep ~~ presence
+experience ~~ emotion
+experience ~~ presence
+emotion ~~ presence'
+
+fit_model_flat_4_MI <- 
+  lavaan::cfa(model_flat_4_MI, 
+              data = items,
+              std.lv = F,
+              estimator = "MLR") 
+
+#Standardized Beta here are the factor loadings
+estimates <-
+  parameterEstimates(fit_model_flat_4_MI, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
+
+Plot_4_flatMI <-
+     semPaths(fit_model_flat_4_MI,
+         whatLabels = "std",
+        layout="tree",
+        rotation = 4,
+        fade=T,
+        curve = 1.5,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex=.75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("View nature as a mother", #Deep
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "When I die, my body will return to the earth",
+                       "'Shared breath' between myself and #plants", 
+                       "All life is grounded on this planet", 
+                       "Indoor plants are family",
+                       "When I eat, I feel thankful for animals and plants",
+                       "I engage in nature to find meaning & richness",
+                       "I like to get outdoors when I can", #experience 
+                       "I feel uneasy if away from nature for too long", 
+                       "My favorite is in nature", 
+                       "Walking through a forest makes me forget worries",
+                       "I prefer outdoor sports",
+                       "I hike or run in nearby nature", 
+                       "Someone carving a tree makes me cringe",  #emotional
+                       "I catch and release insects in my home",
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I take time to watch the sunrise & sunset", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Deep", 
+                       "Experience", 
+                       "Emotion", 
+                       "Presence")
+        )
+
+Fit_table_4factorMI <- matrix(fitMeasures(fit_model_flat_4_MI, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+chi_df4MI <- paste0(round(Fit_table_4factorMI[2],2), " (",
+                 Fit_table_4factorMI[1],")")
+rmsea_ci4MI <- paste0(round(Fit_table_4factorMI[3],2), " (", 
+                  round(Fit_table_4factorMI[4],2), " - ", 
+                  round(Fit_table_4factorMI[5],2), ")")
+srmr4MI <- round(Fit_table_4factorMI[6],2)
+tli4MI <- round(Fit_table_4factorMI[7],2)
+cfi4MI <- round(Fit_table_4factorMI[8],2)
+aic4MI <- round(Fit_table_4factorMI[9],2)
+
+fit_4MI <- tibble(chi_df4MI, rmsea_ci4MI, srmr4MI, tli4MI)
+colnames(fit_4MI) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI")
+
+#gives me the correlations between factors
+cov2cor(inspect(fit_model_flat_4_MI, what = "est")$psi) %>% 
+  round(2) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>%
+  dplyr::rename(" " = "rowname") %>%
+  flextable 
+
+flextable(fit_4MI) %>% 
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 1:4, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit")),
+              ref_symbols = c("a", "b","c", "d"))
+
+```
+
+### Hypothesis 1.B - Hierarchical factor Structure
+
+We also hypothesized that all factors would load onto a second-order CTN
+factor. This would suggest that the factors themselves are associated
+via one overall CTN construct.
+
+Figure 3 shows the standardized estimates for each item regressed onto
+the four factors and a second-order CTN factor. All items significantly
+loaded onto their respective factors (p \< 0.001). In terms of fit
+indices, the chi-square, root mean square error of approximation,
+standardized root mean square residual, and the Tucker-Lewis fit index
+for the four-factor model were acceptable (see Table 6).
+
+**Figure 3. Four-factor hierarchical dimensional structure with
+standardized estimates**
+
+```{r CFA - 4 factor hierarchical, echo=FALSE, include=FALSE}
+model_hier_4 <- 'deep =~ 
+  CTN_spirit_1 + 
+  CTN_spirit_2 +
+  CTN_spirit_3 +
+  CTN_spirit_6 +
+  CTN_spirit_7 +
+  CTN_spirit_8 +
+  CTN_spirit_9 +
+  CTN_spirit_10
+experience =~ 
+   CTN_exp_1 +
+   CTN_exp_2 +
+   CTN_exp_3 +
+   CTN_exp_4 +
+   CTN_exp_5 +
+   CTN_exp_6 +
+   CTN_exp_8
+emotion =~ 
+  CTN_emo_3 +
+  CTN_emo_4 +
+  CTN_emo_6
+presence =~
+  CTN_mind_1 +
+  CTN_mind_2 +
+  CTN_mind_3 +
+  CTN_mind_4 +
+  CTN_mind_5 +
+  CTN_mind_6
+  
+deepctn =~ deep + experience + emotion + presence'
+
+fit_model_hier_4 <- 
+  cfa(model_hier_4, 
+      data=items,
+      std.lv=F, 
+      estimator = "MLR")
+
+#Standardized Beta here are the factor loadings
+estimates_heir <-
+  parameterEstimates(fit_model_hier_4, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
+
+Plot_heir4 <-
+     semPaths(fit_model_hier_4, 
+         whatLabels = "std",
+        layout="tree",
+        style="lisrel",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,    
+        nodeLabels = c("View nature as a mother", 
+                       "Humans and nature connected by same 'Energy'", 
+                       "My connection is 'Spiritual'", 
+                       "When I die, my body will return to the earth",
+                       "'Shared breath' between myself and #plants", 
+                       "All life is grounded on this planet", 
+                       "Indoor plants are family",
+                       "When I eat, I feel thankful for animals and plants",
+                       "I like to get outdoors when I can", #experience 
+                       "I feel uneasy if away from nature for too long", 
+                       "I engage in nature to find meaning & richness",
+                       "My favorite is in nature", 
+                       "Walking through a forest makes me forget worries",
+                       "I prefer outdoor sports",
+                       "I hike or run in nearby nature", 
+                       "Someone carving a tree makes me cringe", #emotional
+                       "I catch and release insects in my home",
+                       "I talk to wild animals I encounter",
+                       "I take time to watch the clouds pass by", #prescence
+                       "I deliberately watch the Stars at night", 
+                       "I take time to watch the sunrise & sunset", 
+                       "I consciously listen to birds", 
+                       "I take time to consciously smell flowers", 
+                       "I pay attention to phases of the moon",
+                       "Deep", 
+                       "Experience", 
+                        "Emotion", 
+                       "Presence",
+                       "Overall CTN")
+        )
+                      
+
+Fit_table_heir <- matrix(fitMeasures(fit_model_hier_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+chi_df4h <- paste0(round(Fit_table_heir[2],2), " (",
+                 Fit_table_heir[1],")")
+rmsea_ci4h <- paste0(round(Fit_table_heir[3],2), " (", 
+                  round(Fit_table_heir[4],2), " - ", 
+                  round(Fit_table_heir[5],2), ")")
+srmr4h <- round(Fit_table_heir[6],2)
+tli4h <- round(Fit_table_heir[7],2)
+cfi4h <- round(Fit_table_heir[8],2)
+aic4h <- round(Fit_table_heir[9],2)
+
+fit_4h <- tibble(chi_df4h, rmsea_ci4h, srmr4h, tli4h)
+colnames(fit_4h) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI")
+
+#gives me the correlations between factors
+model_4_hier_cors <-
+inspect(fit_model_hier_4, what="cor.lv") %>% 
+  as.data.frame() %>% 
+  round(2) %>% 
+  dplyr::select(-deepctn) %>% 
+  rownames_to_column() %>% 
+  filter(rowname != "deepctn")
 
 
 ```
 
-### Single Factor Model
+```{r 4 factor hierarchical plot, include=TRUE, echo=FALSE, out.width="100%"}
+plot(Plot_heir4)
 
-Testing a structure which includes only a single overall Connection to
-Nature factor
+
+```
+
+**Table 6. Fit indices for the hierarchical four-factor model**
+
+```{r heirarchial fit indices, echo=FALSE}
+
+flextable(fit_4h) %>% 
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 1:4, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit")),
+              ref_symbols = c("a", "b","c", "d"))
+     
+
+```
+
+### Hypothesis 1.C - Single Factor Model
+
+We further predicted that both of the above models (1. four factor model
+and 2. four factor hierarchical model) will provide better explanatory
+fit than a unidimensional factor containing only a total CTN score.
+
+Figure 4 shows the standardized estimates for each item regressed onto a
+single overarching CTN factor. While al items significantly loaded onto
+their respective factors (p \< 0.001), the fit indices suggest that this
+model has poor fit (see Table 7 for model fit comparisons).
+
+**Figure 4. Unidimensional factor structure with standardized
+estimates**
 
 ```{r CFA - 1 factor, include=FALSE, echo=FALSE}
 
@@ -784,7 +1131,6 @@ model_flat <-  'overall =~
    CTN_exp_6 +
    CTN_exp_8 +
 
-  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6 +
@@ -796,13 +1142,27 @@ model_flat <-  'overall =~
   CTN_mind_5 +
   CTN_mind_6'
 
-fit_model_flat <- cfa(model_flat, data=cfa_items,
-                        std.lv=F, #set to T to get Std.Err!!!
-                        estimator = "MLR") #robust against non normal data #https://urldefense.com/v3/__https://lavaan.ugent.be/tutorial/est.html__;!!Mih3wA!AZTiIebL9bHjEkMldcV0F-RHoO1rmMMzVCj9u0soFHPUcRstrVs69kjeDTvnGWiLF9ZkmFYq16Hy0Ekyig$ 
+fit_model_flat <- 
+  cfa(model_flat, 
+      data=items,
+      std.lv=F, 
+      estimator = "MLR") 
 
+#Standardized Beta here are the factor loadings
+estimates_flat <-
+  parameterEstimates(fit_model_flat, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
 
-
-Plot_1 <-
+Plot_1_flat <-
      semPaths(fit_model_flat, 
          whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
         layout="tree",
@@ -816,7 +1176,7 @@ Plot_1 <-
         label.prop = 0.8,
         asize = 1.5,
         mar = c(.5,5,.5,4),
-        residuals=F, #errors? how do I interpret this?
+        residuals=F, 
         curvePivot = TRUE, 
         edge.label.cex=.75, #size of numbers
         cardinal = TRUE,
@@ -835,8 +1195,7 @@ Plot_1 <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "If my plants died I would blame myself", #emotional
-                       "Someone carving a tree makes me cringe",
+                       "Someone carving a tree makes me cringe",#emotional
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -848,65 +1207,34 @@ Plot_1 <-
                       "CTN Overall"))
 
 
-Fit_table_flat <- matrix(fitMeasures(fit_model_flat, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+Fit_table_flat <- 
+  matrix(fitMeasures(fit_model_flat, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
                          ncol=9,
                          byrow=TRUE)
+chi_dff <- paste0(round(Fit_table_flat[2],2), " (",
+                 Fit_table_flat[1],")")
+rmsea_cif <- paste0(round(Fit_table_flat[3],2), " (", 
+                  round(Fit_table_flat[4],2), " - ", 
+                  round(Fit_table_flat[5],2), ")")
+srmrf <- round(Fit_table_flat[6],2)
+tlif <- round(Fit_table_flat[7],2)
+cfif <- round(Fit_table_flat[8],2)
+aicf <- round(Fit_table_flat[9],2)
 
-colnames(Fit_table_flat) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
-rownames(Fit_table_flat) <- c("Fit Indices")
-Fit_table_flat <- round(Fit_table_flat,3)
+fit_flat <- tibble(chi_dff, rmsea_cif, srmrf, tlif)
+colnames(fit_flat) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI")
+
 
 ```
 
 ```{r single factor plot, echo=FALSE, out.width="100%"}
-
-
-plot(Plot_1)
-
-
-as_tibble(Fit_table_flat) %>% 
-  add_column(c(""), .before = "df") %>%
-      rename(`Fit Indices` = `c("")`) %>% 
-     flextable() %>% 
-     autofit() %>% 
-     footnote(i = 1, j = 3:4, 
-              value = as_paragraph(c("Closer to 0 indicate better fit",
-                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
-              ref_symbols = c("a", "b"),
-              part = "header",
-              inline = FALSE) %>% 
-     footnote(i = 1, j = 7:10,
-              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
-                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
-                        "(Comparative fit index) Closer to 1 indicates better fit",
-                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
-              ref_symbols = c("c", "d", "e", "f"),
-              part = "header",
-              inline = FALSE)
-
-
+plot(Plot_1_flat)
 ```
 
-### Comparing Fit of each Model
-
-Comparing the fit of the three models
-
-[*Sources for fit
-indices*](https://en.wikipedia.org/wiki/Confirmatory_factor_analysis)
-
 ```{r fit measures, echo=FALSE}
-#cutoffs:
-# fit_model_flat
-# fit_model_hier_4
-# fit_mode_flat_4
-
-
- #(RMSEA + CI), (SRMR), (TFI), (CFI) , (AIC)
-# df4, chi-sq3, RMSEA47, RMSEACIL48, RMSEACIU49, SRMR67, TLI18, CFI17, AIC37
-# df, chisq, rmsea, rmsea.ci.lower, rmsea.ci.upper, srmr, tli cfi, aic
-# include the AIC and the confidence interval 
-
-
 Fit_table <- matrix(c(
                   fitmeasures(fit_model_flat, "df"),
                   fitmeasures(fit_model_flat, "chisq"),
@@ -941,123 +1269,221 @@ Fit_table <- matrix(c(
                     ncol=9,byrow=TRUE)
 
 #df4, chi-sq3, RMSEA32, RMSEACIUp, RMSEACILow, SRMR28, TFI10, CFI9, AIC 
-colnames(Fit_table) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
+colnames(Fit_table) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "RMSR", "TLI", "CFI", "AIC")
 rownames(Fit_table) <- c("1-Factor",
                          "4-Factor", "4-Factor Hierarchial")
-Fit_table <- round(Fit_table,3)
-```
-
-```{r Fit table, echo=FALSE}
-as_tibble(Fit_table) %>% 
+Fit_table <- 
+  round(Fit_table,2) %>% 
+  as_tibble() %>% 
   add_column(c("1 Factor", "4 Factor", "4 Factor Hierarchical"), .before = "df") %>%
      rename(Model = `c("1 Factor", "4 Factor", "4 Factor Hierarchical")`) %>% 
-     flextable() %>% 
+  dplyr::mutate(df = paste(`Chi-Sq`, " (", df, ")"),
+         RMSEA = paste(RMSEA, " (", `RMSEA CI Lower`, " - ", `RMSEA CI Upper`, ")")) %>% 
+  dplyr::select(Model, df, RMSEA, RMSR, TLI, CFI, AIC) 
+
+colnames(Fit_table) <- c("Model", 
+                         "\u03c7\u00B2 (df)",
+                         "RMSEA (95% CI)",
+                         "RMSR",
+                         "TLI", "CFI", "AIC")
+
+```
+
+**Table 7. Comparative Fit indices for each model**
+
+```{r Fit table, echo=FALSE}
+flextable(Fit_table) %>% 
   bold(i = 2:3,
        part = "body") %>% 
-  autofit()
-
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 2:7, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit",
+                "Comparative fit index: Closer to 1 indicates better fit",
+                "Akaike’s Information Criterion: The lower the AIC, the more predictive")),
+              ref_symbols = c("a", "b","c", "d", "e", "f"))
+     
 ```
 
 ```{r Model Comparisons, include=FALSE}
-
-
-#models with all the same items 
-test_all<-anova(fit_model_flat,
+test_all<-
+  lavaan::anova(fit_model_flat,
       fit_model_flat_4,
       fit_model_hier_4)
-test_all
 
-#sig here means nested model (hierarhcial) is sig worse than non-nested model
-
-#but note there's not a great way statistically to compare CFA models... 
-
-#test only single factor and four factor
-
-test_2<-anova(fit_model_flat,
-      fit_model_hier_4)
-
+x2_1 <- round(test_all$Chisq[2],3)
+df_1 <- test_all$Df[2]
+p_1 <- papaja::print_p(round(test_all$`Pr(>Chisq)`[2],3))
+  
+x2_2 <- round(test_all$Chisq[3],3)
+df_2 <- test_all$Df[3]
+p_2<- papaja::print_p(round(test_all$`Pr(>Chisq)`[3],3))
 
 
 ```
 
-```{r model comparison anova, echo=FALSE}
-test_2
-```
+An Analysis of Variance comparing the model fit of the three factor
+structures showed that there was no significant difference between the
+two multi-dimensional models (Chi-sq= `r x2_1`(`r df_1`), p = `r p_1`).
+However, both multi-dimensional models had significantly different fit
+compared to the unidimensional model (Chi-sq = `r x2_2`(`r df_2`), p =
+`r p_2`).
 
-## Reduced CFA
+## Shortened DEEP CTN Scale
+
+In order to produce a scale that is not only psychometrically sound, but
+also practical for use in future research, we conducted a reduced CFA.
+We retained the five strongest loading items from each factor to create
+the reduced scale. However, only three items remained in the emotional
+dimension due to high skew. This resulted in a measure with 18 items.
+
+Figure 5 shows the standardized estimates for each item regressed onto
+the four factors and a second-order CTN factor. All items significantly
+loaded onto their respective factors (p \< 0.001). In terms of fit
+indices, the chi-square, root mean square error of approximation,
+standardized root mean square residual, and the Tucker-Lewis fit index
+for the four-factor model were acceptable (see Table 8).
 
 ```{r reduced CFA, include=FALSE}
-
+#based on the strongest loading items
 reduced <- 
-  cfa_items %>% 
-  dplyr::select(CTN_spirit_1,
-         CTN_spirit_2,
-         CTN_spirit_3,
-         CTN_spirit_7,
-         CTN_spirit_8,
+  items %>% 
+  dplyr::select(CTN_spirit_2,
+                CTN_spirit_3,
+                CTN_spirit_7,
+                CTN_spirit_1,
+                CTN_spirit_8,
 
-         CTN_exp_1,
-         CTN_exp_2,
-         CTN_exp_3,
-         CTN_exp_4,
-         CTN_exp_5,
+                CTN_exp_4,
+                CTN_exp_1,
+                CTN_exp_3,
+                CTN_exp_2,
+                CTN_exp_5,
+         
+                CTN_emo_3,
+                CTN_emo_4,
+                CTN_emo_6,
+                
+                CTN_mind_2,
+                CTN_mind_1,
+                CTN_mind_3,
+                CTN_mind_5,
+                CTN_mind_4)
 
-         CTN_emo_2,
-         CTN_emo_3,
-         CTN_emo_4,
-         CTN_emo_6,
 
-         CTN_mind_1,
-         CTN_mind_2,
-         CTN_mind_4,
-         CTN_mind_5,
-         CTN_mind_6)
+deep_alpha <- 
+reduced %>% 
+  dplyr::select(CTN_spirit_2,
+                CTN_spirit_3,
+                CTN_spirit_7,
+                CTN_spirit_1,
+                CTN_spirit_8) %>% 
+ltm::cronbach.alpha()
 
+exp_alpha <- 
+reduced %>% 
+  dplyr::select(CTN_exp_4,
+                CTN_exp_1,
+                CTN_exp_3,
+                CTN_exp_2,
+                CTN_exp_5) %>% 
+ltm::cronbach.alpha()
+
+emo_alpha <- 
+reduced %>% 
+  dplyr::select(CTN_emo_3,
+                CTN_emo_4,
+                CTN_emo_6) %>% 
+ltm::cronbach.alpha()
+
+presc_alpha <- 
+reduced %>% 
+  dplyr::select(CTN_mind_2,
+                CTN_mind_1,
+                CTN_mind_3,
+                CTN_mind_5,
+                CTN_mind_4) %>% 
+ltm::cronbach.alpha()
+
+alpha_reduced <-  
+  tibble("Deep" = c(deep_alpha$alpha, 5),
+         "Experience" = c(exp_alpha$alpha, 5),
+         "Emotion" = c(emo_alpha$alpha, 3),
+         "Presence" = c(presc_alpha$alpha, 5)) %>% 
+    round(2) %>% 
+  rownames_to_column() %>% 
+    mutate(rowname = case_when(
+      rowname == "1" ~ "Cronbach's Alpha",
+      rowname == "2" ~ "Number of Items"
+    )) %>% 
+    flextable() %>% 
+  colformat_double(i=2, j = 2:5, digits = 0) %>% 
+    set_header_labels(rowname = " ", Deep = "Deep",
+                      Experience = "Experience", Emotion = "Emotion",
+                      Presence = "Presence") %>% 
+    autofit() %>% 
+    footnote(i = 1, j = 1, part = "body",
+              value = flextable::as_paragraph(
+                c(">= 0.9: Excellent \n
+                  0.8 - 0.9: Good \n
+                  0.7 - 0.8: Acceptable \n
+                  0.6 - 0.7: Questionable \n
+                 0.5 - 0.6: Poor \n
+                 < 0.5: Unacceptable")),
+              ref_symbols = c("a"))
 
 ```
 
-### Four Factor Hierarchical
-
 ```{r CFA - reduced 4 factor hier, echo=FALSE, include=FALSE}
-reduced_hier_4 <-  'deep =~ 
-  CTN_spirit_1 +
+reduced_hier_4 <-
+'deep =~ 
   CTN_spirit_2 +
   CTN_spirit_3 +
   CTN_spirit_7 +
+  CTN_spirit_1 +
   CTN_spirit_8
-
 experience =~ 
-   CTN_exp_1 +
-   CTN_exp_2 +
-   CTN_exp_3 +
    CTN_exp_4 +
+   CTN_exp_1 +
+   CTN_exp_3 +
+   CTN_exp_2 +
    CTN_exp_5
-
 emotion =~ 
-  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6
-
 presence =~
-  CTN_mind_1 +         
-  CTN_mind_2 +
-  CTN_mind_4 +
+  CTN_mind_2 +         
+  CTN_mind_1 +
+  CTN_mind_3 +
   CTN_mind_5 +
-  CTN_mind_6
-
-
+  CTN_mind_4
 deepctn =~ deep + experience + emotion + presence'
 
 fit_reduced_hier_4 <- cfa(reduced_hier_4, data=reduced,
-                        std.lv=F, #set to T to get Std.Err!!!
-                        estimator = "MLR") #robust against non normal data #https://lavaan.ugent.be/tutorial/est.html
+                        std.lv=F, 
+                        estimator = "MLR",
+                        orthogonal = F) 
 
-
-
+#Standardized Beta here are the factor loadings
+estimates_red <-
+  parameterEstimates(fit_reduced_hier_4, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
 Plot_reduced <-
      semPaths(fit_reduced_hier_4, 
-         whatLabels = "std", #"par" = unstandardized loading, "std" = standardized. In graphs std is more common. Here the top variable error variance goes to 1 because everything is standardized on that latent variable. This also standarizes all the errors which makes them SD's
+         whatLabels = "std", 
         layout="tree",
         rotation = 4,
         weighted = T, #makes lines bolder for higher numbers
@@ -1073,25 +1499,24 @@ Plot_reduced <-
         curvePivot = TRUE, 
         edge.label.cex= .75, #size of numbers
         cardinal = TRUE,
-        nodeLabels = c("View nature as a mother", #Deep
-                       "Humans and nature connected by same 'Energy'", 
-                       "My connection is 'Spiritual'", 
+        nodeLabels = c("Humans and nature connected by same 'Energy'", #Deep
+                       "My connection is 'Spiritual'",
                        "'Shared breath' between myself and plants", 
+                       "View nature as a mother", 
                        "All life is grounded on this planet", 
-                       "I like to get outdoors when I can", #experience 
-                       "I feel uneasy if away from nature for too long", 
+                       "My favorite is in nature",#experience 
+                       "I like to get outdoors when I can", 
                        "I engage in nature to find meaning & richness",
-                       "My favorite is in nature", 
-                       "Walking through a forest makes me forget worries", 
-                        "If my plants died I would blame myself", #emotional
-                       "Someone carving a tree makes me cringe", 
+                       "I feel uneasy if away from nature for too long",
+                       "Walking through a forest makes me forget worries",
+                       "Someone carving a tree makes me cringe",  #emotional
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
-                       "I deliberately watch the stars at night", 
-                       "I consciously listen to birds", 
-                       "I take time to consciously smell flowers", 
-                       "I pay attention to phases of the moon",
+                       "I deliberately watch the stars at night", #presence
+                       "I take time to watch the clouds pass by",
+                       "Watch sunrish and sunset",
+                       "I consciously listen to birds",
+                       "I take time to consciously smell flowers",
                        "Deep", 
                        "Experience", 
                        "Emotion", 
@@ -1099,194 +1524,67 @@ Plot_reduced <-
                        "Overall CTN")
         )
 
-Fit_table_heir_red <- matrix(fitMeasures(fit_reduced_hier_4, c("df", "chisq", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "tli", "cfi", "aic")), 
+Fit_table_red <- matrix(fitMeasures(fit_reduced_hier_4, c("df.scaled", "chisq.scaled", "rmsea.robust", "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", "srmr", "tli.robust", "cfi.robust", "aic")), 
                          ncol=9,
                          byrow=TRUE)
+chi_dfr <- paste0(round(Fit_table_red[2],2), " (",
+                 Fit_table_red[1],")")
+rmsea_cir <- paste0(round(Fit_table_red[3],2), " (", 
+                  round(Fit_table_red[4],2), " - ", 
+                  round(Fit_table_red[5],2), ")")
+srmrr <- round(Fit_table_red[6],2)
+tlir <- round(Fit_table_red[7],2)
+cfir <- round(Fit_table_red[8],2)
+aicr <- round(Fit_table_red[9],2)
 
-colnames(Fit_table_heir_red) <- c("df", "Chi-Sq", "RMSEA","RMSEA CI Lower", "RMSEA CI Upper", "SRMR", "TLI", "CFI", "AIC")
-rownames(Fit_table_heir_red) <- c("Fit Indices")
-Fit_table_heir_red <- round(Fit_table_heir_red,3)
+fit_red <- tibble(chi_dfr, rmsea_cir, srmrr, tlir)
+colnames(fit_red) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI")
 
 
 ```
+
+**Figure 5. Reduced DEEP CTN Scale factor structure with standardized
+estimates**
 
 ```{r 4 factor reduced hierarchical plot, include=TRUE, echo=FALSE, out.width="100%"}
 plot(Plot_reduced)
 
-as_tibble(Fit_table_heir_red) %>% 
-  add_column(c(""), .before = "df") %>%
-      rename(`Fit Indices` = `c("")`) %>% 
-     flextable() %>% 
+```
+
+**Table 8. Fit indices for the reduced DEEP CTN Scale**
+
+```{r reduced fit table, echo=FALSE}
+
+flextable(fit_red) %>% 
      autofit() %>% 
-     footnote(i = 1, j = 3:4, 
-              value = as_paragraph(c("Closer to 0 indicate better fit",
-                        "(Root mean square error) 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre")),
-              ref_symbols = c("a", "b"),
-              part = "header",
-              inline = FALSE) %>% 
-     footnote(i = 1, j = 7:10,
-              value = as_paragraph(c("(Standardized root mean square residual) Closer to 0 indicate better fit",
-                        "(Tucker Lewis Index) Closer to 1 indicates better fit",
-                        "(Comparative fit index) Closer to 1 indicates better fit",
-                        "(Akaike’s Information Criterion) The lower the AIC, the more predictive")),
-              ref_symbols = c("c", "d", "e", "f"),
-              part = "header",
-              inline = FALSE)
-     
-
+  flextable::footnote(i = 1, j = 1:4, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit")),
+              ref_symbols = c("a", "b","c", "d"))
 
 ```
 
-# DEEP CTN Scale items
+We also expected weak-to-moderate zero-order correlations between the
+four Deep CTN factors as they are predicted to be associated via one CTN
+construct (as would be supported by the hierarchical factor mentioned
+above). This was tested using a Zero-Order Correlation between the four
+factors. Figure 9. shows the intercorrelations between the factors
+revealing moderate relationships between all factors.
 
-```{r DEEPCTN Scale, echo=FALSE}
-#create a table that shows the final items for the DEEP CTN scale
-
-#col names from reduced
-codes <- colnames(reduced)
-items <- matrix(c("I view nature as a mother who nurtures and cares for me", "Deep",
-    "Human beings and nature are connected by the same energy or Life-force", "Deep",
-    "My connection to nature is something I would describe as *spiritual*", "Deep",
-    "I think about the *shared breath* between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale", "Deep",
-    "I often think about the fact that all life is grounded on this planet that is revolving around the sun","Deep",
-    
-    
-    "I like to get outdoors whenever I get the chance", "Experience",
-     "I feel uneasy if I am away from nature for too long","Experience",
-     "I engage and participate with nature to find meaning and richness in life","Experience",
-    "My favorite place is in nature", "Experience",
-    "Walking through a forest makes me forget about my daily worries", "Experience",
-     
-    
-    "If one of my plants died, I would blame myself", "Emotional",
-    "Thinking of someone carving their initials into a tree makes me cringe","Emotional",
-    "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it", "Emotional",
-    "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)",  "Emotional",
-    
-    "I take time to watch the clouds pass by", "Presence",
-    "I deliberately take time to watch stars at night", "Presence",
-    "I consciously watch or listen to birds", "Presence",
-    "I take time to consciously smell flowers", "Presence",
-    "I pay attention to the current phase of the moon", "Presence"),
-  ncol=2, 
-  byrow=TRUE) %>% 
-  as.data.frame() 
-colnames(items) <- c("Item", "Scale")
-
-#Cronbach's Alpha for each subscale
-alpha_deep <- ltm::cronbach.alpha(reduced[,1:5])
-alpha_deep <- round(alpha_deep$alpha,2)
-alpha_exp <- ltm::cronbach.alpha(reduced[,6:10])
-alpha_exp <- round(alpha_exp$alpha,2)
-alpha_emo <- ltm::cronbach.alpha(reduced[,11:14])
-alpha_emo <- round(alpha_emo$alpha,2)
-alpha_pres <- ltm::cronbach.alpha(reduced[,15:19])
-alpha_pres <- round(alpha_pres$alpha,2)
-
-items <- 
-items %>% 
-  mutate(Alpha = case_when(Scale == "Deep" ~ alpha_deep,
-                           Scale == "Experience" ~ alpha_exp,
-                           Scale == "Emotional" ~ alpha_emo,
-                           Scale == "Presence" ~ alpha_pres)) %>% 
-  as.data.frame()
-
-
-
-
-
-
-#Deep table
-deep <- 
-items %>% 
-filter(Scale == "Deep") %>% 
-  dplyr::select(Item) %>% 
-  flextable() %>% 
-  autofit() %>% 
-  set_header_labels(Item ="Deep CTN Subscale") %>% 
-  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_deep),
-                 colwidths = 1) 
-
-#Experiential table
-experience <- 
-items %>% 
-filter(Scale == "Experience") %>% 
-  dplyr::select(Item) %>% 
-  flextable() %>% 
-  autofit() %>% 
-  set_header_labels(Item ="Experiential CTN Subscale") %>% 
-  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_exp),
-                 colwidths = 1) 
-
-#Emotional table
-emotional <- 
-items %>% 
-filter(Scale == "Emotional") %>% 
-  dplyr::select(Item) %>% 
-  flextable() %>% 
-  autofit() %>% 
-  set_header_labels(Item ="Emotional CTN Subscale") %>% 
-  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_emo),
-                 colwidths = 1)
-
-#Presence table
-presence <- 
-items %>% 
-filter(Scale == "Presence") %>% 
-  dplyr::select(Item) %>% 
-  flextable() %>% 
-  autofit() %>% 
-  set_header_labels(Item ="Presence CTN Subscale") %>% 
-  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_pres),
-                 colwidths = 1) 
-
-
-
-```
-
-```{r DEEPCTN Table, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-# Create a helper column for alternating colors
-items$RowColor <- ifelse(items$Scale == lag(items$Scale), "lightgray", "lightblue")
-
-# Create a flextable
-summary_table <- 
-  flextable(items) %>% 
-  set_header_labels(Scale = "CTN Subscale", Alpha = "Cronbach's Alpha") %>% 
-  valign(valign = "top") %>% 
-  autofit()
-
-# Add alternating row colors
-summary_table <- color(
-  summary_table,
-  j = ~RowColor,
-  colors = c("lightgray", "lightblue")
-)
-
-# Print the flextable
-summary_table
-
-```
-
-# Validation
-
-{{% callout note %}} Validation was completed using the reduced scale of
-19 items as it has adequate fit {{% /callout %}}
-
-## Hypothesis 2 - Convergent Validity
-
-The Deep CTN scale has convergent validity, which assesses *how closely
-our new measure is related to other established measures of the same
-construct.*
-
-```{r convergent validity, message=FALSE, warning=FALSE, include=FALSE}
+```{r creating the scale, echo=FALSE}
 #select necessary items
 val_data <-
   data %>% 
-  dplyr::select(id,
+  dplyr::select(id, definition,
          CTN_spirit_1, CTN_spirit_2, CTN_spirit_3, CTN_spirit_7,CTN_spirit_8,
          CTN_exp_1, CTN_exp_2, CTN_exp_3, CTN_exp_4, CTN_exp_5,
-         CTN_emo_2, CTN_emo_3, CTN_emo_4, CTN_emo_6,
+         CTN_emo_3, CTN_emo_4, CTN_emo_6,
          CTN_mind_1, CTN_mind_2, CTN_mind_4, CTN_mind_5, CTN_mind_6,
          
          EIDR_1, EIDR_2, EIDR_3, EIDR_4, EIDR_5, EIDR_6, EIDR_7, 
@@ -1317,9 +1615,179 @@ val_data <-
          
          SES_peers,
          politics_overall, politics_economic, politics_social,
-         age, gender, race) %>% 
-  mutate(across(2:111, as.numeric))
+         age, gender, gender_dummy, race) %>% 
+  mutate(across(3:112, as.numeric))
+```
 
+
+```{r four factor correlation calcs, echo=FALSE, message=FALSE, warning=FALSE}
+
+fac_cor <-
+  val_data %>% 
+  mutate(Deep = (CTN_spirit_1 + CTN_spirit_2 + CTN_spirit_3 + CTN_spirit_7 + CTN_spirit_8)/5,
+         Experience = (CTN_exp_1+ CTN_exp_2+ CTN_exp_3+ CTN_exp_4+ CTN_exp_5)/5,
+         Emotional = (CTN_emo_3+ CTN_emo_4+ CTN_emo_6)/3,
+         Presence = (CTN_mind_1+ CTN_mind_2+ CTN_mind_4+ CTN_mind_5+ CTN_mind_6)/5) %>%
+    dplyr::select(Deep, Experience, Emotional, Presence) %>%
+  as.matrix %>% 
+  rcorr(type = "spearman")
+fac_row = rownames(fac_cor$r)
+fac_m = t(combn(fac_row, 2))
+fac_d = cbind(data.frame(fac_m), R = fac_cor$r[fac_m], P = fac_cor$P[fac_m])
+fac_d$label = round(fac_d$R, 2)
+fac_d$label[fac_d$P < 0.001] = paste0(fac_d$label[fac_d$P < 0.001], "\n***")
+fac_d$X1 = factor(fac_d$X1, fac_row)
+fac_d$X2 = factor(fac_d$X2, rev(fac_row))
+graphics.off()
+fac_plot <- 
+  fac_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 0, end = 1) +
+    geom_text(color = ifelse(fac_d$R > 0.60, "black", "white"), size = 5) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
+**Figure 9. Correlations between factors in the DEEP CTN Scale**
+```{r four factor cor plot, echo=FALSE}
+fac_plot
+```
+
+
+
+# Validation
+
+{{% callout note %}} Validation was completed using the reduced scale of
+18 items as it has adequate fit {{% /callout %}}
+
+## Final DEEP CTN Scale
+
+Table 9 shows the Cronbach's alpha for the reduced scale, which was
+acceptable for Deep, Experiential, and Presence, but showed a poor fit
+for the Emotional dimension.
+
+```{r DEEPCTN Scale, include=FALSE}
+#create a table that shows the final items for the DEEP CTN scale
+
+#col names from reduced
+codes <- colnames(reduced)
+scale <- matrix(c("I view nature as a mother who nurtures and cares for me", "Deep",
+    "Human beings and nature are connected by the same energy or Life-force", "Deep",
+    "My connection to nature is something I would describe as *spiritual*", "Deep",
+    "I think about the *shared breath* between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale", "Deep",
+    "I often think about the fact that all life is grounded on this planet that is revolving around the sun","Deep",
+    
+    
+    "I like to get outdoors whenever I get the chance", "Experience",
+     "I feel uneasy if I am away from nature for too long","Experience",
+     "I engage and participate with nature to find meaning and richness in life","Experience",
+    "My favorite place is in nature", "Experience",
+    "Walking through a forest makes me forget about my daily worries", "Experience",
+     
+    
+    "Thinking of someone carving their initials into a tree makes me cringe","Emotional",
+    "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it", "Emotional",
+    "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)",  "Emotional",
+    
+    "I take time to watch the clouds pass by", "Presence",
+    "I deliberately take time to watch stars at night", "Presence",
+    "I consciously watch or listen to birds", "Presence",
+    "I take time to consciously smell flowers", "Presence",
+    "I pay attention to the current phase of the moon", "Presence"),
+  ncol=2, 
+  byrow=TRUE) %>% 
+  as.data.frame() 
+colnames(scale) <- c("Item", "Scale")
+
+#Cronbach's Alpha for each subscale
+alpha_deep <- ltm::cronbach.alpha(reduced[,1:5])
+alpha_deep <- round(alpha_deep$alpha,2)
+alpha_exp <- ltm::cronbach.alpha(reduced[,6:10])
+alpha_exp <- round(alpha_exp$alpha,2)
+alpha_emo <- ltm::cronbach.alpha(reduced[,11:13])
+alpha_emo <- round(alpha_emo$alpha,2)
+alpha_pres <- ltm::cronbach.alpha(reduced[,14:18])
+alpha_pres <- round(alpha_pres$alpha,2)
+
+scale <- 
+scale %>% 
+  mutate(Alpha = case_when(Scale == "Deep" ~ alpha_deep,
+                           Scale == "Experience" ~ alpha_exp,
+                           Scale == "Emotional" ~ alpha_emo,
+                           Scale == "Presence" ~ alpha_pres)) %>% 
+  as.data.frame()
+
+#Deep table
+deep <- 
+scale %>% 
+filter(Scale == "Deep") %>% 
+  dplyr::select(Item) %>% 
+  flextable() %>% 
+  autofit() %>% 
+  set_header_labels(Item ="Deep CTN Subscale") %>% 
+  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_deep),
+                 colwidths = 1) 
+
+#Experiential table
+experience <- 
+scale %>% 
+filter(Scale == "Experience") %>% 
+  dplyr::select(Item) %>% 
+  flextable() %>% 
+  autofit() %>% 
+  set_header_labels(Item ="Experiential CTN Subscale") %>% 
+  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_exp),
+                 colwidths = 1) 
+
+#Emotional table
+emotional <- 
+scale %>% 
+filter(Scale == "Emotional") %>% 
+  dplyr::select(Item) %>% 
+  flextable() %>% 
+  autofit() %>% 
+  set_header_labels(Item ="Emotional CTN Subscale") %>% 
+  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_emo),
+                 colwidths = 1)
+
+#Presence table
+presence <- 
+scale %>% 
+filter(Scale == "Presence") %>% 
+  dplyr::select(Item) %>% 
+  flextable() %>% 
+  autofit() %>% 
+  set_header_labels(Item ="Presence CTN Subscale") %>% 
+  add_footer_row(values = as_paragraph("Cronbach's Alpha: ", alpha_pres),
+                 colwidths = 1) 
+
+summary_table <- 
+  flextable(scale) %>% 
+  set_header_labels(Scale = "CTN Subscale", Alpha = "Cronbach's Alpha") %>% 
+  valign(valign = "top") %>% 
+  autofit() %>%
+  merge_v(j = 2:3) %>% 
+#    theme_zebra() %>% 
+  hline(i = c(5, 10, 13))
+
+
+
+```
+
+**Table 9. DEEP CTN Scale including the Cronbach's Alpha for each
+factor**
+
+```{r DEEP CTN scale printed, echo=FALSE}
+summary_table
+```
+
+
+```{r convergent validity, message=FALSE, warning=FALSE, include=FALSE}
 
 #reverse score items: CNS_4, CNS_14, REBS_4, REBS_6, REBS_7, REBS_14, PI_interconnect_2, RYFF_1_autonomy, RYFF_4_enviromastery, RYFF_9_growth, RYFF_10_relations, RYFF_12_relations, RYFF_14_purpose, RYFF_15_purpose, RYFF_18_selfaccept
 
@@ -1330,12 +1798,6 @@ reverse_code <- function(data, columns_to_reverse) {
 
 reverse_code(val_data, c("CNS_4", "CNS_14", "RPEBS_4", "RPEBS_6", "RPEBS_7", "RPEBS_14", "PI_interconnect_2", "RYFF_1_autonomy", "RYFF_4_enviromastery", "RYFF_9_growth", "RYFF_10_relations", "RYFF_12_relations", "RYFF_14_purpose", "RYFF_15_purpose", "RYFF_18_selfaccept"))
 
-val_data <-
-  val_data %>%
-  mutate()
-  
-
-
 #create scales & standardize
 val_data <-
   val_data %>% 
@@ -1343,7 +1805,7 @@ val_data <-
          DeepCTN_z = (DeepCTN - mean(DeepCTN))/sd(DeepCTN),
          ExpCTN = (rowSums(dplyr::select(., CTN_exp_1:CTN_exp_5))),
          ExpCTN_z = (ExpCTN - mean(ExpCTN))/sd(ExpCTN),
-         EmoCTN = (rowSums(dplyr::select(., CTN_emo_2:CTN_emo_6))),
+         EmoCTN = (rowSums(dplyr::select(., CTN_emo_3:CTN_emo_6))),
          EmoCTN_z = (EmoCTN - mean(EmoCTN))/sd(EmoCTN),
          PresCTN = (rowSums(dplyr::select(., CTN_mind_1:CTN_mind_6))),
          PresCTN_z = (PresCTN - mean(PresCTN))/sd(PresCTN),
@@ -1378,14 +1840,8 @@ val_data <-
          WB = (RYFF_z + PANAS_z + Vitality_z)/3,
          politics = (politics_overall + politics_economic + politics_social)/3)
 
-#dummycode gender
-#man = 0; woman = 1; other = NA (will remove these from anlaysis as there isn't enough for sufficient power)
 
-val_data <-
-  val_data %>% 
-  mutate(gender_dummy = case_match(gender,"Man" ~ 0,
-                                   "Woman" ~ 1,
-                                   .default = NA))
+
 
 #chronbacs alpha on cns and eidr
 cns_alpha <- 
@@ -1394,39 +1850,21 @@ cns_alpha <-
 eidr_alpha <-
   ltm::cronbach.alpha(val_data[,c("EIDR_1", "EIDR_2", "EIDR_3", "EIDR_4", "EIDR_5", "EIDR_6", "EIDR_7", "EIDR_8", "EIDR_9", "EIDR_10", "EIDR_11", "EIDR_12", "EIDR_13", "EIDR_14")])
 
+#save csv
+#write.csv(val_data, "val_data.csv")
+
 ```
 
-Two established measures of connection to nature were used:
 
-1.  The Connectedness to Nature Scale (CNS - Mayer & Franz, 2004)
-    (cronbach's alpha = `r round(cns_alpha$alpha,2)`)
 
-2.  Environmental Identity Scale revised (EID-R - Clayton et al.,
-    2021)(cronbach's alpha = `r round(eidr_alpha$alpha,2)`).
+## Hypothesis 2 - Convergent Validity
 
-### Hypothesis 2.A
+Our second hypothesis was that the Deep CTN scale would have convergent validity, which assesses how closely our new measure is related to other established measures of the same construct. We tested this by examing the correlations between two existing measures of CTN:
 
--   The Deep Identity facet of the DEEP CTN scale will strongly
-    correlate with the Connectedness to Nature Scale (CNS)
+The Connectedness to Nature Scale (CNS - Mayer & Franz, 2004)
+(cronbach's alpha = `r round(cns_alpha$alpha,2)`)
 
--   The other three facets will only weakly-moderately correlate with
-    the CNS
-
-*This is based on past research identifying the CNS as a uni-dimensional
-measure of nature connectedness which focuses on the cognitive aspect of
-connection to nature (Mayer & Frantz, 2004)*
-
-### Hypothesis 2.B
-
--   The Experience and Emotional facets of the DEEP CTN scale will
-    strongly correlate with the Environmental Identity Scale revised
-    (EID-R)
-
--   The Deep and Presence facets will weakly (or not at all) correlate.
-
-*This is based on previous research which identified multiple dimensions
-measuring enjoyment and appreciation of nature (Olivos & Aragones,
-2011)*
+Environmental Identity Scale revised (EID-R - Clayton et al., 2021)(cronbach's alpha = `r round(eidr_alpha$alpha,2)`).
 
 ```{r cormatrix, include=FALSE, fig.id=TRUE}
 #| fig.cap = "Spearman correlations between DEEP CTN facets and existing measures of CTN"
@@ -1451,6 +1889,32 @@ corp <-
 
 ```
 
+
+### Hypothesis 2.A - CNS
+We predicted that:
+
+-   The Deep Identity facet of the DEEP CTN scale will strongly
+    correlate with the CNS
+
+-   The other three facets will only weakly-moderately correlate with
+    the CNS
+
+*This is based on past research identifying the CNS as a uni-dimensional
+measure of nature connectedness which focuses on the cognitive aspect of
+connection to nature (Mayer & Frantz, 2004)*
+
+### Hypothesis 2.B - EID-R
+We similarly predicted that:
+
+-   The Experience and Emotional facets of the DEEP CTN scale will
+    strongly correlate with the EID-R
+
+-   The Deep and Presence facets will weakly (or not at all) correlate.
+
+*This is based on previous research which identified multiple dimensions
+measuring enjoyment and appreciation of nature (Olivos & Aragones,
+2011)*
+
 ```{r Correlation plot, echo=FALSE, include=TRUE, out.width="100%"}
 nm = rownames(correlations$r)
 m = t(combn(nm, 2))
@@ -1472,8 +1936,7 @@ validation_plot <-
 
 ```
 
-A zero-order Spearman correlation of the four Deep CTN scale facets, the
-CNS, and the EID-R found support for hypothesis 2A and partial
+A zero-order Spearman correlation of the four Deep CTN scale facets, the CNS, and the EID-R found support for hypothesis 2A and partial
 supportfor hypothesis 2B tested (see Figure 7).
 
 -   Hypothesis 2A is supported as the Deep CTN scale facet correlated
@@ -1502,9 +1965,11 @@ print(validation_plot)
 \|0.4\| ≤ r \< \|0.7\| is Moderate;\
 \|0.1\| ≤ r \< \|0.3\| is Weak*
 
-------------------------------------------------------------------------
 
-## Predicting PEB
+
+## Hypothesis 3 - Predictive Validity
+
+### Hypothesis 3.A - PEB
 
 ```{r cronbachs for peb, message=FALSE, warning=FALSE, include=FALSE}
 
@@ -1512,8 +1977,6 @@ peb_alpha <-
   val_data %>% 
   dplyr::select(RPEBS_1, RPEBS_2, RPEBS_3, RPEBS_4, RPEBS_5, RPEBS_6, RPEBS_7, RPEBS_8, RPEBS_9, RPEBS_10, RPEBS_11, RPEBS_12, RPEBS_13, RPEBS_14, RPEBS_15, RPEBS_16, RPEBS_17, RPEBS_18, RPEBS_19, RPEBS_20) %>%
   ltm::cronbach.alpha()
-
-
 ```
 
 We assessed the predictive validity of the new DEEP CTN scale (i.e., how
@@ -1521,14 +1984,131 @@ well our measure can predict participant scores on two theoretically
 related constructs). The “gold standard” for predictive validity of CTN
 measures is how well it predicts pro-environmental behavior (PEB)
 (Clayton, 2003; Clayton et al., 2021; Mayer & Frantz, 2004; Tam, 2013).
-A zero-order correlation found moderate correlations between the
-Recurring PEB Scale (Brick et al., 2017)(cronbach's alpha =
-`r peb_alpha$alpha`) and the new subscales of the DEEP CTN scale.
 
-A linear regression with only the subscales of CTN predicting PEB showed
-....
+We predicted that the DEEP CTN scale and its factors would correlate moderately with PEB using the Recurring Pro-Environmental Scale (Brick et al., 2017)(cronbach's alpha =
+`r round(peb_alpha$alpha,2)`). A zero-order correlation confirmed moderate correlations between the factors and PEB. However, we also predicted some variation of correlations between the facets such that some are stronger predictors than others. This was not supported as correlations ranged between r = 0.43 and r = 0.47 (See Figure 8.)
 
-```{r linear regression with only dimensions predicting PEB, echo=FALSE, message=FALSE, warning=FALSE}
+```{r zero order correlation PEB, include=FALSE, echo=FALSE}
+
+peb_cor <-
+  val_data %>% 
+  dplyr::select(RPEBS_z, DeepCTN_z, ExpCTN_z, EmoCTN_z, PresCTN_z) %>% 
+  as.matrix() %>% 
+  rcorr(type = "spearman")
+
+peb_row = rownames(peb_cor$r)
+peb_m = t(combn(peb_row, 2))
+peb_d = cbind(data.frame(peb_m), R = peb_cor$r[peb_m], P = peb_cor$P[peb_m])
+peb_d$label = round(peb_d$R, 2)
+peb_d$label[peb_d$P < 0.001] = paste0(peb_d$label[peb_d$P < 0.001], "\n***")
+peb_d$X1 = factor(peb_d$X1, peb_row)
+peb_d$X2 = factor(peb_d$X2, rev(peb_row))
+graphics.off()
+peb_plot <- 
+  peb_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 0, end = 1) +
+    geom_text(color = ifelse(peb_d$R > 0.60, "black", "white"), size = 3) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+**Figure 8. Zero-order correlations between DEEP CTN factors and PEB**
+```{r zero order correlation PEB plot, echo=FALSE, include=TRUE, out.width="100%"}
+peb_plot
+```
+
+*Spearman’s correlation coefficient guidelines (Akoglu, 2018):\
+\|0.7\| ≤ r is Strong;\
+\|0.4\| ≤ r \< \|0.7\| is Moderate;\
+\|0.1\| ≤ r \< \|0.3\| is Weak*
+
+### Hypothesis 3.B - Well-Being
+
+```{r wellbeing cronbachs, include=FALSE}
+
+wb_alpha <-
+  val_data %>% 
+  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
+         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
+         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
+         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
+         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
+         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept, 
+         
+         PANAS_1, PANAS_2, PANAS_3, PANAS_4, PANAS_5, 
+         PANAS_6, PANAS_7, PANAS_8, PANAS_9, PANAS_10,
+         
+         VITALITY_1, VITALITY_2, VITALITY_3, 
+         VITALITY_4, VITALITY_5, VITALITY_6) %>%
+  ltm::cronbach.alpha()
+```
+
+Nature connectedness has also been shown to relate to various measures
+of psychological well-being (Capaldi et al., 2014; Pritchard et al.,
+2020). To measure well-being we used a composite measure from three
+established measures of well-being: 1) the Ryff Well-being Scale (Ryff &
+Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et
+al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick,
+1997). The Cronbach’s Alpha for this composite measure is
+`r round(wb_alpha$alpha,2)`.
+
+We predicted that the DEEP CTN scale and its factors would correlate moderately with well-being. A zero-order correlation confirmed only weak-moderate correlations between the factors and well-being. Similarly to predicting PEB there as consistency across the factors to predict well-being. This countered our prediction that there would be variation among the factors to predict well-being, as correlations ranged between r = 0.23 and r = 0.40 (See Figure 9.)
+
+```{r zero order correlation WB, include=FALSE, echo=FALSE}
+
+wb_cor <-
+  val_data %>% 
+  dplyr::select(WB, DeepCTN_z, ExpCTN_z, EmoCTN_z, PresCTN_z) %>% 
+  as.matrix() %>% 
+  rcorr(type = "spearman")
+
+wb_row = rownames(wb_cor$r)
+wb_m = t(combn(wb_row, 2))
+wb_d = cbind(data.frame(wb_m), R = wb_cor$r[wb_m], P = wb_cor$P[wb_m])
+wb_d$label = round(wb_d$R, 2)
+wb_d$label[wb_d$P < 0.001] = paste0(wb_d$label[wb_d$P < 0.001], "\n***")
+wb_d$X1 = factor(wb_d$X1, wb_row)
+wb_d$X2 = factor(wb_d$X2, rev(wb_row))
+graphics.off()
+wb_plot <- 
+  wb_d %>% 
+  ggplot(aes(X1, X2, fill = R, label = label)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(begin = 0, end = 1) +
+    geom_text(color = ifelse(wb_d$R > 0.60, "black", "white"), size = 3) +
+    theme_bw() +
+    coord_equal() +
+     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+**Figure 9. Zero-order correlations between DEEP CTN factors and Well-being**
+```{r zero order correlation WB plot, echo=FALSE, include=TRUE, out.width="100%"}
+wb_plot
+```
+
+
+## Hypothesis 4 - Incremental Validity
+
+We explored if the DEEP CTN scale and its facets would perform above and
+beyond existing CTN scales (i.e., CNS and EID-R) when predicting PEB. 
+
+### Hypothesis 4.A - PEB 
+
+We predicted that one or more of the factors of the DEEP CTN scale would be the strongest predictor of PEB compared to the CNS and the EID-R. A
+linear regression model predicting PEB from the four factors of the
+DEEP CTN scale and two existing CTN measures (CNS and EIDR). These were all entered simultaneously to determine the amount of unique variance each predictor accounted for. Note that because overall CTN was highly
+intercorrelated with the factors of the scale, it was left out and only the four dimensions were included.
+
+The results of the linear regression to predict PEB support our prediction. When entered simultaneously into a regression model, only the emotional and presence factors of the DEEP CTN Scale as well as the CNS were significant predicts of PEB. The Emotional factor was the strongest predictor, followed by the CNS, and finally the Presence factor.
+
+```{r linear regression with only dimensions predicting PEB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 dimensions_peb <-
       lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z, 
@@ -1620,13 +2200,13 @@ plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The
 
 ```
 
-```{r dimonly output, echo=FALSE, message=FALSE, warning=FALSE}
-
+**Table 10. Linear regression predicting PEB from DEEP CTN factors, CNS, and EID-R**
+```{r dimonly output, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 bind_cols(coef_confint_dim_only[-1,], R2_peb_table[,-1]) %>% 
      relocate(c(`Partial R2`, p), .after = Variable) %>% 
      flextable() %>% 
-     bold(~p < .05, 1:3) %>% 
+     bold(~p < .025, 1:3) %>% 
      bold(~lower_bound > 0, c(1,4,5,6)) %>% 
      footnote(i = 1, j = 4,
               value = as_paragraph("< 0.29 = small; 
@@ -1636,30 +2216,7 @@ bind_cols(coef_confint_dim_only[-1,], R2_peb_table[,-1]) %>%
               part = "header") %>% 
   autofit()
 
-
-
-
 ```
-
-Total variance explained by the model = `r paste(peb_tot_var)`
-
-```{r ploteffectspredict, echo=FALSE, message=FALSE, warning=FALSE}
-
-plot_model_dim_only
-
-```
-
-### Incremental Validity
-
-We explored if the DEEP CTN scale and its facets would perform above and
-beyond existing CTN scales (i.e., CNS and EID-R) when predicting PEB. A
-linear regression model was run, which included the dimensions of the
-DEEP CTN scale and the existing CTN measures (CNS and EIDR) were entered
-simultaneously to predict PEB. Note that because overall CTN was highly
-intercorrelated with Deep and Emotional, it was left out and only the
-four dimensions were included.
-
-We found that ...
 
 ```{r predictive validity PEB,include=FALSE, warning=FALSE}
 
@@ -1760,281 +2317,19 @@ bind_cols(coef_confint_peb[-1,], R2_incremental_table[,-1]) %>%
               part = "header") %>% 
   autofit()
 
-
-
-
-
 ```
 
 Total variance explained by the model = `r paste(inc_tot_var)`
 
+To account for the familywise error rate of multiple tests, we used a corrected alpha of 0.025 as the critical p-value.
+
+**Figure 10. Effect sizes of DEEP CTN factors, CNS, and EID-R predicting PEB**
 ```{r effectplotincremental, echo=FALSE, message=FALSE, warning=FALSE}
 plot_model_peb
 ```
 
-### Robustness
-
-We also tested the robustness of our new DEEP CTN scale, by testing if
-the DEEP CTN scale and its facets are significant predictors of PEB
-after controlling for known covariates of these outcomes: political
-ideology, gender, and socio-economic status (SES). We fist inspected a
-zero order correlation to identify which covariates should be included.
-Including any variable that:
-
-1.  strongly correlated with PEB AND
-
-2.  weakly correlated with the Deep CTN Scale may reduce variance in the
-    dependent variable and therefore enhance the likelihood of seeing
-    significant effects of the DEEP CTN scale.
-
-Further, if an additional variable is…
-
-1.  strongly correlated with BOTH PEB AND
-
-2.  the Deep CTN Scale,
-
-its inclusion in the model will address potential mediating effects
-regarding the relationship between the Deep CTN Scale and a DV of
-interest. In either case this would suggest it’s important to include as
-a covariate.
-
-```{r Robustness Covariates, echo=FALSE, include=FALSE}
-
-val_data <-
-      val_data %>% 
-      mutate(pol_z = (politics - mean(politics))/sd(politics),
-             ses_z = (SES_peers - mean(SES_peers))/sd(SES_peers))
-    
-allvarscordata <- 
-     val_data %>% 
-         dplyr::select(CTN_z,
-                 DeepCTN_z,
-                 ExpCTN_z,
-                 EmoCTN_z,
-                 PresCTN_z,
-                 CNS_z,
-                 EIDR_z,
-                 RPEBS_z,
-                 PI_interconnect_z,
-                 pol_z,
-                 gender_dummy, #0 = male, 1=female
-                 ses_z)  %>% 
-  filter(!is.na(gender_dummy)) %>% 
-          as.matrix()
-
-
-allvarscorrelation <-
-     rcorr(allvarscordata, type = "spearman",)
-
-allvarscorp <- 
-     cor.mtest(allvarscordata)
-
-nm = rownames(allvarscorrelation$r)
-m = t(combn(nm, 2))
-d = cbind(data.frame(m), R = allvarscorrelation$r[m], P = allvarscorrelation$P[m])
-d$label = round(d$R, 2)
-d$label[d$P < 0.001] = paste0(d$label[d$P < 0.001], "\n**")
-d$X1 = factor(d$X1, nm)
-d$X2 = factor(d$X2, rev(nm))
-
-graphics.off()
-robustness_plot <- 
-  ggplot(d, aes(X1, X2, fill = R, label = label)) +
-    geom_tile(color = "white") +
-    scale_fill_viridis_c() +
-    geom_text(color = ifelse(d$R > 0.35, "black", "white"), size = 2) +
-    theme_bw() +
-    coord_equal() +
-     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
-```{r full zero-order correlation, echo=FALSE}
-print(robustness_plot)
-```
-
-This resulted in including the following covariates:
-
--   Primal Beliefs - The world is interconnect (r = .36\*\* with PEB & r
-    = .29\*\* to .51\*\* with DEEP CTN dimensions)
-
-A multiple linear regression model where dimensions of the DEEP CTN
-scale and existing CTN measures (CNS and EIDR) and the covariates
-(politics & primal belief interconnectedness) were entered
-simultaneously to predict PEB is reported in the table below.
-
-By adding the covariates, both Emotional and Prescence subscales
-remained significant predictors of PEB
-
-```{r Robustness Existing measures, echo=FALSE, include=FALSE, warning=FALSE}
-
-robust_model_peb <-
-      lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
-             CNS_z + EIDR_z + 
-             PI_interconnect_z, data = val_data)
-
-
-robust_anova_peb <-
-     Anova(robust_model_peb, type = "II")
-
-
-robust_r2 <-
-     calc.relimp(robust_model_peb, type="lmg",
-                 rela=F) #setting to T normalizes metrics to sum to 100%
-
-robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
-robust_pvalues <- tibble(round(robust_anova_peb$`Pr(>F)`,2),
-                         .name_repair = "universal") #p values
-vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z", "PI_connect_Z"))
-
-robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
-
-
-
-#create table of R and P values
-R2_incremental_peb_robust <- 
-     bind_cols(vars, robust_rvalues, robust_pvalues[-8,])%>% 
-     rename("variable" = `c(...)`, "Partial R2" = `round(robust_r2$lmg, 2)`, 
-            "p" = `round.robust_anova_peb..Pr..F....2.`)
-     
-#plotting effect sizes
-#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
-model_robustPEB_output <- broom::tidy(robust_model_peb)
-model_robustPEB_conf <- broom::tidy(robust_model_peb, conf.int = T)
-
-model_robustPEB <- forestmangr::round_df(model_robustPEB_conf, digits = 2)
-model_robustPEB <- model_robustPEB[-1,] #remove the intercept 
-
-coef_robustPEB <- 
-     coef(robust_model_peb)
-ConfidenceInterval_robustPEB <- 
-     confint(robust_model_peb, level = 0.95)
-coef_confint_robustPEB <- 
-     cbind(coef_robustPEB, ConfidenceInterval_robustPEB)%>% 
-     as.data.frame()
-coef_confint_robustPEB <- 
-     coef_confint_robustPEB %>% 
-     mutate(variable=rownames(coef_confint_robustPEB))
-
-
-coef_confint_robustPEB <- 
-     coef_confint_robustPEB %>% 
-     rename(c("std Beta" = "coef_robustPEB",
-              "lower_bound" = `2.5 %`, 
-              "upper_bound" = `97.5 %`))
-
-# Reorder variables
-col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
-coef_confint_robustPEB <- 
-     coef_confint_robustPEB[, col_order] #reorder variables in the data frame
-
-coef_confint_robustPEB <- 
-     coef_confint_robustPEB %>% 
-  mutate_if(is.numeric, round, digits = 2) # round numeric into two significant digits 
-
-plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (The intercept) 
-  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
-  geom_point(shape = 15,
-             size  = 4,
-             position = "dodge", 
-             color="black") + 
-  geom_errorbar(aes(ymin  = lower_bound,
-                    ymax  = upper_bound),
-                size  = 1,
-                position = "dodge", 
-                color="turquoise4") +
-  theme(axis.title = element_text(face = "bold")) +
-  xlab("Variables") + ylab("Beta coeffecients with 95% CI") +
-  coord_flip(ylim = c(-.5, .5)) + 
-  geom_hline(yintercept = 0, color = "red", size = 1) +
-   theme(axis.title = element_text(size = 17)) + 
-  theme(axis.text = element_text(size = 14)) 
-
-```
-
-```{r robust PEB output, echo=FALSE, warning=FALSE}
-
-
-bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>% 
-     relocate(c(`Partial R2`, p), .after = variable) %>% 
-     flextable() %>% 
-     bold(~p < .05, 1:3) %>% 
-     bold(~lower_bound > 0, c(1,4,5,6))%>% 
-     footnote(i = 1, j = 4,
-              value = as_paragraph("< 0.29 = small; 
-                                   0.30-0.49 = medium;
-                                   > 0.50 = large"),
-              ref_symbols = "*",
-              part = "header") %>% 
-  autofit()
-
-
-
-
-
-
-
-```
-
-Total variance explained by the model = `r paste(robust_tot_var)`
-
-```{r effectplotrobust, echo=FALSE, message=FALSE, warning=FALSE}
-plot_model_robustPEB
-```
-
-Adding robust variables did not improve the fit of the model above the
-variables in the incremental validity model
-
-```{r robust anova table, echo=FALSE, message=FALSE, warning=FALSE}
-#Compare models
-
-model_names <- c("Incremental", "Robust")
-
-comparison <-
-anova(model_peb, robust_model_peb)
-
-bind_cols(model_names, comparison) %>% 
-  flextable() %>% 
-  autofit()
-```
-
-## Predicting Well-Being
-
-```{r wellbeing cronbachs}
-
-wb_alpha <-
-  val_data %>% 
-  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
-         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
-         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
-         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
-         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
-         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept, 
-         
-         PANAS_1, PANAS_2, PANAS_3, PANAS_4, PANAS_5, 
-         PANAS_6, PANAS_7, PANAS_8, PANAS_9, PANAS_10,
-         
-         VITALITY_1, VITALITY_2, VITALITY_3, 
-         VITALITY_4, VITALITY_5, VITALITY_6) %>%
-  ltm::cronbach.alpha()
-
-
-
-```
-
-Nature connectedness has also been shown to relate to various measures
-of psychological well-being (Capaldi et al., 2014; Pritchard et al.,
-2020). To measure wellbeing we used a composite measure from three
-established measures of well-being: 1) the Ryff Well-being Scale (Ryff &
-Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et
-al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick,
-1997). The Cronbach’s Alpha for this composite measure is
-`r wb_alpha$alpha`.
-
-A linear regression with only the subscales of CTN predicting Well-being
-showed ....
-
-```{r linear regression with only dimensions predicting WB, echo=FALSE, message=FALSE, warning=FALSE}
+### Hypothesis 4.B - Well-being
+```{r linear regression with only dimensions predicting WB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 #WB is already standardized as a z score
 dimensions_wb <-
@@ -2127,7 +2422,7 @@ plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The
 
 ```
 
-```{r dimonly output WB, echo=FALSE, message=FALSE, warning=FALSE}
+```{r dimonly output WB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 
 bind_cols(coef_confint_dim_only[-1,], R2_wb_table[,-1]) %>% 
@@ -2148,25 +2443,10 @@ bind_cols(coef_confint_dim_only[-1,], R2_wb_table[,-1]) %>%
 
 ```
 
-Total variance explained by the model = `r paste(wb_tot_var)`
+We also explored if the DEEP CTN scale and its facets would perform above and beyond existing CTN scales (i.e., CNS and EID-R) when predicting
+Well-being. We predicted that one or more of the factors of the DEEP CTN scale would be the strongest predictor of psychological well-being compared to the CNS and the EID-R. Similar to the regression to predict PEB, only the factors of CTN were entered in the model due to the high intercorrelation of the overall CTN measure with its own factors.
 
-```{r ploteffectspredict WB, echo=FALSE, message=FALSE, warning=FALSE}
-
-plot_model_dim_only
-
-```
-
-### Incremental Validity
-
-We explored if the DEEP CTN scale and its facets would perform above and
-beyond existing CTN scales (i.e., CNS and EID-R) when predicting
-Well-being A linear regression model was run, which included the
-dimensions of the DEEP CTN scale and the existing CTN measures (CNS and
-EIDR) were entered simultaneously to predict Well-being Note that
-because overall CTN was highly intercorrelated with Deep and Emotional,
-it was left out and only the four dimensions were included.
-
-We found that ...
+The results of the linear regression to predict well-being are counter to our prediction. When entered simultaneously into a regression model, only the presence factor of the DEEP CTN Scale and the EID-R were significant predicts of well-being. The EID-R was the strongest predictor, accounting for almost twice the varince in well-being than the presence factor of DEEP CTN.
 
 ```{r predictive validity WB,include=FALSE, warning=FALSE}
 
@@ -2252,12 +2532,13 @@ plot_model_wb <- coef_confint_wb[-1,] %>%  #remove row number 1 (The intercept)
   theme(axis.text = element_text(size = 14)) 
 ```
 
+**Table 11. Linear regression predicting Well-being from DEEP CTN factors, CNS, and EID-R**
 ```{r model WB plots, echo=FALSE, warning=FALSE}
 
 bind_cols(coef_confint_wb[-1,], R2_incremental_table[,-1]) %>% 
      relocate(c(`Partial R2`, p), .after = variable) %>% 
      flextable() %>% 
-     bold(~p < .05, 1:3) %>% 
+     bold(~p < .025, 1:3) %>% 
      bold(~lower_bound > 0, c(1,4,5,6))%>% 
      footnote(i = 1, j = 4,
               value = as_paragraph("< 0.29 = small; 
@@ -2271,43 +2552,46 @@ bind_cols(coef_confint_wb[-1,], R2_incremental_table[,-1]) %>%
 
 Total variance explained by the model = `r paste(inc_tot_var)`
 
+To account for the familywise error rate of multiple tests, we used a corrected alpha of 0.025 as the critical p-value.
+
+**Figure 11. Effect sizes of DEEP CTN factors, CNS, and EID-R predicting Well-being**
 ```{r effectplotincremental wb, echo=FALSE, message=FALSE, warning=FALSE}
 plot_model_wb
 ```
 
-### Robustness
+
+## Hypothesis 5 - Robustness
 
 We also tested the robustness of our new DEEP CTN scale, by testing if
-the DEEP CTN scale and its facets are significant predictors of
-Well-being after controlling for known covariates of these outcomes:
-gender, and socio-economic status (SES). We fist inspected a zero order
-correlation to identify which covariates should be included. Including
-any variable that:
+the DEEP CTN scale and its factors are significant predictors of both PEB & well-being after controlling for known covariates of these outcomes (e.g., interconnected worldviews, political ideology, gender, age, and socio-economic status (SES)). 
 
-1.  strongly correlated with PEB AND
+We fist inspected a zero order correlation to identify which covariates should be included. The decision to include variables is based on whether they are:
 
-2.  weakly correlated with the Deep CTN Scale may reduce variance in the
-    dependent variable and therefore enhance the likelihood of seeing
-    significant effects of the DEEP CTN scale.
+1.  Strongly correlated with the outcome measure (PEB or Well-being) AND
 
-Further, if an additional variable is…
+2.  Weakly correlated with the Deep CTN Scale 
 
-1.  strongly correlated with BOTH PEB AND
+Do so would reduce variance in the outcome variable and therefore enhance the likelihood of seeing significant effects of the DEEP CTN scale.
+
+Further, if an additional variable is:
+
+1.  Strongly correlated with BOTH the outcome variable (PEB or Well-being) AND
 
 2.  the Deep CTN Scale,
 
-its inclusion in the model will address potential mediating effects
-regarding the relationship between the Deep CTN Scale and a DV of
-interest. In either case this would suggest it’s important to include as
-a covariate.
+its inclusion in the model could address potential mediating effects
+regarding the relationship between the Deep CTN Scale and the outcome variable of interest. In either case this would suggest it’s important to include as a covariate.
 
-```{r Robustness Covariates WB, echo=FALSE, include=FALSE}
+This resulted in including **interconnected primal beliefs** when predicting **PEB** (r = .36\*\* with PEB & r = .29\*\* to .51\*\* with DEEP CTN dimensions). 
+    
+As well as including **age** when predicting well-being (r = .23\*\* with **well-being** & r = .21\*\* to .30\*\* with DEEP CTN dimensions).
 
+```{r Robustness Covariates, echo=FALSE, include=FALSE}
 val_data <-
       val_data %>% 
       mutate(pol_z = (politics - mean(politics))/sd(politics),
              ses_z = (SES_peers - mean(SES_peers))/sd(SES_peers))
-    
+#gender and age need to be included    
 allvarscordata <- 
      val_data %>% 
          dplyr::select(CTN_z,
@@ -2317,9 +2601,11 @@ allvarscordata <-
                  PresCTN_z,
                  CNS_z,
                  EIDR_z,
+                 RPEBS_z,
                  WB,
                  PI_interconnect_z,
                  pol_z,
+                 age,
                  gender_dummy, #0 = male, 1=female
                  ses_z)  %>% 
   filter(!is.na(gender_dummy)) %>% 
@@ -2352,28 +2638,163 @@ robustness_plot <-
 
 ```
 
-```{r full zero-order correlation wb, echo=FALSE}
+```{r full zero-order correlation, echo=FALSE}
 print(robustness_plot)
 ```
 
-This resulted in including the following covariates:
 
--   Primal Beliefs - The world is interconnect (r = .41\*\* with
-    Well-being & r = .29\*\* to .51\*\* with DEEP CTN dimensions)
 
-A multiple linear regression model where dimensions of the DEEP CTN
-scale and existing CTN measures (CNS and EIDR) and the covariate (primal
-belief interconnectedness) were entered simultaneously to predict
-Well0being is reported in the table below.
+### Hypothesis 5.A - PEB 
+```{r Robustness Existing measures, echo=FALSE, include=FALSE, warning=FALSE}
 
-By adding the covariates...
+robust_model_peb <-
+      lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
+             CNS_z + EIDR_z + 
+            PI_interconnect_z, data = val_data)
 
+
+robust_anova_peb <-
+     Anova(robust_model_peb, type = "II")
+
+
+robust_r2 <-
+     calc.relimp(robust_model_peb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
+robust_pvalues <- tibble(round(robust_anova_peb$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z", "PI_connect_Z"))
+
+robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
+
+
+
+#create table of R and P values
+R2_incremental_peb_robust <- 
+     bind_cols(vars, robust_rvalues, robust_pvalues[-8,])%>% 
+     rename("variable" = `c(...)`, "Partial R2" = `round(robust_r2$lmg, 2)`, 
+            "p" = `round.robust_anova_peb..Pr..F....2.`)
+     
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+model_robustPEB_output <- broom::tidy(robust_model_peb)
+model_robustPEB_conf <- broom::tidy(robust_model_peb, conf.int = T)
+
+model_robustPEB <- forestmangr::round_df(model_robustPEB_conf, digits = 2)
+model_robustPEB <- model_robustPEB[-1,] #remove the intercept 
+
+coef_robustPEB <- 
+     coef(robust_model_peb)
+ConfidenceInterval_robustPEB <- 
+     confint(robust_model_peb, level = 0.95)
+coef_confint_robustPEB <- 
+     cbind(coef_robustPEB, ConfidenceInterval_robustPEB)%>% 
+     as.data.frame()
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     mutate(variable=rownames(coef_confint_robustPEB))
+
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     rename(c("std Beta" = "coef_robustPEB",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB[, col_order] #reorder variables in the data frame
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+  mutate_if(is.numeric, round, digits = 2) # round numeric into two significant digits 
+
+plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 4,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 1,
+                position = "dodge", 
+                color="turquoise4") +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("Variables") + ylab("Beta coeffecients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14)) 
+
+```
+
+```{r robust anova table, echo=FALSE, message=FALSE, warning=FALSE}
+#Compare models
+
+model_names <- c("Incremental", "Robust")
+
+comparison <-
+anova(model_peb, robust_model_peb)
+
+robust_peb_f <- round(comparison$F[2],3)
+robust_peb_p <- round(comparison$`Pr(>F)`[2],3)
+robust_peb_df <- comparison$Df[2]
+
+```
+
+We conducted a multiple linear regression model where dimensions of the DEEP CTN scale, existing CTN measures (CNS and EIDR), and interconnected primal beliefs were entered simultaneously to predict PEB. 
+
+By including the covariate interconnected primal beliefs only the Emotional factor of the DEEP CTN Scale remained a significant predictor of PEB. 
+
+However, adding the additional covariate (interconnected primal beliefs) did not improve the fit of the model above the variables in the incremental validity model (F = `r robust_peb_f`(`r robust_peb_df`), p = `r robust_peb_p`).
+
+**Table 12. Linear regression predicting PEB from DEEP CTN factors, CNS, EID-R, and Interconnected Primal Beliefs**
+```{r robust PEB output, echo=FALSE, warning=FALSE}
+
+
+bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>% 
+     relocate(c(`Partial R2`, p), .after = variable) %>% 
+     flextable() %>% 
+     bold(~p < .025, 1:3) %>% 
+     bold(~lower_bound > 0, c(1,4,5,6))%>% 
+     footnote(i = 1, j = 4,
+              value = as_paragraph("< 0.29 = small; 
+                                   0.30-0.49 = medium;
+                                   > 0.50 = large"),
+              ref_symbols = "*",
+              part = "header") %>% 
+  autofit()
+
+
+
+
+
+
+
+```
+
+Total variance explained by the model = `r paste(robust_tot_var)`
+
+To account for the familywise error rate of multiple tests, we used a corrected alpha of 0.025 as the critical p-value.
+
+**Figure 12. Effect sizes of DEEP CTN factors, CNS, EID-R, and Interconnected Primal Beliefs predicting PEB**
+```{r effectplotrobust, echo=FALSE, message=FALSE, warning=FALSE}
+plot_model_robustPEB
+```
+
+
+
+
+### Hypothesis 5.B - Well-being
 ```{r Robustness Existing measures WB, echo=FALSE, include=FALSE, warning=FALSE}
 
 robust_model_wb <-
       lm(WB ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
              CNS_z + EIDR_z + 
-             PI_interconnect_z, data = val_data)
+             age, data = val_data)
 
 
 robust_anova_wb <-
@@ -2387,7 +2808,7 @@ robust_r2 <-
 robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
 robust_pvalues <- tibble(round(robust_anova_wb$`Pr(>F)`,2),
                          .name_repair = "universal") #p values
-vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z", "PI_connect_Z"))
+vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "CTN_Z", "EIDR_Z", "age"))
 
 robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
 
@@ -2454,13 +2875,35 @@ plot_model_robustwB <- coef_confint_robustwB[-1,] %>%  #remove row number 1 (The
 
 ```
 
+```{r robust anova table WB, echo=FALSE, message=FALSE, warning=FALSE}
+#Compare models
+
+model_names <- c("Incremental", "Robust")
+
+comparison_wb <-
+anova(model_wb, robust_model_wb)
+
+robust_wb_f <- round(comparison_wb$F[2],3)
+robust_wb_p <- round(comparison_wb$`Pr(>F)`[2],3)
+robust_wb_df <- comparison_wb$Df[2]
+
+```
+
+We conducted a multiple linear regression model where dimensions of the DEEP CTN scale, existing CTN measures (CNS and EIDR), and age were entered simultaneously to predict well-being. 
+
+By including the covariate age both the Presence factor of the DEEP CTN Scale and the CNS remained significant predictors of well-being 
+
+Adding age as an additional covariate improved the fit of the model above the variables in the incremental validity model (F = `r robust_wb_f`(`r robust_wb_df`), p = `r robust_wb_p`).
+
+**Table 13. Linear regression predicting Well-being from DEEP CTN factors, CNS, EID-R, and Age**
+
 ```{r robust WB output, echo=FALSE, warning=FALSE}
 
 
 bind_cols(coef_confint_robustwB[-1,], R2_incremental_wb_robust[,-1]) %>% 
      relocate(c(`Partial R2`, p), .after = variable) %>% 
      flextable() %>% 
-     bold(~p < .05, 1:3) %>% 
+     bold(~p < .025, 1:3) %>% 
      bold(~lower_bound > 0, c(1,4,5,6))%>% 
      footnote(i = 1, j = 4,
               value = as_paragraph("< 0.29 = small; 
@@ -2474,22 +2917,15 @@ bind_cols(coef_confint_robustwB[-1,], R2_incremental_wb_robust[,-1]) %>%
 
 Total variance explained by the model = `r paste(robust_tot_var)`
 
+To account for the familywise error rate of multiple tests, we used a corrected alpha of 0.025 as the critical p-value.
+
+**Figure 13. Effect sizes of DEEP CTN factors, CNS, EID-R, and Age predicting Well-being**
 ```{r effectplotrobust WB, echo=FALSE, message=FALSE, warning=FALSE}
 plot_model_robustwB
 ```
 
-Adding primal beliefs (the world is interconnected) significantly
-improved the fit of the model
 
-```{r robust anova table WB, echo=FALSE, message=FALSE, warning=FALSE}
-#Compare models
 
-model_names <- c("Incremental", "Robust")
+# References
 
-comparison <-
-anova(model_wb, robust_model_wb)
 
-bind_cols(model_names, comparison) %>% 
-  flextable() %>% 
-  autofit()
-```
