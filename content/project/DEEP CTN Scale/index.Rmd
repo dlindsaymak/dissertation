@@ -255,10 +255,11 @@ and/or kurtosis value was greater than \|3\|, were considered non-normal
 (either strongly skewed or having peaked or flat kurtosis) would be
 removed from the analysis (Hair et al., 2017, p. 61).
 
-Five items showed high negative skew and two additional items showed
-high kurtosis and were removed from further analysis (see Table 1 for
+Three items showed high negative skew high kurtosis and were removed from further analysis (see Table 1 for
 details). These items were also found to be extremes in the pilot
 studies.
+
+Note: Two items had a kurtosis of 3.01 (Seeing a cleared forest is upsetting to me) and 3.02 (Every part of nature is sacred). These items were retained as they were extremely close to the cut-off and the Emotional scale was already reduced to 4 items.
 
 ```{r Skewness kurtosis, message=FALSE, warning=FALSE, include=FALSE}
 #detect skew items 
@@ -286,7 +287,7 @@ kurtosis <- as.data.frame(round(sort(kurtosis(items),
 kurtosis_items <- 
 kurtosis %>% 
   rename("kurtosis" = "round(sort(kurtosis(items), decreasing = T), 2)") %>% 
-  filter(kurtosis > 3 | kurtosis < -3) 
+  filter(kurtosis > 3.1 | kurtosis < -3.1) 
 
 kurtosis_table <-
   kurtosis_items %>% 
@@ -351,6 +352,9 @@ expected factor (CTN_EMO_2: "If one of my plants died, I would blame
 myself") and was removed from further analysis (see Table 3). No items
 had high correlations with other items in other factors.
 
+Note: decided to keep this item in as the emotional factor was already reduced to 4 items.
+
+
 **Table 3. Items from the Emotional factor with low inter-item
 correlations**
 
@@ -361,6 +365,7 @@ deep_items <-
   dplyr::select(CTN_spirit_1,
          CTN_spirit_2,
          CTN_spirit_3,
+         CTN_spirit_4,
          CTN_spirit_6,
          CTN_spirit_7,
          CTN_spirit_8,
@@ -383,7 +388,7 @@ deep_plot <-
   ggplot(aes(X1, X2, fill = R, label = label)) +
     geom_tile(color = "white") +
     scale_fill_viridis_c(begin = 1, end = 0) +
-    geom_text(color = ifelse(deep_d$R < 0.60, "black", "white"), size = 1) +
+    geom_text(color = ifelse(deep_d$R < 0.60, "black", "white")) +
     theme_bw() +
     coord_equal() +
      theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -415,7 +420,7 @@ exp_plot <-
   ggplot(aes(X1, X2, fill = R, label = label)) +
     geom_tile(color = "white") +
     scale_fill_viridis_c(begin = 1, end = 0) +
-    geom_text(color = ifelse(exp_d$R < 0.60, "black", "white"), size = 1) +
+    geom_text(color = ifelse(exp_d$R < 0.60, "black", "white")) +
     theme_bw() +
     coord_equal() +
      theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -423,7 +428,8 @@ exp_plot <-
 #Emotional
 emo_items <- 
   items %>% 
-  dplyr::select(CTN_emo_2,
+  dplyr::select(CTN_emo_1,
+                CTN_emo_2,
                 CTN_emo_3,
                 CTN_emo_4,
                 CTN_emo_6) %>% 
@@ -475,7 +481,7 @@ pres_plot <-
   ggplot(aes(X1, X2, fill = R, label = label)) +
     geom_tile(color = "white") +
     scale_fill_viridis_c(begin = 1, end = 0) +
-    geom_text(color = ifelse(pres_d$R < 0.60, "black", "white"), size = 1) +
+    geom_text(color = ifelse(pres_d$R < 0.60, "black", "white")) +
     theme_bw() +
     coord_equal() +
      theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -492,9 +498,9 @@ emo_d %>%
 ```
 
 ```{r Correlations Large, echo=FALSE}
-items <-
-  items %>% 
-  dplyr::select(-CTN_emo_2)
+#items <-
+#  items %>% 
+#  dplyr::select(-CTN_emo_2)
 
 high_cor <- 
 items %>% 
@@ -603,6 +609,7 @@ model_flat_4 <-  'deep =~
   CTN_spirit_1 + 
   CTN_spirit_2 +
   CTN_spirit_3 +
+  CTN_spirit_4 +
   CTN_spirit_6 +
   CTN_spirit_7 +
   CTN_spirit_8 +
@@ -619,6 +626,8 @@ experience =~
    CTN_exp_8
 
 emotion =~ 
+  CTN_emo_1 +
+  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6
@@ -683,6 +692,7 @@ Plot_4_flat <-
         nodeLabels = c("View nature as a mother", #Deep
                        "Humans and nature connected by same 'Energy'", 
                        "My connection is 'Spiritual'", 
+                       "Every part of nature is sacred",
                        "When I die, my body will return to the earth",
                        "'Shared breath' between myself and #plants", 
                        "All life is grounded on this planet", 
@@ -695,7 +705,9 @@ Plot_4_flat <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "Someone carving a tree makes me cringe",  #emotional
+                       "Seeing a cleared forest is upsetting to me",#emotional
+                       "If one of my plants died, I would blame myself",
+                       "Someone carving a tree makes me cringe",  
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -780,6 +792,7 @@ model_flat_4_MI <- 'deep =~
   CTN_spirit_1 + 
   CTN_spirit_2 +
   CTN_spirit_3 +
+  CTN_spirit_4 +
   CTN_spirit_6 +
   CTN_spirit_7 +
   CTN_spirit_8 +
@@ -796,6 +809,8 @@ experience =~
    CTN_exp_8
 
 emotion =~ 
+  CTN_emo_1 +
+  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6
@@ -858,6 +873,7 @@ Plot_4_flatMI <-
         nodeLabels = c("View nature as a mother", #Deep
                        "Humans and nature connected by same 'Energy'", 
                        "My connection is 'Spiritual'", 
+                       "Every part of nature is sacred",
                        "When I die, my body will return to the earth",
                        "'Shared breath' between myself and #plants", 
                        "All life is grounded on this planet", 
@@ -870,7 +886,9 @@ Plot_4_flatMI <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "Someone carving a tree makes me cringe",  #emotional
+                       "Seeing a cleared forest is upsetting to me",#emotional
+                       "If one of my plants died, I would blame myself",
+                       "Someone carving a tree makes me cringe",  
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -945,6 +963,7 @@ model_hier_4 <- 'deep =~
   CTN_spirit_1 + 
   CTN_spirit_2 +
   CTN_spirit_3 +
+  CTN_spirit_4 +
   CTN_spirit_6 +
   CTN_spirit_7 +
   CTN_spirit_8 +
@@ -959,6 +978,8 @@ experience =~
    CTN_exp_6 +
    CTN_exp_8
 emotion =~ 
+  CTN_emo_1 +
+  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6
@@ -1014,6 +1035,7 @@ Plot_heir4 <-
         nodeLabels = c("View nature as a mother", 
                        "Humans and nature connected by same 'Energy'", 
                        "My connection is 'Spiritual'", 
+                       "Every part of nature is sacred",
                        "When I die, my body will return to the earth",
                        "'Shared breath' between myself and #plants", 
                        "All life is grounded on this planet", 
@@ -1026,7 +1048,9 @@ Plot_heir4 <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "Someone carving a tree makes me cringe", #emotional
+                       "Seeing a cleared forest is upsetting to me",#emotional
+                       "If one of my plants died, I would blame myself",
+                       "Someone carving a tree makes me cringe", 
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -1117,6 +1141,7 @@ model_flat <-  'overall =~
   CTN_spirit_1 + 
   CTN_spirit_2 +
   CTN_spirit_3 +
+  CTN_spirit_4 +
   CTN_spirit_6 +
   CTN_spirit_7 +
   CTN_spirit_8 +
@@ -1131,6 +1156,8 @@ model_flat <-  'overall =~
    CTN_exp_6 +
    CTN_exp_8 +
 
+  CTN_emo_1 +
+  CTN_emo_2 +
   CTN_emo_3 +
   CTN_emo_4 +
   CTN_emo_6 +
@@ -1183,6 +1210,7 @@ Plot_1_flat <-
         nodeLabels = c("View nature as a mother", #Deep
                        "Humans and nature connected by same #'Energy'", 
                        "My connection is 'Spiritual'", 
+                       "Every part of nature is sacred",
                        "When I die, my body will return to the earth",
                        "'Shared breath' between myself and #plants", 
                        "All life is grounded on this planet", 
@@ -1195,7 +1223,9 @@ Plot_1_flat <-
                        "Walking through a forest makes me forget worries",
                        "I prefer outdoor sports",
                        "I hike or run in nearby nature", 
-                       "Someone carving a tree makes me cringe",#emotional
+                       "Seeing a cleared forest is upsetting to me",#emotional
+                       "If one of my plants died, I would blame myself",
+                       "Someone carving a tree makes me cringe",
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
                        "I take time to watch the clouds pass by", #prescence
@@ -1355,7 +1385,7 @@ reduced <-
                 CTN_spirit_3,
                 CTN_spirit_7,
                 CTN_spirit_1,
-                CTN_spirit_8,
+                CTN_spirit_4,
 
                 CTN_exp_4,
                 CTN_exp_1,
@@ -1366,6 +1396,8 @@ reduced <-
                 CTN_emo_3,
                 CTN_emo_4,
                 CTN_emo_6,
+                CTN_emo_1,
+                CTN_emo_2,
                 
                 CTN_mind_2,
                 CTN_mind_1,
@@ -1380,7 +1412,7 @@ reduced %>%
                 CTN_spirit_3,
                 CTN_spirit_7,
                 CTN_spirit_1,
-                CTN_spirit_8) %>% 
+                CTN_spirit_4) %>% 
 ltm::cronbach.alpha()
 
 exp_alpha <- 
@@ -1396,7 +1428,9 @@ emo_alpha <-
 reduced %>% 
   dplyr::select(CTN_emo_3,
                 CTN_emo_4,
-                CTN_emo_6) %>% 
+                CTN_emo_6,
+                CTN_emo_2,
+                CTN_emo_1) %>% 
 ltm::cronbach.alpha()
 
 presc_alpha <- 
@@ -1444,7 +1478,7 @@ reduced_hier_4 <-
   CTN_spirit_3 +
   CTN_spirit_7 +
   CTN_spirit_1 +
-  CTN_spirit_8
+  CTN_spirit_4
 experience =~ 
    CTN_exp_4 +
    CTN_exp_1 +
@@ -1454,7 +1488,9 @@ experience =~
 emotion =~ 
   CTN_emo_3 +
   CTN_emo_4 +
-  CTN_emo_6
+  CTN_emo_6 +
+  CTN_emo_1 +
+  CTN_emo_2 
 presence =~
   CTN_mind_2 +         
   CTN_mind_1 +
@@ -1503,7 +1539,7 @@ Plot_reduced <-
                        "My connection is 'Spiritual'",
                        "'Shared breath' between myself and plants", 
                        "View nature as a mother", 
-                       "All life is grounded on this planet", 
+                       "Every part of nature is sacred", 
                        "My favorite is in nature",#experience 
                        "I like to get outdoors when I can", 
                        "I engage in nature to find meaning & richness",
@@ -1512,6 +1548,8 @@ Plot_reduced <-
                        "Someone carving a tree makes me cringe",  #emotional
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
+                       "Seeing a cleared forest is upsetting",
+                       "If one of my plants died I would be upset",
                        "I deliberately watch the stars at night", #presence
                        "I take time to watch the clouds pass by",
                        "Watch sunrish and sunset",
@@ -1582,9 +1620,9 @@ revealing moderate relationships between all factors.
 val_data <-
   data %>% 
   dplyr::select(id, definition,
-         CTN_spirit_1, CTN_spirit_2, CTN_spirit_3, CTN_spirit_7,CTN_spirit_8,
+         CTN_spirit_1, CTN_spirit_2, CTN_spirit_3, CTN_spirit_7,CTN_spirit_4,
          CTN_exp_1, CTN_exp_2, CTN_exp_3, CTN_exp_4, CTN_exp_5,
-         CTN_emo_3, CTN_emo_4, CTN_emo_6,
+         CTN_emo_1, CTN_emo_2, CTN_emo_3, CTN_emo_4, CTN_emo_6,
          CTN_mind_1, CTN_mind_2, CTN_mind_4, CTN_mind_5, CTN_mind_6,
          
          EIDR_1, EIDR_2, EIDR_3, EIDR_4, EIDR_5, EIDR_6, EIDR_7, 
@@ -1624,9 +1662,9 @@ val_data <-
 
 fac_cor <-
   val_data %>% 
-  mutate(Deep = (CTN_spirit_1 + CTN_spirit_2 + CTN_spirit_3 + CTN_spirit_7 + CTN_spirit_8)/5,
+  mutate(Deep = (CTN_spirit_1 + CTN_spirit_2 + CTN_spirit_3 + CTN_spirit_7 + CTN_spirit_4)/5,
          Experience = (CTN_exp_1+ CTN_exp_2+ CTN_exp_3+ CTN_exp_4+ CTN_exp_5)/5,
-         Emotional = (CTN_emo_3+ CTN_emo_4+ CTN_emo_6)/3,
+         Emotional = (CTN_emo_1 + CTN_emo_2 + CTN_emo_3+ CTN_emo_4+ CTN_emo_6)/3,
          Presence = (CTN_mind_1+ CTN_mind_2+ CTN_mind_4+ CTN_mind_5+ CTN_mind_6)/5) %>%
     dplyr::select(Deep, Experience, Emotional, Presence) %>%
   as.matrix %>% 
@@ -1680,7 +1718,7 @@ scale <- matrix(c("I view nature as a mother who nurtures and cares for me", "De
     "Human beings and nature are connected by the same energy or Life-force", "Deep",
     "My connection to nature is something I would describe as *spiritual*", "Deep",
     "I think about the *shared breath* between myself and plants; I breathe in the oxygen released by plants, and plants use the carbon dioxide I exhale", "Deep",
-    "I often think about the fact that all life is grounded on this planet that is revolving around the sun","Deep",
+    "Every part of nature is sacred","Deep",
     
     
     "I like to get outdoors whenever I get the chance", "Experience",
@@ -1693,6 +1731,8 @@ scale <- matrix(c("I view nature as a mother who nurtures and cares for me", "De
     "Thinking of someone carving their initials into a tree makes me cringe","Emotional",
     "If there is an insect, such as a fly or a spider, in my home, I try to catch and release it rather than kill it", "Emotional",
     "I talk to the wild animals I encounter (e.g., birds, lizards, rabbits, squirrels)",  "Emotional",
+    "Seeing a cleared forest is upsetting to me", "Emotional",
+    "If one of my plants died, I would be upset", "Emotional",
     
     "I take time to watch the clouds pass by", "Presence",
     "I deliberately take time to watch stars at night", "Presence",
@@ -1801,11 +1841,11 @@ reverse_code(val_data, c("CNS_4", "CNS_14", "RPEBS_4", "RPEBS_6", "RPEBS_7", "RP
 #create scales & standardize
 val_data <-
   val_data %>% 
-  mutate(DeepCTN = (rowSums(dplyr::select(., CTN_spirit_1:CTN_spirit_8))),
+  mutate(DeepCTN = (rowSums(dplyr::select(., CTN_spirit_1:CTN_spirit_4))),
          DeepCTN_z = (DeepCTN - mean(DeepCTN))/sd(DeepCTN),
          ExpCTN = (rowSums(dplyr::select(., CTN_exp_1:CTN_exp_5))),
          ExpCTN_z = (ExpCTN - mean(ExpCTN))/sd(ExpCTN),
-         EmoCTN = (rowSums(dplyr::select(., CTN_emo_3:CTN_emo_6))),
+         EmoCTN = (rowSums(dplyr::select(., CTN_emo_1:CTN_emo_6))),
          EmoCTN_z = (EmoCTN - mean(EmoCTN))/sd(EmoCTN),
          PresCTN = (rowSums(dplyr::select(., CTN_mind_1:CTN_mind_6))),
          PresCTN_z = (PresCTN - mean(PresCTN))/sd(PresCTN),
@@ -2650,7 +2690,108 @@ print(robustness_plot)
 
 
 ### Hypothesis 5.A - PEB 
-```{r Robustness Existing measures, echo=FALSE, include=FALSE, warning=FALSE}
+```{r Robustness dimsonly, echo=FALSE, include=FALSE, warning=FALSE}
+
+robust_model_peb <-
+      lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
+            PI_interconnect_z, data = val_data)
+
+
+robust_anova_peb <-
+     Anova(robust_model_peb, type = "II")
+
+
+robust_r2 <-
+     calc.relimp(robust_model_peb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
+robust_pvalues <- tibble(round(robust_anova_peb$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "PI_connect_Z"))
+
+robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
+
+
+
+#create table of R and P values
+R2_incremental_peb_robust <- 
+     bind_cols(vars, robust_rvalues, robust_pvalues[-6,])%>% 
+     dplyr::rename("variable" = `c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "PI_connect_Z")`, 
+            "Partial R2" = `round.robust_anova_peb..Pr..F....2.`, 
+            "p" = `round.robust_anova_peb..Pr..F....2.`)
+     
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+model_robustPEB_output <- broom::tidy(robust_model_peb)
+model_robustPEB_conf <- broom::tidy(robust_model_peb, conf.int = T)
+
+model_robustPEB <- forestmangr::round_df(model_robustPEB_conf, digits = 2)
+model_robustPEB <- model_robustPEB[-1,] #remove the intercept 
+
+coef_robustPEB <- 
+     coef(robust_model_peb)
+ConfidenceInterval_robustPEB <- 
+     confint(robust_model_peb, level = 0.95)
+coef_confint_robustPEB <- 
+     cbind(coef_robustPEB, ConfidenceInterval_robustPEB)%>% 
+     as.data.frame()
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     mutate(variable=rownames(coef_confint_robustPEB))
+
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+     rename(c("std Beta" = "coef_robustPEB",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB[, col_order] #reorder variables in the data frame
+
+coef_confint_robustPEB <- 
+     coef_confint_robustPEB %>% 
+  mutate_if(is.numeric, round, digits = 2) # round numeric into two significant digits 
+
+plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 4,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 1,
+                position = "dodge", 
+                color="turquoise4") +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("Variables") + ylab("Beta coeffecients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14)) 
+
+```
+
+```{r robust anova table, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+#Compare models
+
+model_names <- c("Incremental", "Robust")
+
+comparison <-
+anova(model_peb, robust_model_peb)
+
+robust_peb_f <- round(comparison$F[2],3)
+robust_peb_p <- round(comparison$`Pr(>F)`[2],3)
+robust_peb_df <- comparison$Df[2]
+
+```
+
+
+```{r Robustness Existing measures, echo=TRUE, warning=FALSE}
 
 robust_model_peb <-
       lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
@@ -2736,28 +2877,14 @@ plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (T
 
 ```
 
-```{r robust anova table, echo=FALSE, message=FALSE, warning=FALSE}
-#Compare models
-
-model_names <- c("Incremental", "Robust")
-
-comparison <-
-anova(model_peb, robust_model_peb)
-
-robust_peb_f <- round(comparison$F[2],3)
-robust_peb_p <- round(comparison$`Pr(>F)`[2],3)
-robust_peb_df <- comparison$Df[2]
-
-```
 
 We conducted a multiple linear regression model where dimensions of the DEEP CTN scale, existing CTN measures (CNS and EIDR), and interconnected primal beliefs were entered simultaneously to predict PEB. 
 
 By including the covariate interconnected primal beliefs only the Emotional factor of the DEEP CTN Scale remained a significant predictor of PEB. 
 
-However, adding the additional covariate (interconnected primal beliefs) did not improve the fit of the model above the variables in the incremental validity model (F = `r robust_peb_f`(`r robust_peb_df`), p = `r robust_peb_p`).
 
 **Table 12. Linear regression predicting PEB from DEEP CTN factors, CNS, EID-R, and Interconnected Primal Beliefs**
-```{r robust PEB output, echo=FALSE, warning=FALSE}
+```{r robust PEB output, warning=FALSE, include=FALSE}
 
 
 bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>% 
@@ -2774,12 +2901,9 @@ bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>%
   autofit()
 
 
-
-
-
-
-
 ```
+
+
 
 Total variance explained by the model = `r paste(robust_tot_var)`
 
@@ -2792,9 +2916,8 @@ plot_model_robustPEB
 
 
 
-
 ### Hypothesis 5.B - Well-being
-```{r Robustness Existing measures WB, echo=FALSE, include=FALSE, warning=FALSE}
+```{r Robustness Existing measures WB, eval=FALSE, warning=FALSE, include=FALSE}
 
 robust_model_wb <-
       lm(WB ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
@@ -2880,6 +3003,93 @@ plot_model_robustwB <- coef_confint_robustwB[-1,] %>%  #remove row number 1 (The
 
 ```
 
+```{r Robustness dims onlys WB, echo=FALSE, include=FALSE, warning=FALSE}
+
+robust_model_wb <-
+      lm(WB ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
+             age, data = val_data)
+
+
+robust_anova_wb <-
+     Anova(robust_model_wb, type = "II")
+
+
+robust_r2 <-
+     calc.relimp(robust_model_wb, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+robust_rvalues <- tibble(round(robust_r2$lmg,2)) #partial R2 of all variables
+robust_pvalues <- tibble(round(robust_anova_wb$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+vars <- tibble(c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "age"))
+
+robust_tot_var<- round(robust_r2$R2, 2) #variance explained by model
+
+
+
+#create table of R and P values
+R2_incremental_wb_robust <- 
+     bind_cols(vars, robust_rvalues, robust_pvalues[-6,])%>% 
+     rename("variable" = `c("deep_ctn_z", "exp_ctn_z", "emo_ctn_z", "presc_ctn_z", "age")`, 
+            "Partial R2" = `round(robust_r2$lmg, 2)`, 
+            "p" = `round.robust_anova_wb..Pr..F....2.`)
+     
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+model_robustwB_output <- broom::tidy(robust_model_wb)
+model_robustwB_conf <- broom::tidy(robust_model_wb, conf.int = T)
+
+model_robustwB <- forestmangr::round_df(model_robustwB_conf, digits = 2)
+model_robustwB <- model_robustwB[-1,] #remove the intercept 
+
+coef_robustwB <- 
+     coef(robust_model_wb)
+ConfidenceInterval_robustwB <- 
+     confint(robust_model_wb, level = 0.95)
+coef_confint_robustwB <- 
+     cbind(coef_robustwB, ConfidenceInterval_robustwB)%>% 
+     as.data.frame()
+coef_confint_robustwB <- 
+     coef_confint_robustwB %>% 
+     mutate(variable=rownames(coef_confint_robustwB))
+
+
+coef_confint_robustwB <- 
+     coef_confint_robustwB %>% 
+     rename(c("std Beta" = "coef_robustwB",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_robustwB <- 
+     coef_confint_robustwB[, col_order] #reorder variables in the data frame
+
+coef_confint_robustwB <- 
+     coef_confint_robustwB %>% 
+  mutate_if(is.numeric, round, digits = 2)   # round numeric into two significant digits 
+
+
+plot_model_robustwB <- coef_confint_robustwB[-1,] %>%  #remove row number 1 (The intercept) 
+  ggplot(aes(x=reorder(variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 4,
+             position = "dodge", 
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 1,
+                position = "dodge", 
+                color="turquoise4") +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("Variables") + ylab("Beta coeffecients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14)) 
+
+```
+
 ```{r robust anova table WB, echo=FALSE, message=FALSE, warning=FALSE}
 #Compare models
 
@@ -2909,7 +3119,7 @@ bind_cols(coef_confint_robustwB[-1,], R2_incremental_wb_robust[,-1]) %>%
      relocate(c(`Partial R2`, p), .after = variable) %>% 
      flextable() %>% 
      bold(~p < .025, 1:3) %>% 
-     bold(~lower_bound > 0, c(1,4,5,6))%>% 
+     bold(i = c(2,4,5) , c(1,4,5,6))%>% 
      footnote(i = 1, j = 4,
               value = as_paragraph("< 0.29 = small; 
                                    0.30-0.49 = medium;
