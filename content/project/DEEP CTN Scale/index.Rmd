@@ -1749,9 +1749,9 @@ alpha_deep <- ltm::cronbach.alpha(reduced[,1:5])
 alpha_deep <- round(alpha_deep$alpha,2)
 alpha_exp <- ltm::cronbach.alpha(reduced[,6:10])
 alpha_exp <- round(alpha_exp$alpha,2)
-alpha_emo <- ltm::cronbach.alpha(reduced[,11:13])
+alpha_emo <- ltm::cronbach.alpha(reduced[,11:15])
 alpha_emo <- round(alpha_emo$alpha,2)
-alpha_pres <- ltm::cronbach.alpha(reduced[,14:18])
+alpha_pres <- ltm::cronbach.alpha(reduced[,16:20])
 alpha_pres <- round(alpha_pres$alpha,2)
 
 scale <- 
@@ -1813,7 +1813,7 @@ summary_table <-
   autofit() %>%
   merge_v(j = 2:3) %>% 
 #    theme_zebra() %>% 
-  hline(i = c(5, 10, 13))
+  hline(i = c(5, 10, 15,20))
 
 
 
@@ -2878,9 +2878,9 @@ plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (T
 ```
 
 
-We conducted a multiple linear regression model where dimensions of the DEEP CTN scale, existing CTN measures (CNS and EIDR), and interconnected primal beliefs were entered simultaneously to predict PEB. 
+We conducted a multiple linear regression model where dimensions of the DEEP CTN scale and interconnected primal beliefs were entered simultaneously to predict PEB. 
 
-By including the covariate interconnected primal beliefs only the Emotional factor of the DEEP CTN Scale remained a significant predictor of PEB. 
+
 
 
 **Table 12. Linear regression predicting PEB from DEEP CTN factors, CNS, EID-R, and Interconnected Primal Beliefs**
@@ -3104,11 +3104,9 @@ robust_wb_df <- comparison_wb$Df[2]
 
 ```
 
-We conducted a multiple linear regression model where dimensions of the DEEP CTN scale, existing CTN measures (CNS and EIDR), and age were entered simultaneously to predict well-being. 
+We conducted a multiple linear regression model where dimensions of the DEEP CTN scale and age were entered simultaneously to predict well-being. 
 
-By including the covariate age both the Presence factor of the DEEP CTN Scale and the CNS remained significant predictors of well-being 
 
-Adding age as an additional covariate improved the fit of the model above the variables in the incremental validity model (F = `r robust_wb_f`(`r robust_wb_df`), p = `r robust_wb_p`).
 
 **Table 13. Linear regression predicting Well-being from DEEP CTN factors, CNS, EID-R, and Age**
 
