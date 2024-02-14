@@ -2690,7 +2690,7 @@ print(robustness_plot)
 
 
 ### Hypothesis 5.A - PEB 
-```{r Robustness dimsonly, echo=FALSE, include=FALSE, warning=FALSE}
+```{r Robustness dimsonly, echo=FALSE, warning=FALSE}
 
 robust_model_peb <-
       lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
