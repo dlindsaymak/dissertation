@@ -2108,7 +2108,7 @@ intercorrelated with the factors of the scale, it was left out and only the four
 
 The results of the linear regression to predict PEB support our prediction. When entered simultaneously into a regression model, only the emotional and presence factors of the DEEP CTN Scale as well as the CNS were significant predicts of PEB. The Emotional factor was the strongest predictor, followed by the CNS, and finally the Presence factor.
 
-```{r linear regression with only dimensions predicting PEB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r linear regression with only dimensions predicting PEB, message=FALSE, warning=FALSE, include=FALSE}
 
 dimensions_peb <-
       lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z, 
@@ -2200,8 +2200,9 @@ plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The
 
 ```
 
-**Table 10. Linear regression predicting PEB from DEEP CTN factors, CNS, and EID-R**
-```{r dimonly output, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+**Table 10A. Linear regression predicting PEB from ONLY DEEP CTN factors**
+
+```{r dimonly output, echo=FALSE, message=FALSE, warning=FALSE}
 
 bind_cols(coef_confint_dim_only[-1,], R2_peb_table[,-1]) %>% 
      relocate(c(`Partial R2`, p), .after = Variable) %>% 
@@ -2301,8 +2302,8 @@ plot_model_peb <- coef_confint_peb[-1,] %>%  #remove row number 1 (The intercept
    theme(axis.title = element_text(size = 17)) + 
   theme(axis.text = element_text(size = 14)) 
 ```
-
-```{r model PEB plots, echo=FALSE, warning=FALSE}
+**Table 10. Linear regression predicting PEB from DEEP CTN factors, CNS, and EID-R**
+```{r model PEB table, echo=FALSE, warning=FALSE}
 
 bind_cols(coef_confint_peb[-1,], R2_incremental_table[,-1]) %>% 
      relocate(c(`Partial R2`, p), .after = variable) %>% 
@@ -2329,7 +2330,7 @@ plot_model_peb
 ```
 
 ### Hypothesis 4.B - Well-being
-```{r linear regression with only dimensions predicting WB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r linear regression with only dimensions predicting WB, message=FALSE, warning=FALSE, include=FALSE}
 
 #WB is already standardized as a z score
 dimensions_wb <-
@@ -2422,6 +2423,14 @@ plot_model_dim_only <- coef_confint_dim_only[-1,] %>%  #remove row number 1 (The
 
 ```
 
+
+We also explored if the DEEP CTN scale and its facets would perform above and beyond existing CTN scales (i.e., CNS and EID-R) when predicting
+Well-being. We predicted that one or more of the factors of the DEEP CTN scale would be the strongest predictor of psychological well-being compared to the CNS and the EID-R. Similar to the regression to predict PEB, only the factors of CTN were entered in the model due to the high intercorrelation of the overall CTN measure with its own factors.
+
+The results of the linear regression to predict well-being are counter to our prediction. When entered simultaneously into a regression model, only the presence factor of the DEEP CTN Scale and the EID-R were significant predicts of well-being. The EID-R was the strongest predictor, accounting for almost twice the varince in well-being than the presence factor of DEEP CTN.
+
+**Table 11A. Linear regression predicting Well-being from ONLY DEEP CTN factors**
+
 ```{r dimonly output WB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 
@@ -2443,10 +2452,6 @@ bind_cols(coef_confint_dim_only[-1,], R2_wb_table[,-1]) %>%
 
 ```
 
-We also explored if the DEEP CTN scale and its facets would perform above and beyond existing CTN scales (i.e., CNS and EID-R) when predicting
-Well-being. We predicted that one or more of the factors of the DEEP CTN scale would be the strongest predictor of psychological well-being compared to the CNS and the EID-R. Similar to the regression to predict PEB, only the factors of CTN were entered in the model due to the high intercorrelation of the overall CTN measure with its own factors.
-
-The results of the linear regression to predict well-being are counter to our prediction. When entered simultaneously into a regression model, only the presence factor of the DEEP CTN Scale and the EID-R were significant predicts of well-being. The EID-R was the strongest predictor, accounting for almost twice the varince in well-being than the presence factor of DEEP CTN.
 
 ```{r predictive validity WB,include=FALSE, warning=FALSE}
 
@@ -2563,7 +2568,7 @@ plot_model_wb
 ## Hypothesis 5 - Robustness
 
 We also tested the robustness of our new DEEP CTN scale, by testing if
-the DEEP CTN scale and its factors are significant predictors of both PEB & well-being after controlling for known covariates of these outcomes (e.g., interconnected worldviews, political ideology, gender, age, and socio-economic status (SES)). 
+the DEEP CTN scale and its factors are significant predictors of both PEB & well-being after controlling for known covariates of these outcomes (e.g., interconnected world-views, political ideology, gender, age, and socio-economic status (SES)). 
 
 We fist inspected a zero order correlation to identify which covariates should be included. The decision to include variables is based on whether they are:
 
