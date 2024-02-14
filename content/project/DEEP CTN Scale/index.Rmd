@@ -2431,7 +2431,7 @@ The results of the linear regression to predict well-being are counter to our pr
 
 **Table 11A. Linear regression predicting Well-being from ONLY DEEP CTN factors**
 
-```{r dimonly output WB, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r dimonly output WB, echo=FALSE, message=FALSE, warning=FALSE}
 
 
 bind_cols(coef_confint_dim_only[-1,], R2_wb_table[,-1]) %>% 
