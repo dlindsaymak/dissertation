@@ -2776,7 +2776,7 @@ plot_model_robustPEB <- coef_confint_robustPEB[-1,] %>%  #remove row number 1 (T
 
 ```
 
-```{r robust anova table, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r robust anova table, echo=FALSE, message=FALSE, warning=FALSE}
 #Compare models
 
 model_names <- c("Incremental", "Robust")
@@ -2791,7 +2791,7 @@ robust_peb_df <- comparison$Df[2]
 ```
 
 
-```{r Robustness Existing measures, echo=TRUE, warning=FALSE}
+```{r Robustness Existing measures, eval=FALSE, warning=FALSE, include=FALSE}
 
 robust_model_peb <-
       lm(RPEBS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z + 
@@ -2888,7 +2888,7 @@ We conducted a multiple linear regression model where dimensions of the DEEP CTN
 
 
 bind_cols(coef_confint_robustPEB[-1,], R2_incremental_peb_robust[,-1]) %>% 
-     relocate(c(`Partial R2`, p), .after = variable) %>% 
+     relocate(c(`round(robust_r2$lmg, 2)`, p), .after = variable) %>% 
      flextable() %>% 
      bold(~p < .025, 1:3) %>% 
      bold(~lower_bound > 0, c(1,4,5,6))%>% 
