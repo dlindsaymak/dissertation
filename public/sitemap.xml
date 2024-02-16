@@ -2,56 +2,68 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://debsdissertation.netlify.app/publication-type/article/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
     <loc>https://debsdissertation.netlify.app/tag/connection-to-nature/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/tag/deep-ctn-scale/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/publication/conference-paper/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/publication-type/paper-conference/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/tag/pro-environmental-behavior/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/publication_types/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/publication/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/tags/</loc>
-    <lastmod>2024-02-06T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/project/deep-ctn-scale/</loc>
-    <lastmod>2024-02-02T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/tag/pro-environmental-behavior/</loc>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/project/</loc>
-    <lastmod>2024-02-02T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/tags/</loc>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/tag/well-being/</loc>
-    <lastmod>2024-02-02T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/categories/</loc>
-    <lastmod>2024-01-26T00:00:00+00:00</lastmod>
+    <lastmod>2024-02-13T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/post/</loc>
+    <lastmod>2024-02-13T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/post/efa_nov22/</loc>
+    <lastmod>2024-02-13T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/category/efa/</loc>
+    <lastmod>2024-02-13T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/publication-type/article/</loc>
+    <lastmod>2024-02-09T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/publication/conference-paper/</loc>
+    <lastmod>2024-02-09T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/publication-type/paper-conference/</loc>
+    <lastmod>2024-02-09T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/publication_types/</loc>
+    <lastmod>2024-02-09T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+  </url><url>
+    <loc>https://debsdissertation.netlify.app/publication/</loc>
+    <lastmod>2024-02-09T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/category/cfa/</loc>
@@ -59,10 +71,6 @@
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/post/cfa_spr23/</loc>
-    <lastmod>2024-01-26T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/post/efa_nov22/</loc>
     <lastmod>2024-01-26T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
@@ -74,19 +82,11 @@
     <lastmod>2024-01-26T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
-    <loc>https://debsdissertation.netlify.app/category/efa/</loc>
-    <lastmod>2024-01-26T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
     <loc>https://debsdissertation.netlify.app/post/peb_validity_spr23/</loc>
     <lastmod>2024-01-26T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
     <loc>https://debsdissertation.netlify.app/post/peb_validity_sp23_reduced/</loc>
-    <lastmod>2024-01-26T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-  </url><url>
-    <loc>https://debsdissertation.netlify.app/post/</loc>
     <lastmod>2024-01-26T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
   </url><url>
