@@ -5,7 +5,7 @@ theme: "theme-academic-cv"
 # This file is formatted using YAML syntax - learn more at https://learnxinyminutes.com/docs/yaml/
 
 title: "Deb Lindsay Research" # Website name
-baseURL: 'https://debsdissertation.netlify.app/' # Website URL
+baseURL: 'https://debralindsay.com' # Website URL
 
 ############################
 ## LANGUAGE
