@@ -119,7 +119,7 @@ Data collected on 29 Jan 2024
 
 ```{r demographics, echo=FALSE, include=FALSE}
 #dummycode gender
-#man = 0; woman = 1; other = NA (will remove these from anlaysis as there isn't enough for sufficient power)
+#man = 0; woman = 1; other = NA (will remove these from analysis as there isn't enough for sufficient power)
 data <-
   data %>% 
   mutate(age = as.numeric(age),
@@ -248,8 +248,8 @@ deepscaleitems <-
 Before conducting the CFA we tested the assumptions of CFA models to
 show multivariate normality via acceptable Mardia’s skewness and
 kurtosis values. We used the general guidelines that the closer to zero
-both skewedness and kurtosis values, the closer to a normal
-distribution. Any item whose skewedness value was greater than \|1\|
+both skewness and kurtosis values, the closer to a normal
+distribution. Any item whose skewness value was greater than \|1\|
 and/or kurtosis value was greater than \|3\|, were considered non-normal
 (either strongly skewed or having peaked or flat kurtosis) would be
 removed from the analysis (Hair et al., 2017, p. 61).
@@ -313,7 +313,7 @@ extreme_data <-
   mutate(skew = NA, kurtosis = NA) %>% 
   dplyr::select(Code, Items, skew, kurtosis, Data)
 
-#merging data and extreme item kurtosis and skewedness scores
+#merging data and extreme item kurtosis and skewness scores
 extremetable <- 
   extremetable %>% 
   arrange(skew) %>% 
@@ -701,7 +701,7 @@ Plot_4_flat <-
                        "Someone carving a tree makes me cringe",  
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
+                       "I take time to watch the clouds pass by", #presence
                        "I deliberately watch the Stars at night", 
                        "I take time to watch the sunrise & sunset", 
                        "I consciously listen to birds", 
@@ -880,7 +880,7 @@ Plot_4_flatMI <-
                        "Someone carving a tree makes me cringe",  
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
+                       "I take time to watch the clouds pass by", #presence
                        "I deliberately watch the Stars at night", 
                        "I take time to watch the sunrise & sunset", 
                        "I consciously listen to birds", 
@@ -1043,7 +1043,7 @@ Plot_heir4 <-
                        "Someone carving a tree makes me cringe", 
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
+                       "I take time to watch the clouds pass by", #presence
                        "I deliberately watch the Stars at night", 
                        "I take time to watch the sunrise & sunset", 
                        "I consciously listen to birds", 
@@ -1216,7 +1216,7 @@ Plot_1_flat <-
                        "Someone carving a tree makes me cringe",
                        "I catch and release insects in my home",
                        "I talk to wild animals I encounter",
-                       "I take time to watch the clouds pass by", #prescence
+                       "I take time to watch the clouds pass by", #presence
                        "I deliberately watch the Stars at night", 
                        "I take time to watch the sunrise & sunset", 
                        "I consciously listen to birds", 
@@ -1613,7 +1613,7 @@ We also expected weak-to-moderate zero-order correlations between the
 four Deep CTN factors as they are predicted to be associated via one CTN
 construct (as would be supported by the hierarchical factor mentioned
 above). This was tested using a Zero-Order Correlation between the four
-factors. Figure 6. shows the intercorrelations between the factors
+factors. Figure 6. shows the inter-correlations between the factors
 revealing moderate relationships between all factors.
 
 ```{r creating the scale, echo=FALSE}
@@ -1748,7 +1748,7 @@ scale <- matrix(c("I view nature as a mother who nurtures and cares for me", "De
   as.data.frame() 
 colnames(scale) <- c("Item", "Scale")
 
-#Cronbach's Alpha for each subscale
+#Cronbach's Alpha for each sub-scale
 alpha_deep <- ltm::cronbach.alpha(reduced[,1:5])
 alpha_deep <- round(alpha_deep$alpha,2)
 alpha_exp <- ltm::cronbach.alpha(reduced[,6:10])
@@ -1993,7 +1993,7 @@ CNS, and the EID-R found support for hypothesis 2A and partial
 support for hypothesis 2B tested (see Table).
 
 -   Hypothesis 2A is supported as the Deep CTN scale factor correlated
-    strongly with the CNS, while the other three facotrs only correlated moderately.
+    strongly with the CNS, while the other three factors only correlated moderately.
 
 -   Hypothesis 2B is partially supported. While the experiential factor
     did correlate strongly with the EID-R,t he emotional factor only correlated moderately. Additionally, the deep and presence facets also correlated moderately.
@@ -2273,7 +2273,7 @@ Nature connectedness has also been shown to relate to various measures
 of psychological well-being (Capaldi et al., 2014; Pritchard et al.,
 2020). To measure well-being we used a composite measure from three
 established measures of well-being: 1) the Ryff Well-being Scale (Ryff &
-Keyes, 1995); 2) the positive affect subscale of the PANAS (Watson et
+Keyes, 1995); 2) the positive affect sub-scale of the PANAS (Watson et
 al., 1988); and 3) the Subjective Vitality Scale (Ryan & Frederick,
 1997). The Cronbach’s Alpha for this composite measure is
 `r round(wb_alpha$alpha,2)`.
@@ -2642,10 +2642,6 @@ full_join(peb_predict_table, incremental_peb_table, by = "Variable", suffix = c(
 
 ```
 
-To account for the familywise error rate of multiple tests, we used a
-corrected alpha of 0.025 as the critical p-value.
-
-
 ### Hypothesis 4.B - Well-being
 
 
@@ -2655,7 +2651,7 @@ predicting Well-being. We predicted that one or more of the factors of
 the DEEP CTN scale would be the strongest predictor of psychological
 well-being compared to the CNS and the EID-R. Similar to the regression
 to predict PEB, only the factors of CTN were entered in the model due to
-the high intercorrelation of the overall CTN measure with its own
+the high inter-correlation of the overall CTN measure with its own
 factors.
 
 The results of the linear regression to predict well-being show that emotional and presence remain significant predictors at a correct alpha, however the deep CTN factor is no longer significant (see Table 7). 
@@ -2796,12 +2792,6 @@ full_join(wb_regression_table, incremental_wb, by = "Variable", suffix = c("_1",
 
 
 ```
-
-
-To account for the familywise error rate of multiple tests, we used a
-corrected alpha of 0.025 as the critical p-value.
-
-
 
 ## Hypothesis 5 - Robustness
 
@@ -3135,7 +3125,7 @@ While interconnected worldviews explained a significant amount of unique varianc
 
 **Table 9. Linear regression predicting PEB from DEEP CTN factors, Worldviews, and Age**
 
-```{r robust PEB output, warning=FALSE, include=FALSE}
+```{r robust PEB output, echo=FALSE, warning=FALSE}
 
 full_join(peb_predict_table, peb_robust_table, by = "Variable", suffix = c("_1", "_2")) %>% 
   flextable() %>% 
@@ -3376,7 +3366,7 @@ well-being.
 
 While interconnected worldviews and political ideology explained a significant amount of unique variance, only the Presence factor remained significant at a correct alpha to account for family-wise error (see Table 10). Including the covariates improved the fit of the model (F = `r robust_wb_f`(`r robust_wb_df`), p = `r robust_wb_p`).
 
-**Table 10. Linear regression predicting Well-being from DEEP CTN factors, Worldviews, Poltics, and Age**
+**Table 10. Linear regression predicting Well-being from DEEP CTN factors, Worldviews, Politics, and Age**
 ```{r robust WB output, echo=FALSE, warning=FALSE}
 
 full_join(wb_regression_table, wb_robust_table, by = "Variable", suffix = c("_1", "_2")) %>% 
