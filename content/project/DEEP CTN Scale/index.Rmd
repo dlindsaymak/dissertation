@@ -481,12 +481,12 @@ pres_plot <-
 #set up so these plots are in a grid
 gridExtra::grid.arrange(deep_plot, exp_plot, emo_plot, pres_plot, ncol = 2)
 
-#emo_d %>% 
-#  dplyr::select(X1, X2, R, P) %>%
-#  filter(R < .30) %>% 
-#  flextable() %>% 
-#  colformat_double(j = 3:4, digits = 2) %>%
-#  autofit()
+emo_d %>% 
+  dplyr::select(X1, X2, R, P) %>%
+    filter(R < .30) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:4, digits = 2) %>%
+  autofit()
 ```
 
 ```{r Correlations Large, echo=FALSE}
@@ -1295,6 +1295,79 @@ rownames(Fit_table) <- c("1-Factor",
 ```
 
 
+**Table 3. Comparative Fit indices for each model**
+
+```{r Fit table, echo=FALSE}
+
+
+Fit_table <-
+Fit_table %>% 
+  round(2) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  dplyr::mutate(df = paste(`Chi-Sq`, " (", df, ")"),
+         RMSEA = paste(RMSEA, " (", `RMSEA CI Lower`, " - ", `RMSEA CI Upper`, ")")) %>% 
+  dplyr::select(rowname, df, RMSEA, RMSR, TLI, CFI, AIC) 
+
+colnames(Fit_table) <- c("Model", 
+                         "\u03c7\u00B2 (df)",
+                         "RMSEA (95% CI)",
+                         "RMSR",
+                         "TLI", "CFI", "AIC")
+Fit_table %>% 
+  as_tibble() %>% 
+  flextable() %>% 
+  bold(i = 2:3,
+       part = "body") %>% 
+  autofit() %>% 
+  flextable::footnote(i = 1, j = 2:7, part = "header",
+              value = flextable::as_paragraph(
+                c("Chi-Square: Closer to 0 indicate better fit",
+                  "Root mean square error: 0.01 = Excellent; 0.05 = Good; 0.08 = Mediocre",
+                  "Standardized root mean square residual: Closer to 0 indicate better fit",
+                "Tucker Lewis Index: Closer to 1 indicates better fit",
+                "Comparative fit index: Closer to 1 indicates better fit",
+                "Akaike’s Information Criterion: The lower the AIC, the more predictive")),
+              ref_symbols = c("a", "b","c", "d", "e", "f"))
+     
+```
+
+
+```{r Model Comparisons, include=FALSE}
+test_all<-
+  lavaan::anova(fit_model_flat,
+      fit_model_flat_4,
+      fit_model_hier_4)
+
+x2_1 <- round(test_all$Chisq[2],3)
+df_1 <- test_all$Df[2]
+p_1 <- papaja::print_p(round(test_all$`Pr(>Chisq)`[2],3))
+  
+x2_2 <- round(test_all$Chisq[3],3)
+df_2 <- test_all$Df[3]
+p_2<- papaja::print_p(round(test_all$`Pr(>Chisq)`[3],3))
+
+
+
+```
+
+An Analysis of Variance comparing the model fit of the four factor
+structures showed that there was 
+1. no significant difference between the
+two multi-dimensional models (Chi-sq= `r x2_1`(`r df_1`), p = `r p_1`).
+
+2. the multi-dimensional models had significantly improved fit
+compared to the unidimensional model (Chi-sq = `r x2_2`(`r df_2`), p =
+`r p_2`).
+
+
+
+
+
+
+
+
+
 ## Shortened DEEP CTN Scale
 
 In order to produce a scale that is not only psychometrically sound, but
@@ -1517,7 +1590,7 @@ colnames(fit_red) <- c("\u03c7\u00B2 (df)",
                     "AIC")
 fit_red <-
 fit_red %>% 
-  mutate(Model = "Reduced") %>% 
+  mutate(Model = "Reduced 4-factor") %>% 
   dplyr::select(Model, everything())
 
 
@@ -1531,35 +1604,262 @@ plot(Plot_reduced)
 
 ```
 
-**Table 3. Comparative Fit indices for each model**
+```{r shortened four fac, echo=FALSE}
 
-```{r Fit table, echo=FALSE}
-
-Fit_table <-
-Fit_table %>% 
-  round(2) %>% 
-  as.data.frame() %>% 
-  rownames_to_column() %>% 
-  dplyr::mutate(df = paste(`Chi-Sq`, " (", df, ")"),
-         RMSEA = paste(RMSEA, " (", `RMSEA CI Lower`, " - ", `RMSEA CI Upper`, ")")) %>% 
-  dplyr::select(rowname, df, RMSEA, RMSR, TLI, CFI, AIC) 
-
-colnames(Fit_table) <- c("Model", 
-                         "\u03c7\u00B2 (df)",
-                         "RMSEA (95% CI)",
-                         "RMSR",
-                         "TLI", "CFI", "AIC") 
+reduced_4 <-
+'deep =~ 
+  CTN_spirit_2 +
+  CTN_spirit_3 +
+  CTN_spirit_7 +
+  CTN_spirit_1 +
+  CTN_spirit_4
+experience =~ 
+   CTN_exp_4 +
+   CTN_exp_1 +
+   CTN_exp_3 +
+   CTN_exp_2 +
+   CTN_exp_5
+emotion =~ 
+  CTN_emo_3 +
+  CTN_emo_4 +
+  CTN_emo_6 +
+  CTN_emo_1 +
+  CTN_emo_2 
+presence =~
+  CTN_mind_2 +         
+  CTN_mind_1 +
+  CTN_mind_3 +
+  CTN_mind_5 +
+  CTN_mind_4
   
-Fit_table <- 
-  Fit_table %>% 
+  deep ~~ experience
+deep ~~ emotion
+deep ~~ presence
+experience ~~ emotion
+experience ~~ presence
+emotion ~~ presence
+'
+
+fit_reduced_4 <- cfa(reduced_4, data=reduced,
+                        std.lv=F, 
+                        estimator = "MLR",
+                        orthogonal = F) 
+
+#Standardized Beta here are the factor loadings
+estimates_red_4 <-
+  parameterEstimates(fit_reduced_4, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
+Plot_reduced_4 <-
+     semPaths(fit_reduced_4, 
+         whatLabels = "std", 
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("Humans and nature connected by same 'Energy'", #Deep
+                       "My connection is 'Spiritual'",
+                       "'Shared breath' between myself and plants", 
+                       "View nature as a mother", 
+                       "Every part of nature is sacred", 
+                       "My favorite is in nature",#experience 
+                       "I like to get outdoors when I can", 
+                       "I engage in nature to find meaning & richness",
+                       "I feel uneasy if away from nature for too long",
+                       "Walking through a forest makes me forget worries",
+                       "Someone carving a tree makes me cringe",  #emotional
+                       "I catch and release insects in my home",
+                       "I talk to wild animals I encounter",
+                       "Seeing a cleared forest is upsetting",
+                       "If one of my plants died I would be upset",
+                       "I deliberately watch the stars at night", #presence
+                       "I take time to watch the clouds pass by",
+                       "Watch sunrish and sunset",
+                       "I consciously listen to birds",
+                       "I take time to consciously smell flowers",
+                       "Deep", 
+                       "Experience", 
+                       "Emotion", 
+                       "Presence")
+        )
+
+Fit_table_red4 <- matrix(fitMeasures(fit_reduced_4, c("df.scaled", "chisq.scaled", "rmsea.robust", "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", "srmr", "tli.robust", "cfi.robust", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+chi_dfr4 <- paste0(round(Fit_table_red4[2],2), " (",
+                 Fit_table_red4[1],")")
+rmsea_cir4 <- paste0(round(Fit_table_red4[3],2), " (", 
+                  round(Fit_table_red4[4],2), " - ", 
+                  round(Fit_table_red4[5],2), ")")
+srmrr4 <- round(Fit_table_red4[6],2)
+tlir4 <- round(Fit_table_red4[7],2)
+cfir4 <- round(Fit_table_red4[8],2)
+aicr4 <- round(Fit_table_red4[9],2)
+
+fit_red4 <- tibble(chi_dfr4, rmsea_cir4, srmrr4, tlir4, cfir4, aicr4)
+colnames(fit_red4) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI",
+                    "CFI",
+                    "AIC")
+fit_red4 <-
+fit_red4 %>% 
+  mutate(Model = "Reduced 4-factor hierachical") %>% 
+  dplyr::select(Model, everything())
+```
+
+```{r reduced unidimensional, echo=FALSE}
+
+reduced_flat <-
+'overall_CTN =~ 
+  CTN_spirit_2 +
+  CTN_spirit_3 +
+  CTN_spirit_7 +
+  CTN_spirit_1 +
+  CTN_spirit_4 +
+
+   CTN_exp_4 +
+   CTN_exp_1 +
+   CTN_exp_3 +
+   CTN_exp_2 +
+   CTN_exp_5 +
+
+  CTN_emo_3 +
+  CTN_emo_4 +
+  CTN_emo_6 +
+  CTN_emo_1 +
+  CTN_emo_2 +
+
+  CTN_mind_2 +         
+  CTN_mind_1 +
+  CTN_mind_3 +
+  CTN_mind_5 +
+  CTN_mind_4
+'
+
+fit_reduced_flat <- cfa(reduced_flat, data=reduced,
+                        std.lv=F, 
+                        estimator = "MLR",
+                        orthogonal = F) 
+
+#Standardized Beta here are the factor loadings
+estimates_red_flat <-
+  parameterEstimates(fit_reduced_flat, standardized=TRUE) %>% 
+  dplyr::filter(op == "=~") %>% 
+  dplyr::select("Latent Variable"=lhs, 
+                Indicator=rhs, 
+                "b"= est, 
+                SE=se,
+                Z=z, 
+                "p-value"=pvalue, 
+                Beta=std.all) %>% 
+  flextable() %>% 
+  colformat_double(j = 3:7, digits = 2) 
+Plot_reduced_flat <-
+     semPaths(fit_reduced_flat, 
+         whatLabels = "std", 
+        layout="tree",
+        rotation = 4,
+        weighted = T, #makes lines bolder for higher numbers
+        nCharNodes = 10, #number of text characters to allow in each box
+        shapeMan = "rectangle", 
+        sizeMan = 35, 
+        sizeMan2 = 2,
+        border.width = .5,
+        label.prop = 0.8,
+        asize = 1.5,
+        mar = c(.5,5,.5,4),
+        residuals=F, #errors? how do I interpret this?
+        curvePivot = TRUE, 
+        edge.label.cex= .75, #size of numbers
+        cardinal = TRUE,
+        nodeLabels = c("Humans and nature connected by same 'Energy'", #Deep
+                       "My connection is 'Spiritual'",
+                       "'Shared breath' between myself and plants", 
+                       "View nature as a mother", 
+                       "Every part of nature is sacred", 
+                       "My favorite is in nature",#experience 
+                       "I like to get outdoors when I can", 
+                       "I engage in nature to find meaning & richness",
+                       "I feel uneasy if away from nature for too long",
+                       "Walking through a forest makes me forget worries",
+                       "Someone carving a tree makes me cringe",  #emotional
+                       "I catch and release insects in my home",
+                       "I talk to wild animals I encounter",
+                       "Seeing a cleared forest is upsetting",
+                       "If one of my plants died I would be upset",
+                       "I deliberately watch the stars at night", #presence
+                       "I take time to watch the clouds pass by",
+                       "Watch sunrish and sunset",
+                       "I consciously listen to birds",
+                       "I take time to consciously smell flowers",
+                       "Overall CTN")
+        )
+
+Fit_table_redflat <- matrix(fitMeasures(fit_reduced_flat, c("df.scaled", "chisq.scaled", "rmsea.robust", "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", "srmr", "tli.robust", "cfi.robust", "aic")), 
+                         ncol=9,
+                         byrow=TRUE)
+chi_dfrflat <- paste0(round(Fit_table_redflat[2],2), " (",
+                 Fit_table_redflat[1],")")
+rmsea_cirflat <- paste0(round(Fit_table_redflat[3],2), " (", 
+                  round(Fit_table_redflat[4],2), " - ", 
+                  round(Fit_table_redflat[5],2), ")")
+srmrrflat <- round(Fit_table_redflat[6],2)
+tlirflat <- round(Fit_table_redflat[7],2)
+cfirflat <- round(Fit_table_redflat[8],2)
+aicrflat <- round(Fit_table_redflat[9],2)
+
+fit_redflat <- tibble(chi_dfrflat, rmsea_cirflat, srmrrflat, tlirflat, cfirflat, aicrflat)
+colnames(fit_redflat) <- c("\u03c7\u00B2 (df)",
+                    "RMSEA (95% CI)",
+                    "RMSR",
+                    "TLI",
+                    "CFI",
+                    "AIC")
+fit_redflat <-
+fit_redflat %>% 
+  mutate(Model = "Reduced 1-factor") %>% 
+  dplyr::select(Model, everything())
+
+```
+
+
+
+**Table 4. Comparative Fit indices for each model - Reduced DEEP CTN Scale**
+
+```{r Fit table reduced, echo=FALSE}
+
+
+fit_reduced <-
+  bind_rows(fit_redflat, fit_red4, fit_red)
+
+fit_reduced %>% 
   as_tibble() %>% 
-  bind_rows(fit_red)
-  
-
-flextable(Fit_table) %>% 
-  bold(i = 4,
+  flextable() %>% 
+    autofit() %>%
+  bold(i = 2:3,
        part = "body") %>% 
-  autofit() %>% 
+ 
   flextable::footnote(i = 1, j = 2:7, part = "header",
               value = flextable::as_paragraph(
                 c("Chi-Square: Closer to 0 indicate better fit",
@@ -1572,41 +1872,34 @@ flextable(Fit_table) %>%
      
 ```
 
-```{r Model Comparisons, include=FALSE}
-test_all<-
-  lavaan::anova(fit_model_flat,
-      fit_model_flat_4,
-      fit_model_hier_4,
+```{r anova on reduced scale, echo=FALSE}
+test_all_reduced<-
+  lavaan::anova(fit_reduced_flat,
+      fit_reduced_4,
       fit_reduced_hier_4)
 
-x2_1 <- round(test_all$Chisq[2],3)
-df_1 <- test_all$Df[2]
-p_1 <- papaja::print_p(round(test_all$`Pr(>Chisq)`[2],3))
+x2_3 <- round(test_all_reduced$Chisq[2],3)
+df_3 <- test_all_reduced$Df[2]
+p_3 <- papaja::print_p(round(test_all_reduced$`Pr(>Chisq)`[2],3))
   
-x2_2 <- round(test_all$Chisq[3],3)
-df_2 <- test_all$Df[3]
-p_2<- papaja::print_p(round(test_all$`Pr(>Chisq)`[3],3))
+x2_4 <- round(test_all_reduced$Chisq[3],3)
+df_4 <- test_all_reduced$Df[3]
+p_4<- papaja::print_p(round(test_all_reduced$`Pr(>Chisq)`[3],3))
 
-x2_3 <- round(test_all$Chisq[4],3)
-df_3 <- test_all$Df[4]
-p_3<- papaja::print_p(round(test_all$`Pr(>Chisq)`[4],3))
+
+
 
 
 ```
 
+
 An Analysis of Variance comparing the model fit of the four factor
 structures showed that there was 
-1. no significant difference between the
-two multi-dimensional models (Chi-sq= `r x2_1`(`r df_1`), p = `r p_1`).
+1. the reduced four-factor model provided a slightly better fit (Chi-sq= `r x2_3`(`r df_3`), p = `r p_3`).
 
-2. the multi-dimensional models had significantly improved fit
-compared to the unidimensional model (Chi-sq = `r x2_2`(`r df_2`), p =
-`r p_2`).
-
-3. the reduced scale (20 items) further significantly improved the fit compared to the longer scale which included all items (Chi-sq = `r x2_3`(`r df_3`), p = `r p_3`).
-
-
-
+2. the reduced multi-dimensional models had significantly improved fit
+compared to the reduced unidimensional model (Chi-sq = `r x2_4`(`r df_4`), p =
+`r p_4`).
 
 
 We also expected weak-to-moderate zero-order correlations between the
@@ -1615,6 +1908,7 @@ construct (as would be supported by the hierarchical factor mentioned
 above). This was tested using a Zero-Order Correlation between the four
 factors. Figure 6. shows the inter-correlations between the factors
 revealing moderate relationships between all factors.
+
 
 ```{r creating the scale, echo=FALSE}
 #select necessary items
@@ -1840,6 +2134,8 @@ reverse_code <- function(data, columns_to_reverse) {
 }
 
 reverse_code(val_data, c("CNS_4", "CNS_14", "RPEBS_4", "RPEBS_6", "RPEBS_7", "RPEBS_14", "PI_interconnect_2", "RYFF_1_autonomy", "RYFF_4_enviromastery", "RYFF_9_growth", "RYFF_10_relations", "RYFF_12_relations", "RYFF_14_purpose", "RYFF_15_purpose", "RYFF_18_selfaccept"))
+
+
 
 #create scales & standardize
 val_data <-
@@ -2093,8 +2389,9 @@ dimensions_peb_anova <-
      Anova(dimensions_peb, type = "II")
 
 peb_r2 <-
-     calc.relimp(dimensions_peb, type="lmg",
-                 rela=F) #setting to T normalizes metrics to sum to 100%
+     calc.relimp(dimensions_peb, type=c("lmg", "first", "last", "betasq"))
+              #   rela=T) #setting to T normalizes metrics to sum to 100%
+
 
 p_vars <- c("Deep", "Experience", "Emotional", "Presence")
 peb_rvalues <- tibble(round(peb_r2$lmg,2)) #partial R2 of all variables
@@ -3397,9 +3694,450 @@ full_join(wb_regression_table, wb_robust_table, by = "Variable", suffix = c("_1"
 
 ```
 
+# Exploratory Analyses
+
+## Individual Well-being Measures
+
+```{r individual wb measures correlations, echo=FALSE}
+#reversed
+#ryff_1 (autonomy); ryff_4 (environmental mastery); ryff_4 (personal growth); ryff_10 (relations); ryff_12 (relations); ryff_14 (purpose); ryff_15 (purpose); ryff_18 (self-accept)
+
+val_data %>% 
+  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy, 
+         RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery,
+         RYFF_7_growth, RYFF_8_growth, RYFF_9_growth, 
+         RYFF_10_relations, RYFF_11_relations, RYFF_12_relations,
+         RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose, 
+         RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept)%>%
+  ltm::cronbach.alpha()
+
+#Items are definitely correctly reversed
+
+
+val_data %>% 
+  dplyr::select(RYFF_1_autonomy, RYFF_2_autonomy, RYFF_3_autonomy)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(RYFF_4_enviromastery, RYFF_5_enviromastery, RYFF_6_enviromastery)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(RYFF_7_growth, RYFF_8_growth, RYFF_9_growth)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(RYFF_10_relations, RYFF_11_relations, RYFF_12_relations)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(RYFF_13_purpose, RYFF_14_purpose, RYFF_15_purpose)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(RYFF_16_selfaccept, RYFF_17_selfaccept, RYFF_18_selfaccept)%>%
+  ltm::cronbach.alpha()
+
+
+val_data %>% 
+  dplyr::select(., PANAS_1:PANAS_10)%>%
+  ltm::cronbach.alpha()
+
+val_data %>% 
+  dplyr::select(., VITALITY_1:VITALITY_6)%>%
+  ltm::cronbach.alpha()
+
+#there has been some inconsistency with the cronbach's alpha for Ryff - so this might not be something to really worry about - https://www.researchgate.net/figure/Cronbach-a-coefficients-of-the-six-sub-scales-across-studies_tbl5_324658452
+#But we should talk about this if we choose to go into the exploratory analyses
 
 
 
+#RYFF_Z
+#PANAS_z
+#Vitality_z
+
+cor_cols = c('RYFF_z',
+             'PANAS_z',
+             'Vitality_z')
+
+cormatrix <- 
+     as.matrix(val_data[,cor_cols])
+            
+correlations <-
+     rcorr(cormatrix, type = "spearman")
+
+corp <- 
+     cor.mtest(cormatrix)
+
+#format numbers
+cor_table <-as.matrix( round(correlations$r,2))
+
+#remove rownames and colnames
+colnames(cor_table)<- rownames(cor_table)<- NULL
+
+#remove leading zeros and add stars
+n <- length(cor_cols)
+for (c in 1:n) {
+  for (r in 1:n) {
+      pval <- correlations$P[r,c]
+      stars <- ifelse(pval < .001, "***", ifelse(pval < .01, "** ", ifelse(pval < .05, "*  ", "   ")))
+      coeff = sub("0*\\.",".",round(correlations$r,2)[r,c]) #remove leading zeros
+      cor_table[r,c] = paste(c(coeff,stars),collapse='')
+  }
+}
+
+cor_table[upper.tri(cor_table)] <- '' # erase the upper triangle
+diag(cor_table) <- '-' # replace the diagonals by dash(-)
+
+colnames(cor_table) <- cor_cols
+
+cor_table %>% 
+  as_tibble() %>% #mutate everything to numeric
+    rownames_to_column() %>% 
+    mutate(rowname = cor_cols) %>% 
+    dplyr::select(rowname, RYFF_z, PANAS_z, Vitality_z) %>% 
+  mutate(rowname = c("RYFF_z", "PANAS_z", "Vitality_z")) %>%
+  flextable() %>% 
+  set_header_labels(rowname = " ", 
+                    RYFF_z = "Ryff", 
+                    PANAS_z = "PANAS", 
+                    Vitality_z = "Vitality") %>% 
+  add_footer_lines("|0.1| ≤ r < |0.3| = Weak correlation \n|0.4| ≤ r < |0.7| = Moderate correlation \n|0.7| ≤ r = Strong correlation \n** p < 0.01\n*** p < 0.001") %>%
+  autofit()
+
+
+
+```
+
+```{r ryff predictive, echo=FALSE}
+
+ryff <-
+      lm(RYFF_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z, 
+         data = val_data)
+
+ryff_anova <-
+     Anova(ryff, type = "II")
+
+ryff_r2 <-
+     calc.relimp(ryff, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+p_vars <- c("Deep", "Experience", "Emotional", "Presence")
+ryff_rvalues <- tibble(round(ryff_r2$lmg,2)) #partial R2 of all variables
+ryff_pvalues <- tibble(round(ryff_anova$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+ryff_tot_var<-round(ryff_r2$R2, 2) #variance explained by model
+
+#create table of R and P values
+ryff_table <- 
+     bind_cols(p_vars,ryff_rvalues, ryff_pvalues[-5,]) %>% 
+     rename("Variable" = `...1`, "Partial R2" = `round(ryff_r2$lmg, 2)`, 
+            "p" = `round.ryff_anova..Pr..F....2.`)
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+ryff_output <- broom::tidy(ryff)
+ryff_conf <- broom::tidy(ryff, conf.int = T)
+
+model_ryff <- forestmangr::round_df(ryff_output, digits = 2)
+model_ryff <- model_ryff[-1,] #remove the intercept 
+
+coef_ryff <- 
+     coef(ryff)
+ConfidenceInterval_ryff <- 
+     confint(ryff, level = 0.95)
+coef_confint_ryff <- 
+     cbind(coef_ryff, ConfidenceInterval_ryff)%>% 
+     as.data.frame()
+coef_confint_ryff <- 
+     coef_confint_ryff %>% 
+     mutate(variable=c("Intercept", "Deep", "Experiential", "Emotional", "Presence"))
+
+
+coef_confint_ryff <- 
+     coef_confint_ryff %>% 
+     rename(c("std Beta" = "coef_ryff",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_ryff <- 
+     coef_confint_ryff[, col_order] #reorder variables in the data frame
+
+coef_confint_ryff <- 
+     coef_confint_ryff %>% 
+  mutate_if(is.numeric, round, digits = 2) %>%  # round numeric into two significant digits 
+  rename(Variable = variable)
+
+
+ryff_regression_table <-
+  bind_cols(coef_confint_ryff[-1,], ryff_table[,-1]) %>% 
+  relocate(c(`Partial R2`, p), .after = Variable) %>% 
+  mutate(`std Beta` = paste(`std Beta`, " (", lower_bound, " - ", upper_bound, ")")) %>% 
+  dplyr::select(Variable, `Partial R2`, p, `std Beta`) %>%
+  rename(`std Beta (99% CI)` = `std Beta`)
+
+       
+
+
+plot_model_ryff <- 
+  bind_cols(coef_confint_ryff[-1,], ryff_table[,-1])  %>%  #remove row number 1 (The intercept) 
+  mutate(rsig = case_when(Variable == "Deep" ~  
+                            paste0(as.list(pull(wb_rvalues[1,1]))$DeepCTN_z, "***"),
+                          Variable == "Experiential" ~
+                            paste0(as.list(pull(wb_rvalues[2,1]))$ExpCTN_z),
+                          Variable == "Emotional" ~
+                            paste0(as.list(pull(wb_rvalues[3,1]))$EmoCTN_z, "**"),
+                          Variable == "Presence" ~
+                            paste0(as.list(pull(wb_rvalues[4,1]))$PresCTN_z, "***"))) %>% 
+  ggplot(aes(x=reorder(Variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 2,
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 0.75,
+                color="turquoise4",
+                width = 0.5) +
+  geom_text(aes(label = rsig), 
+                position = position_dodge(0.9),
+                vjust = -1.5) +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("DEEP CTN Factor") + 
+  ylab("\u03B2 coefficients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 0.5) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14))  +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())+
+  labs(caption = "numbers above points = partial r2 value")
+
+
+```
+
+
+```{r PANAS predictive, echo=FALSE}
+
+panas <-
+      lm(PANAS_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z, 
+         data = val_data)
+
+panas_anova <-
+     Anova(panas, type = "II")
+
+panas_r2 <-
+     calc.relimp(panas, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+p_vars <- c("Deep", "Experience", "Emotional", "Presence")
+panas_rvalues <- tibble(round(panas_r2$lmg,2)) #partial R2 of all variables
+panas_pvalues <- tibble(round(panas_anova$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+panas_tot_var<-round(panas_r2$R2, 2) #variance explained by model
+
+#create table of R and P values
+panas_table <- 
+     bind_cols(p_vars,panas_rvalues, panas_pvalues[-5,]) %>% 
+     rename("Variable" = `...1`, "Partial R2" = `round(panas_r2$lmg, 2)`, 
+            "p" = `round.panas_anova..Pr..F....2.`)
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+panas_output <- broom::tidy(ryff)
+panas_conf <- broom::tidy(panas, conf.int = T)
+
+model_panas <- forestmangr::round_df(panas_output, digits = 2)
+model_panas <- model_panas[-1,] #remove the intercept 
+
+coef_panas <- 
+     coef(panas)
+ConfidenceInterval_panas <- 
+     confint(panas, level = 0.95)
+coef_confint_panas <- 
+     cbind(coef_panas, ConfidenceInterval_panas)%>% 
+     as.data.frame()
+coef_confint_panas <- 
+     coef_confint_panas %>% 
+     mutate(variable=c("Intercept", "Deep", "Experiential", "Emotional", "Presence"))
+
+
+coef_confint_panas <- 
+     coef_confint_panas %>% 
+     rename(c("std Beta" = "coef_panas",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_panas <- 
+     coef_confint_panas[, col_order] #reorder variables in the data frame
+
+coef_confint_panas <- 
+     coef_confint_panas %>% 
+  mutate_if(is.numeric, round, digits = 2) %>%  # round numeric into two significant digits 
+  rename(Variable = variable)
+
+
+panas_regression_table <-
+  bind_cols(coef_confint_panas[-1,], panas_table[,-1]) %>% 
+  relocate(c(`Partial R2`, p), .after = Variable) %>% 
+  mutate(`std Beta` = paste(`std Beta`, " (", lower_bound, " - ", upper_bound, ")")) %>% 
+  dplyr::select(Variable, `Partial R2`, p, `std Beta`) %>%
+  rename(`std Beta (99% CI)` = `std Beta`)
+
+       
+
+
+plot_model_panas <- 
+  bind_cols(coef_confint_panas[-1,], panas_table[,-1])  %>%  #remove row number 1 (The intercept) 
+  mutate(rsig = case_when(Variable == "Deep" ~  
+                            paste0(as.list(pull(wb_rvalues[1,1]))$DeepCTN_z, "***"),
+                          Variable == "Experiential" ~
+                            paste0(as.list(pull(wb_rvalues[2,1]))$ExpCTN_z),
+                          Variable == "Emotional" ~
+                            paste0(as.list(pull(wb_rvalues[3,1]))$EmoCTN_z, "**"),
+                          Variable == "Presence" ~
+                            paste0(as.list(pull(wb_rvalues[4,1]))$PresCTN_z, "***"))) %>% 
+  ggplot(aes(x=reorder(Variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 2,
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 0.75,
+                color="turquoise4",
+                width = 0.5) +
+  geom_text(aes(label = rsig), 
+                position = position_dodge(0.9),
+                vjust = -1.5) +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("DEEP CTN Factor") + 
+  ylab("\u03B2 coefficients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 0.5) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14))  +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+```
+
+```{r Vitality predictive, echo=FALSE}
+
+vitality <-
+      lm(Vitality_z ~ DeepCTN_z + ExpCTN_z + EmoCTN_z + PresCTN_z, 
+         data = val_data)
+
+vitality_anova <-
+     Anova(vitality, type = "II")
+
+vitality_r2 <-
+     calc.relimp(vitality, type="lmg",
+                 rela=F) #setting to T normalizes metrics to sum to 100%
+
+p_vars <- c("Deep", "Experience", "Emotional", "Presence")
+vitality_rvalues <- tibble(round(vitality_r2$lmg,2)) #partial R2 of all variables
+vitality_pvalues <- tibble(round(vitality_anova$`Pr(>F)`,2),
+                         .name_repair = "universal") #p values
+
+vitality_tot_var<-round(vitality_r2$R2, 2) #variance explained by model
+
+#create table of R and P values
+vitality_table <- 
+     bind_cols(p_vars,vitality_rvalues, vitality_pvalues[-5,]) %>% 
+     rename("Variable" = `...1`, "Partial R2" = `round(vitality_r2$lmg, 2)`, 
+            "p" = `round.vitality_anova..Pr..F....2.`)
+
+#plotting effect sizes
+#https://www.mihiretukebede.com/posts/2020-09-30-2020-09-30-plotting-model-coefficients-in-a-forest-plot/
+vitality_output <- broom::tidy(ryff)
+vitality_conf <- broom::tidy(vitality, conf.int = T)
+
+model_vitality <- forestmangr::round_df(vitality_output, digits = 2)
+model_vitality <- model_vitality[-1,] #remove the intercept 
+
+coef_vitality <- 
+     coef(vitality)
+ConfidenceInterval_vitality <- 
+     confint(vitality, level = 0.95)
+coef_confint_vitality <- 
+     cbind(coef_vitality, ConfidenceInterval_vitality)%>% 
+     as.data.frame()
+coef_confint_vitality <- 
+     coef_confint_vitality %>% 
+     mutate(variable=c("Intercept", "Deep", "Experiential", "Emotional", "Presence"))
+
+
+coef_confint_vitality <- 
+     coef_confint_vitality %>% 
+     rename(c("std Beta" = "coef_vitality",
+              "lower_bound" = `2.5 %`, 
+              "upper_bound" = `97.5 %`))
+
+# Reorder variables
+col_order <- c("variable", "std Beta", "lower_bound", "upper_bound")
+coef_confint_vitality <- 
+     coef_confint_vitality[, col_order] #reorder variables in the data frame
+
+coef_confint_vitality <- 
+     coef_confint_vitality%>% 
+  mutate_if(is.numeric, round, digits = 2) %>%  # round numeric into two significant digits 
+  rename(Variable = variable)
+
+
+vitality_regression_table <-
+  bind_cols(coef_confint_vitality[-1,], vitality_table[,-1]) %>% 
+  relocate(c(`Partial R2`, p), .after = Variable) %>% 
+  mutate(`std Beta` = paste(`std Beta`, " (", lower_bound, " - ", upper_bound, ")")) %>% 
+  dplyr::select(Variable, `Partial R2`, p, `std Beta`) %>%
+  rename(`std Beta (99% CI)` = `std Beta`)
+
+       
+
+
+plot_model_vitality <- 
+  bind_cols(coef_confint_vitality[-1,], vitality_table[,-1])  %>%  #remove row number 1 (The intercept) 
+  mutate(rsig = case_when(Variable == "Deep" ~  
+                            paste0(as.list(pull(wb_rvalues[1,1]))$DeepCTN_z, "***"),
+                          Variable == "Experiential" ~
+                            paste0(as.list(pull(wb_rvalues[2,1]))$ExpCTN_z),
+                          Variable == "Emotional" ~
+                            paste0(as.list(pull(wb_rvalues[3,1]))$EmoCTN_z, "**"),
+                          Variable == "Presence" ~
+                            paste0(as.list(pull(wb_rvalues[4,1]))$PresCTN_z, "***"))) %>% 
+  ggplot(aes(x=reorder(Variable, `std Beta`), y=`std Beta`)) +
+  geom_point(shape = 15,
+             size  = 2,
+             color="black") + 
+  geom_errorbar(aes(ymin  = lower_bound,
+                    ymax  = upper_bound),
+                size  = 0.75,
+                color="turquoise4",
+                width = 0.5) +
+  geom_text(aes(label = rsig), 
+                position = position_dodge(0.9),
+                vjust = -1.5) +
+  theme(axis.title = element_text(face = "bold")) +
+  xlab("DEEP CTN Factor") + 
+  ylab("\u03B2 coefficients with 95% CI") +
+  coord_flip(ylim = c(-.5, .5)) + 
+  geom_hline(yintercept = 0, color = "red", size = 0.5) +
+   theme(axis.title = element_text(size = 17)) + 
+  theme(axis.text = element_text(size = 14))  +
+  theme(panel.background = element_rect(fill='transparent'), 
+        plot.background = element_rect(fill='transparent', color=NA), 
+        panel.grid.major = element_line(colour = "#ECEFF2"),
+        panel.grid.minor = element_blank())
+
+```
 
 
 
@@ -3407,5 +4145,8 @@ full_join(wb_regression_table, wb_robust_table, by = "Variable", suffix = c("_1"
     upsetting to me) and 3.02 (Every part of nature is sacred). These
     items were retained as they were extremely close to the cut-off and
     the Emotional scale was already reduced to 4 items.
+
+
+
 
 # References
