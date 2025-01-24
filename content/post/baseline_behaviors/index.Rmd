@@ -1,0 +1,190 @@
+---
+title: "Baseline Pro-Environmental Behvaior"
+author: "Deb Lindsay"
+date: "`r Sys.Date()`"
+output: html_document
+slug: baselinePEB
+categories:
+  - PEB
+tags: 
+  - PEB
+subtitle: ''
+summary: ''
+authors: []
+lastmod: "`r Sys.Date()`"
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: yes
+projects: []
+output:
+  blogdown::html_page:
+    toc: true
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+```{r Packages and Functions required, include=FALSE}
+
+library(tidyverse) #base package that runs most functions
+
+```
+
+```{r loading data, include=FALSE}
+
+#Data 1 = March 2021
+# Live - 2020-10-13 09:50:34
+#this data is a huge mess
+
+#Data 2 = July 2021
+# Live - 2021-03-31 09:41:30
+#this data is a huge mess
+
+#Data 3 = October 2024
+# Live - 2021-09-23 19:46:48
+
+data1 <-
+  read_csv("data1.csv")
+
+data2 <-
+  read_csv("data2.csv")
+
+data3 <-
+  read_csv("data3.csv")
+
+
+```
+
+```{r Data Cleaning, include=FALSE}
+
+###Data 1
+#remove first two rows
+#data1 <- data1[-c(1,2),]
+
+
+#need to remove test data (before 2020-10-13 09:50:34)
+#convert StartDate to date
+#data1 <- data1 %>%
+#  mutate(StartDate = as.POSIXct(StartDate, format = "%Y-%m-%d %H:%M:%S"))
+
+#data1 <- data1 %>%
+#  filter(StartDate > "2020-10-13 09:50:34")
+
+# remove failed attention checks
+#data1$attention...55 (correct == 3)
+#data1$attention...180 (correct == 6)
+#data1$attention...122 (correct == 6)
+#data1$attention...223 (correct 3)
+#data1$attention...286 (subjective check)
+
+
+### Data 3
+#remove first two rows
+data3 <- data3[-c(1,2),]
+
+#remove test data (before 2021-09-23 19:46:48)
+data3 <- data3 %>%
+  mutate(StartDate = as.POSIXct(StartDate, format = "%Y-%m-%d %H:%M:%S"))
+data3 <- data3 %>%
+  filter(StartDate > "2021-09-23 19:46:48")
+
+
+#remove those who did not finish
+data3 <-
+  data3 %>%
+  filter(Progress == 100)
+
+
+
+#remove failed attention checks
+#att_1 == 3
+#att_2 == 3
+#att_3 == 2
+#att == 1 or 2
+
+#grade attention checks
+# if att_1 == 3 -> score 1 else 0
+# if att_2 == 3 -> score 1 else 0
+# if att_3 == 2 -> score 1 else 0
+
+data3$att_score <- 
+  ifelse(data3$att_1 == 3, 1, 0) + ifelse(data3$att_2 == 3, 1, 0) + ifelse(data3$att_3 == 2, 1, 0)
+
+#filter people who score less than 2
+data3 %>% 
+  group_by(att_score) %>%
+  summarise(n = n())
+
+
+data3 <- 
+  data3 %>%
+  filter(att_score == 2 | att_score == 3)
+
+#looking at subjective attention check (only keep 1 and 2)
+data3 %>% 
+  group_by(attention) %>% 
+  summarise(n = n())
+
+data3 <-
+  data3 %>%
+  filter(attention == as.numeric(1) | attention == as.numeric(2))
+
+
+
+```
+
+```{r counting baseline behaviors, include=FALSE}
+
+total = length(data3$id)
+
+#create a table that counts the total n of participants that selected 99 for past_beh_air, past_beh_car,            past_beh_consump, past_beh_meat, past_beh_recycle, past_beh_waterelec
+
+data3 %>% 
+  select(past_beh_car, past_beh_air, past_beh_waterelec, past_beh_meat, past_beh_recycle, past_beh_consump) %>%
+  gather(key = "behavior", value = "response") %>%
+  group_by(behavior) %>%
+  summarise(n = sum(as.numeric(response) == 99, na.rm = TRUE),
+            percent = round((n/total*100),2))
+
+
+
+#past_beh_car = "I have reduced car use (as a driver or passenger)"
+#past_beh_air = "I have reduced air travel"
+#past_beh_waterelec = "I have reduced water and electricity consumption"
+#past_beh_meat = "I have reduced eating meat from any animal"
+#past_beh_consump = "I have reduced consumption in general (i.e., buying/using less things)"
+#past_beh_recycle = "I have increased recycling or reusing waste products (e.g. using recycling programs, composting, repurposing)"
+
+#create new labels for graph
+labs = c("Never used a car \n(as passenger or driver)", "Never flown \n(domestic or international)", "Never eaten meat")
+
+ggplot(data3 %>% 
+         select(past_beh_car, past_beh_air, past_beh_meat) %>%
+         gather(key = "behavior", value = "response") %>%
+         group_by(behavior) %>%
+         summarise(n = sum(as.numeric(response) == 99, na.rm = TRUE),
+                   percent = round((n/total*100),2)),
+       aes(x = behavior, y = percent)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Baseline Pro-Environmental Behaviors",
+       x = "Behavior",
+       y = "% Participants (Total 1383)",
+       caption = "Data from October 2024") +
+  scale_x_discrete(labels = labs) +
+  scale_y_continuous(limits = c(0,100), breaks = seq(0,100,10)) +
+  geom_text(aes(label = paste(n, "(", percent, "%)")), vjust = -0.5, hjust = -0.12) +
+  coord_flip() +
+  theme_minimal() +
+  theme(plot.margin = margin(1,1,1,1, "cm"))
+
+
+
+
+```
+
